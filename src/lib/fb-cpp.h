@@ -31,5 +31,6 @@
 #include "Descriptor.h"
 #include "Statement.h"
 #include "Blob.h"
+#include "EventListener.h"
 
 #endif  // FBCPP_H
