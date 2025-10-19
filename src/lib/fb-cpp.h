@@ -27,5 +27,6 @@
 
 #include "Client.h"
 #include "Attachment.h"
+#include "Transaction.h"
 
 #endif  // FBCPP_H
