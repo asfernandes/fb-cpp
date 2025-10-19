@@ -26,5 +26,6 @@
 #define FBCPP_H
 
 #include "Client.h"
+#include "Attachment.h"
 
 #endif  // FBCPP_H

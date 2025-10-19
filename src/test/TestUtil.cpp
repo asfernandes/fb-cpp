@@ -31,6 +31,8 @@
 #include <string>
 #include <string_view>
 
+namespace fs = std::filesystem;
+
 
 namespace fbcpp::test
 {
@@ -38,12 +40,51 @@ namespace fbcpp::test
 
 	namespace
 	{
-		struct Cleanup final
+		class TempDir
 		{
-			~Cleanup()
+		public:
+			explicit TempDir()
+			{
+				fs::path tempPath = fs::temp_directory_path();
+
+				auto now = std::chrono::system_clock::now();
+				auto time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+
+				std::ostringstream oss;
+				oss << "fbcpp-test-" << time;
+
+				path = tempPath / oss.str();
+
+				fs::create_directory(path);
+			}
+
+			~TempDir()
+			{
+				std::error_code ec;
+				fs::remove(path, ec);
+			}
+
+		public:
+			auto get() const
+			{
+				return path;
+			}
+
+		private:
+			fs::path path;
+		} tempDir;
+
+		struct ClientCleanup final
+		{
+			~ClientCleanup()
 			{
 				CLIENT.shutdown();
 			}
-		} cleanup;
+		} clientCleanup;
 	}  // namespace
+
+	std::string getTempFile(const std::string_view name)
+	{
+		return (tempDir.get() / name).string();
+	}
 }  // namespace fbcpp::test

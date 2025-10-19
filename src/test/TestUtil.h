@@ -25,7 +25,10 @@
 #ifndef FBCPP_TEST_TEST_UTIL_H
 #define FBCPP_TEST_TEST_UTIL_H
 
+#include "Attachment.h"
 #include "Client.h"
+#include <string>
+#include <string_view>
 #include <boost/test/unit_test.hpp>
 
 
@@ -34,6 +37,28 @@ using namespace fbcpp;
 namespace fbcpp::test
 {
 	extern Client CLIENT;
+
+	std::string getTempFile(const std::string_view name);
+
+	class FbDropDatabase
+	{
+	public:
+		explicit FbDropDatabase(Attachment& attachment)
+			: attachment{attachment}
+		{
+		}
+
+		~FbDropDatabase()
+		{
+			attachment.dropDatabase();
+		}
+
+		FbDropDatabase(const FbDropDatabase&) = delete;
+		FbDropDatabase& operator=(const FbDropDatabase&) = delete;
+
+	private:
+		Attachment& attachment;
+	};
 }  // namespace fbcpp::test
 
 using namespace fbcpp::test;
