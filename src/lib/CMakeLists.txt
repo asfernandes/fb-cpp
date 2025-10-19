@@ -7,6 +7,11 @@ file(GLOB_RECURSE SRC
 	"*.cpp"
 )
 
+find_package(Boost REQUIRED
+	COMPONENTS
+		multiprecision
+)
+
 
 add_library(${PROJECT_NAME}
 	${SRC}
@@ -17,5 +22,6 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
+	PRIVATE Boost::multiprecision
 	${CMAKE_DL_LIBS}
 )

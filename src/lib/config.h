@@ -22,14 +22,19 @@
  * SOFTWARE.
  */
 
-#ifndef FBCPP_H
-#define FBCPP_H
+#ifndef FBCPP_CONFIG_H
+#define FBCPP_CONFIG_H
 
-#include "Client.h"
-#include "Attachment.h"
-#include "Transaction.h"
-#include "Descriptor.h"
-#include "Statement.h"
-#include "Blob.h"
+#if !defined(FB_CPP_USE_BOOST_MULTIPRECISION)
+#if __has_include(<boost/multiprecision/cpp_int.hpp>) && __has_include(<boost/multiprecision/cpp_dec_float.hpp>)
+#define FB_CPP_USE_BOOST_MULTIPRECISION 1
+#endif
+#endif
 
-#endif  // FBCPP_H
+#if !defined(FB_CPP_USE_BOOST_DLL)
+#if __has_include(<boost/dll.hpp>)
+#define FB_CPP_USE_BOOST_DLL 1
+#endif
+#endif
+
+#endif  // FBCPP_CONFIG_H

@@ -3,12 +3,18 @@
   "version-string": "0.0.1",
   "dependencies": [
     "boost-dll",
+    "boost-multiprecision",
     "boost-test"
   ],
   "overrides": [
     {
       "name": "boost-dll",
       "version": "1.85.0"
+    },
+    {
+      "name": "boost-multiprecision",
+      "version": "1.85.0",
+      "port-version": 2
     },
     {
       "name": "boost-test",
