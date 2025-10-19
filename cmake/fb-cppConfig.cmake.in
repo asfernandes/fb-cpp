@@ -1,0 +1,13 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(Boost OPTIONAL
+	COMPONENTS
+		dll
+		multiprecision
+)
+
+include("${CMAKE_CURRENT_LIST_DIR}/fb-cppTargets.cmake")
+
+check_required_components(fb-cpp)
