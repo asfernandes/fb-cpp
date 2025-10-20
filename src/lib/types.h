@@ -69,7 +69,7 @@ namespace fbcpp
 
 	using Date = std::chrono::year_month_day;
 	using Time = std::chrono::hh_mm_ss<std::chrono::microseconds>;
-	using Timestamp = std::chrono::local_time<std::chrono::microseconds>;
+	using Timestamp = std::chrono::local_time<std::chrono::microseconds>;  // FIXME: MSVC support range
 
 	struct TimeTz final
 	{
