@@ -6,7 +6,7 @@
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = "fb-cpp"
 PROJECT_NUMBER         = "0.0.1"
-PROJECT_BRIEF          = "C++ wrapper for Firebird database API"
+PROJECT_BRIEF          = "A modern C++ wrapper for the Firebird database API"
 PROJECT_LOGO           =
 OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@/docs
 CREATE_SUBDIRS         = NO
