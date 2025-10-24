@@ -69,7 +69,36 @@ namespace fbcpp
 
 	using Date = std::chrono::year_month_day;
 	using Time = std::chrono::hh_mm_ss<std::chrono::microseconds>;
-	using Timestamp = std::chrono::local_time<std::chrono::microseconds>;  // FIXME: MSVC support range
+
+	struct Timestamp final
+	{
+		bool operator==(const Timestamp& other) const noexcept
+		{
+			return date == other.date && time.to_duration() == other.time.to_duration();
+		}
+
+		///
+		/// Converts to std::chrono::local_time<std::chrono::microseconds>.
+		/// Important: in Windows, std::chrono::local_time<std::chrono::microseconds> cannot represent all the valid
+		/// date range supported by Firebird.
+		///
+		std::chrono::local_time<std::chrono::microseconds> toLocalTime() const noexcept
+		{
+			return std::chrono::local_days{date} + time.to_duration();
+		}
+
+		static Timestamp fromLocalTime(std::chrono::local_time<std::chrono::microseconds> value) noexcept
+		{
+			const auto days = std::chrono::floor<std::chrono::days>(value);
+			const Date dateValue{days};
+			const auto timeOfDay = std::chrono::duration_cast<std::chrono::microseconds>(value - days);
+
+			return Timestamp{dateValue, Time{timeOfDay}};
+		}
+
+		Date date{};
+		Time time{std::chrono::microseconds::zero()};
+	};
 
 	struct TimeTz final
 	{

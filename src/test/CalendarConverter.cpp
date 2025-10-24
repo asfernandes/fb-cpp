@@ -38,10 +38,6 @@ namespace data = boost::unit_test::data;
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
-
-static const auto spTz = locate_zone("America/Sao_Paulo");
-static const auto utcTz = locate_zone("UTC");
-
 namespace
 {
 	template <typename T>
@@ -76,8 +72,7 @@ namespace
 
 	struct TimeTzCase final
 	{
-		Time time;
-		std::string_view zone;
+		TimeTz timeTz;
 		std::string_view outputText;
 		std::optional<std::string_view> inputText = std::nullopt;
 	};
@@ -90,8 +85,7 @@ namespace
 
 	struct TimestampTzCase final
 	{
-		Timestamp timestamp;
-		std::string_view zone;
+		TimestampTz timestampTz;
 		std::string_view outputText;
 		std::optional<std::string_view> inputText = std::nullopt;
 	};
@@ -166,9 +160,9 @@ BOOST_DATA_TEST_CASE(timeConversion, data::make(TIME_CASES), timeCase)
 
 
 static const std::initializer_list<TimestampCase> TIMESTAMP_CASES{
-	{Timestamp{local_days{2024y / month{2} / 29d} + 13h + 14min + 15s + 123400us}, "2024-02-29 13:14:15.1234"},
-	{Timestamp{local_days{1y / month{1} / 1d} + microseconds::zero()}, "0001-01-01 00:00:00.0000"},
-	{Timestamp{local_days{9999y / month{12} / 31d} + 23h + 59min + 59s + 999900us}, "9999-12-31 23:59:59.9999",
+	{Timestamp{Date{2024y / month{2} / 29d}, Time{13h + 14min + 15s + 123400us}}, "2024-02-29 13:14:15.1234"},
+	{Timestamp{Date{1y / month{1} / 1d}, Time{microseconds::zero()}}, "0001-01-01 00:00:00.0000"},
+	{Timestamp{Date{9999y / month{12} / 31d}, Time{23h + 59min + 59s + 999900us}}, "9999-12-31 23:59:59.9999",
 		"  9999 - 12 - 31    23 : 59 : 59 . 9999  "},
 };
 
@@ -196,9 +190,9 @@ BOOST_DATA_TEST_CASE(timestampConversion, data::make(TIMESTAMP_CASES), timestamp
 
 
 static const std::initializer_list<TimeTzCase> TIME_TZ_CASES{
-	{Time{13h + 14min + 15s + 123400us}, "America/Sao_Paulo", "13:14:15.1234 America/Sao_Paulo"},
-	{Time{0us}, "America/Sao_Paulo", "00:00:00.0000 America/Sao_Paulo"},
-	{Time{23h + 59min + 59s + 999900us}, "America/Sao_Paulo", "23:59:59.9999 America/Sao_Paulo",
+	{TimeTz{Time{16h + 14min + 15s + 123400us}, "America/Sao_Paulo"}, "13:14:15.1234 America/Sao_Paulo"},
+	{TimeTz{Time{3h}, "America/Sao_Paulo"}, "00:00:00.0000 America/Sao_Paulo"},
+	{TimeTz{Time{2h + 59min + 59s + 999900us}, "America/Sao_Paulo"}, "23:59:59.9999 America/Sao_Paulo",
 		"  23 : 59 : 59 . 9999    America/Sao_Paulo  "},
 };
 
@@ -209,10 +203,7 @@ BOOST_DATA_TEST_CASE(timeTzConversion, data::make(TIME_TZ_CASES), timeTzCase)
 
 	impl::CalendarConverter converter{CLIENT, &statusWrapper};
 
-	const Date baseTimeTzDate{year{2020}, month{1}, 1d};
-	const Timestamp localTimestamp{local_days{baseTimeTzDate} + timeTzCase.time.to_duration()};
-	const auto localTimestampUtc = utcTz->to_local(spTz->to_sys(localTimestamp));
-	const TimeTz timeTz{Time{localTimestampUtc - floor<days>(localTimestampUtc)}, std::string{timeTzCase.zone}};
+	const TimeTz& timeTz = timeTzCase.timeTz;
 	const std::string outputText{timeTzCase.outputText};
 	const std::string inputText{timeTzCase.inputText.value_or(outputText)};
 
@@ -251,11 +242,12 @@ BOOST_DATA_TEST_CASE(timeTzOffsetConversion, data::make(TIME_TZ_OFFSET_CASES), t
 
 
 static const std::initializer_list<TimestampTzCase> TIMESTAMP_TZ_CASES{
-	{Timestamp{local_days{2024y / month{2} / 29d} + 13h + 14min + 15s + 123400us}, "America/Sao_Paulo",
+	{TimestampTz{Timestamp{Date{2024y / month{2} / 29d}, Time{16h + 14min + 15s + 123400us}}, "America/Sao_Paulo"},
 		"2024-02-29 13:14:15.1234 America/Sao_Paulo"},
-	{Timestamp{local_days{1y / month{1} / 1d} + 13h + 14min + 15s + 123400us}, "UTC", "0001-01-01 13:14:15.1234 UTC"},
-	{Timestamp{local_days{9999y / month{12} / 31d} + 23h + 59min + 59s + 999900us}, "America/Sao_Paulo",
-		"9999-12-31 23:59:59.9999 America/Sao_Paulo", "  9999 - 12 - 31   23 : 59 : 59 . 9999    America/Sao_Paulo  "},
+	{TimestampTz{Timestamp{Date{1y / month{1} / 1d}, Time{13h + 14min + 15s + 123400us}}, "UTC"},
+		"0001-01-01 13:14:15.1234 UTC"},
+	{TimestampTz{Timestamp{Date{year{9999}, month{12}, 31d}, Time{23h + 59min + 59s + 999900us}}, "America/Sao_Paulo"},
+		"9999-12-31 20:59:59.9999 America/Sao_Paulo", "  9999 - 12 - 31   20 : 59 : 59 . 9999    America/Sao_Paulo  "},
 };
 
 BOOST_DATA_TEST_CASE(timestampTzConversion, data::make(TIMESTAMP_TZ_CASES), timestampTzCase)
@@ -265,10 +257,7 @@ BOOST_DATA_TEST_CASE(timestampTzConversion, data::make(TIMESTAMP_TZ_CASES), time
 
 	impl::CalendarConverter converter{CLIENT, &statusWrapper};
 
-	auto utcTimestamp = timestampTzCase.timestamp;
-	if (timestampTzCase.zone != "UTC")
-		utcTimestamp = utcTz->to_local(spTz->to_sys(timestampTzCase.timestamp));
-	const TimestampTz timestampTz{utcTimestamp, std::string{timestampTzCase.zone}};
+	const TimestampTz& timestampTz = timestampTzCase.timestampTz;
 	const std::string outputText{timestampTzCase.outputText};
 	const std::string inputText{timestampTzCase.inputText.value_or(outputText)};
 

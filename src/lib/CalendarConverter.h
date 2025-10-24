@@ -370,30 +370,29 @@ namespace fbcpp::impl
 		// FIXME: review
 		OpaqueTimestamp timestampToOpaqueTimestamp(const Timestamp& timestamp)
 		{
-			const auto date = timestampDate(timestamp);
+			const auto& date = timestamp.date;
 			if (!date.ok())
 				throwInvalidTimestampValue();
 
 			const auto opaqueDate = dateToOpaqueDate(date);
 
-			const auto timeOfDay = timestampTimeOfDay(timestamp);
+			const auto timeOfDay = timestamp.time.to_duration();
 			if (timeOfDay.count() < 0 || timeOfDay >= std::chrono::hours{24})
 				throwInvalidTimestampValue();
 
-			const std::chrono::hh_mm_ss timeBreakdown{timeOfDay};
-			if (timeBreakdown.is_negative())
+			if (timestamp.time.is_negative())
 				throwInvalidTimestampValue();
 
-			const auto subseconds = timeBreakdown.subseconds().count();
+			const auto subseconds = timestamp.time.subseconds().count();
 			if (subseconds % 100 != 0)
 				throwInvalidTimestampValue();
 
 			OpaqueTimestamp opaqueTimestamp;
 			opaqueTimestamp.value.timestamp_date = opaqueDate.value;
 			opaqueTimestamp.value.timestamp_time =
-				client.getUtil()->encodeTime(static_cast<unsigned>(timeBreakdown.hours().count()),
-					static_cast<unsigned>(timeBreakdown.minutes().count()),
-					static_cast<unsigned>(timeBreakdown.seconds().count()), static_cast<unsigned>(subseconds / 100));
+				client.getUtil()->encodeTime(static_cast<unsigned>(timestamp.time.hours().count()),
+					static_cast<unsigned>(timestamp.time.minutes().count()),
+					static_cast<unsigned>(timestamp.time.seconds().count()), static_cast<unsigned>(subseconds / 100));
 
 			return opaqueTimestamp;
 		}
@@ -421,7 +420,7 @@ namespace fbcpp::impl
 			if (!date.ok())
 				throwInvalidTimestampValue();
 
-			return std::chrono::local_days{date} + timeOfDay;
+			return Timestamp{date, Time{timeOfDay}};
 		}
 
 		Timestamp stringToTimestamp(std::string_view value)
@@ -489,7 +488,7 @@ namespace fbcpp::impl
 			if (timeOfDay >= std::chrono::hours{24})
 				throwInvalidTimestampValue();
 
-			return std::chrono::local_days{date} + timeOfDay;
+			return Timestamp{date, Time{timeOfDay}};
 		}
 
 		OpaqueTimestamp stringToOpaqueTimestamp(std::string_view value)
@@ -500,26 +499,15 @@ namespace fbcpp::impl
 		std::string opaqueTimestampToString(OpaqueTimestamp timestamp)
 		{
 			const auto converted = opaqueTimestampToTimestamp(timestamp);
-			const std::chrono::hh_mm_ss timeBreakdown{timestampTimeOfDay(converted)};
-			const auto subseconds = static_cast<unsigned>(timeBreakdown.subseconds().count() / 100);
+			const auto subseconds = static_cast<unsigned>(converted.time.subseconds().count() / 100);
 
-			const auto dateString = std::format("{:%Y-%m-%d}", std::chrono::local_days{timestampDate(converted)});
+			const auto dateString = std::format("{:%Y-%m-%d}", std::chrono::local_days{converted.date});
 			const auto timeString =
-				std::format("{:02}:{:02}:{:02}.{:04}", static_cast<unsigned>(timeBreakdown.hours().count()),
-					static_cast<unsigned>(timeBreakdown.minutes().count()),
-					static_cast<unsigned>(timeBreakdown.seconds().count()), subseconds);
+				std::format("{:02}:{:02}:{:02}.{:04}", static_cast<unsigned>(converted.time.hours().count()),
+					static_cast<unsigned>(converted.time.minutes().count()),
+					static_cast<unsigned>(converted.time.seconds().count()), subseconds);
 
 			return std::format("{} {}", dateString, timeString);
-		}
-
-		Date timestampDate(const Timestamp& timestamp)
-		{
-			return Date{std::chrono::floor<std::chrono::days>(timestamp)};
-		}
-
-		std::chrono::microseconds timestampTimeOfDay(const Timestamp& timestamp)
-		{
-			return timestamp - std::chrono::floor<std::chrono::days>(timestamp);
 		}
 
 		OpaqueTimestampTz timestampTzToOpaqueTimestampTz(const TimestampTz& timestampTz)
@@ -562,7 +550,8 @@ namespace fbcpp::impl
 				&minutes, &seconds, &subseconds, static_cast<unsigned>(sizeof(timeZoneBuffer)), timeZoneBuffer);
 
 			TimestampTz timestampTz;
-			timestampTz.utcTimestamp = BASE_EPOCH + std::chrono::microseconds{ticks};
+			const auto utcLocalTime = BASE_EPOCH + std::chrono::microseconds{ticks};
+			timestampTz.utcTimestamp = Timestamp::fromLocalTime(utcLocalTime);
 			timestampTz.zone = timeZoneBuffer;
 
 			if (decodedTimeZoneName)
@@ -659,7 +648,7 @@ namespace fbcpp::impl
 			if (timeOfDay >= std::chrono::hours{24})
 				throwInvalidTimestampValue();
 
-			const Timestamp localTimestamp = std::chrono::local_days{date} + timeOfDay;
+			const Timestamp localTimestamp{date, Time{timeOfDay}};
 
 			const auto monthValue = static_cast<unsigned>(date.month());
 			const auto dayValue = static_cast<unsigned>(date.day());
@@ -673,7 +662,7 @@ namespace fbcpp::impl
 			const OpaqueTimestamp utcOpaque{encoded.value.utc_timestamp};
 			const auto utcTimestamp = opaqueTimestampToTimestamp(utcOpaque);
 
-			const auto offsetDuration = localTimestamp - utcTimestamp;
+			const auto offsetDuration = localTimestamp.toLocalTime() - utcTimestamp.toLocalTime();
 			if (offsetDuration % std::chrono::minutes{1} != std::chrono::microseconds::zero())
 				throwInvalidTimestampValue();
 

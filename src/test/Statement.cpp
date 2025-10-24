@@ -614,13 +614,14 @@ BOOST_AUTO_TEST_CASE(timestampType)
 		"select timestamp '2024-02-29 13:14:15.1234', timestamp '2023-12-31 23:59:59' from rdb$database "
 		"where cast(? as timestamp) = timestamp '2024-02-29 13:14:15.1234'"};
 
-	const auto february29 =
-		std::chrono::local_days{Date{std::chrono::year{2024}, std::chrono::month{2}, std::chrono::day{29}}} +
-		std::chrono::hours{13} + std::chrono::minutes{14} + std::chrono::seconds{15} +
+	const auto february29Time = std::chrono::hours{13} + std::chrono::minutes{14} + std::chrono::seconds{15} +
 		std::chrono::microseconds{123400};
-	const auto december31 =
-		std::chrono::local_days{Date{std::chrono::year{2023}, std::chrono::month{12}, std::chrono::day{31}}} +
-		std::chrono::hours{23} + std::chrono::minutes{59} + std::chrono::seconds{59};
+	const Timestamp february29{Date{std::chrono::year{2024}, std::chrono::month{2}, std::chrono::day{29}},
+		Time{std::chrono::duration_cast<std::chrono::microseconds>(february29Time)}};
+	const auto december31Time =
+		std::chrono::hours{23} + std::chrono::minutes{59} + std::chrono::seconds{59} + std::chrono::microseconds{0};
+	const Timestamp december31{Date{std::chrono::year{2023}, std::chrono::month{12}, std::chrono::day{31}},
+		Time{std::chrono::duration_cast<std::chrono::microseconds>(december31Time)}};
 
 	statement.setTimestamp(0, february29);
 	BOOST_CHECK(statement.execute(transaction));
@@ -660,7 +661,7 @@ BOOST_AUTO_TEST_CASE(timestampTzType)
 			return value.utcTimestamp;
 
 		if (value.zone == "America/Sao_Paulo")
-			return value.utcTimestamp - std::chrono::hours{3};
+			return Timestamp::fromLocalTime(value.utcTimestamp.toLocalTime() - std::chrono::hours{3});
 
 		BOOST_FAIL("Unexpected time zone in test");
 		return value.utcTimestamp;
@@ -671,19 +672,23 @@ BOOST_AUTO_TEST_CASE(timestampTzType)
 			return TimestampTz{local, std::string{zone}};
 
 		if (zone == "America/Sao_Paulo")
-			return TimestampTz{local + std::chrono::hours{3}, std::string{zone}};
+		{
+			const auto utcLocal = local.toLocalTime() + std::chrono::hours{3};
+			return TimestampTz{Timestamp::fromLocalTime(utcLocal), std::string{zone}};
+		}
 
 		BOOST_FAIL("Unexpected time zone in test");
 		return TimestampTz{};
 	};
 
-	const Timestamp utcLocal =
-		std::chrono::local_days{Date{std::chrono::year{2024}, std::chrono::month{2}, std::chrono::day{29}}} +
-		std::chrono::hours{13} + std::chrono::minutes{14} + std::chrono::seconds{15} +
+	const auto utcLocalTime = std::chrono::hours{13} + std::chrono::minutes{14} + std::chrono::seconds{15} +
 		std::chrono::microseconds{123400};
-	const Timestamp saoPauloLocal =
-		std::chrono::local_days{Date{std::chrono::year{2023}, std::chrono::month{12}, std::chrono::day{31}}} +
-		std::chrono::hours{23} + std::chrono::minutes{59} + std::chrono::seconds{59};
+	const Timestamp utcLocal{Date{std::chrono::year{2024}, std::chrono::month{2}, std::chrono::day{29}},
+		Time{std::chrono::duration_cast<std::chrono::microseconds>(utcLocalTime)}};
+	const auto saoPauloLocalTime =
+		std::chrono::hours{23} + std::chrono::minutes{59} + std::chrono::seconds{59} + std::chrono::microseconds{0};
+	const Timestamp saoPauloLocal{Date{std::chrono::year{2023}, std::chrono::month{12}, std::chrono::day{31}},
+		Time{std::chrono::duration_cast<std::chrono::microseconds>(saoPauloLocalTime)}};
 	const auto utcTimestampTz = makeTimestampTz("UTC", utcLocal);
 	const auto saoPauloTimestampTz = makeTimestampTz("America/Sao_Paulo", saoPauloLocal);
 
@@ -2244,9 +2249,10 @@ BOOST_AUTO_TEST_CASE(opaqueTimestampType)
 
 	impl::CalendarConverter converter{CLIENT, &statusWrapper};
 
-	const auto date = std::chrono::year{2024} / std::chrono::month{2} / std::chrono::day{29};
-	const Timestamp timestamp = std::chrono::local_days{date} + std::chrono::hours{12} + std::chrono::minutes{34} +
-		std::chrono::seconds{56} + std::chrono::microseconds{789100};
+	const Date date{std::chrono::year{2024}, std::chrono::month{2}, std::chrono::day{29}};
+	const auto timeOfDay = std::chrono::hours{12} + std::chrono::minutes{34} + std::chrono::seconds{56} +
+		std::chrono::microseconds{789100};
+	const Timestamp timestamp{date, Time{std::chrono::duration_cast<std::chrono::microseconds>(timeOfDay)}};
 	const auto opaqueTimestamp = converter.timestampToOpaqueTimestamp(timestamp);
 	statement.setOpaqueTimestamp(0, opaqueTimestamp);
 	BOOST_CHECK(statement.execute(transaction));
@@ -2282,11 +2288,11 @@ BOOST_AUTO_TEST_CASE(opaqueTimestampTzType)
 
 	const auto fetchedOpaqueTimestampTz = statement.getOpaqueTimestampTz(0).value();
 	const auto roundTripTimestampTz = converter.opaqueTimestampTzToTimestampTz(fetchedOpaqueTimestampTz);
-	BOOST_CHECK(roundTripTimestampTz.utcTimestamp.time_since_epoch() == timestampTz.utcTimestamp.time_since_epoch());
+	BOOST_CHECK(roundTripTimestampTz.utcTimestamp.toLocalTime() == timestampTz.utcTimestamp.toLocalTime());
 	BOOST_CHECK_EQUAL(roundTripTimestampTz.zone, timestampTz.zone);
 
 	const auto fetchedTimestampTz = statement.getTimestampTz(0).value();
-	BOOST_CHECK(fetchedTimestampTz.utcTimestamp.time_since_epoch() == timestampTz.utcTimestamp.time_since_epoch());
+	BOOST_CHECK(fetchedTimestampTz.utcTimestamp.toLocalTime() == timestampTz.utcTimestamp.toLocalTime());
 	BOOST_CHECK_EQUAL(fetchedTimestampTz.zone, timestampTz.zone);
 	BOOST_CHECK_EQUAL(statement.getString(0).value(), "2024-02-29 12:34:56.7891 America/Sao_Paulo");
 

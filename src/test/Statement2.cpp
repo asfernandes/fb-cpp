@@ -350,10 +350,11 @@ BOOST_AUTO_TEST_CASE(parameterBindingAndGetters)
 
 		const Date dateValue{2024y / March / 15d};
 		const Time timeValue{13h + 14min + 15s + 123456us};
-		const Timestamp timestampValue{local_days{2024y / March / 15d} + 10h + 11min + 12s + 654321us};
+		const auto timestampDuration = 10h + 11min + 12s + 654321us;
+		const Timestamp timestampValue{Date{2024y / March / 15d}, Time{timestampDuration}};
 		const TimeTz timeTzValue{Time{7h + 8min + 9s + 111222us}, "UTC"};
-		const TimestampTz timestampTzValue{
-			Timestamp{local_days{2024y / March / 16d} + 5h + 6min + 7s + 333444us}, "UTC"};
+		const auto timestampTzDuration = 5h + 6min + 7s + 333444us;
+		const TimestampTz timestampTzValue{Timestamp{Date{2024y / March / 16d}, Time{timestampTzDuration}}, "UTC"};
 
 		const OpaqueDate opaqueDateValue = calendarConverter.dateToOpaqueDate(dateValue);
 		const OpaqueTime opaqueTimeValue = calendarConverter.timeToOpaqueTime(timeValue);
@@ -719,8 +720,8 @@ BOOST_AUTO_TEST_CASE(stringConversions)
 	BOOST_CHECK_EQUAL(selectStmt.getDate(3).value(), Date{2024y / April / 5d});
 	BOOST_CHECK_EQUAL(selectStmt.getString(3).value(), "2024-04-05");
 	BOOST_CHECK_EQUAL(selectStmt.getTime(4).value().to_duration(), Time{10h + 20min + 30s + 400000us}.to_duration());
-	BOOST_CHECK_EQUAL(
-		selectStmt.getTimestamp(5).value(), Timestamp{local_days{2024y / April / 5d} + 10h + 20min + 30s + 400000us});
+	const Timestamp expectedTimestamp{Date{2024y / April / 5d}, Time{10h + 20min + 30s + 400000us}};
+	BOOST_CHECK(selectStmt.getTimestamp(5).value() == expectedTimestamp);
 	BOOST_CHECK_EQUAL(selectStmt.getTimeTz(6).value().zone, "UTC");
 	BOOST_CHECK_EQUAL(selectStmt.getTimestampTz(7).value().zone, "UTC");
 }
