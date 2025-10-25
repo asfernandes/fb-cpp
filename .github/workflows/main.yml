@@ -79,7 +79,7 @@ jobs:
             vcpkg/downloads
             vcpkg/buildtrees
             vcpkg/packages
-            build/Release/vcpkg_installed
+            build/vcpkg_installed
           key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
           restore-keys: |
             ${{ runner.os }}-vcpkg-
