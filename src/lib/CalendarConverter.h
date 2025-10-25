@@ -517,12 +517,6 @@ namespace fbcpp::impl
 			client.getUtil()->encodeTimeStampTz(
 				statusWrapper, &opaque.value, 1u, 1u, 1u, 0u, 0u, 0u, 0u, timestampTz.zone.c_str());
 
-			/* FIXME:
-			const auto ticks = (timestampTz.utcTimestamp - BASE_EPOCH).count() / 100;
-
-			opaque.value.utc_timestamp.timestamp_date = static_cast<ISC_DATE>(ticks / TICKS_PER_DAY);
-			opaque.value.utc_timestamp.timestamp_time = static_cast<ISC_TIME>(ticks % TICKS_PER_DAY);
-			*/
 			const auto utcOpaque = timestampToOpaqueTimestamp(timestampTz.utcTimestamp);
 			opaque.value.utc_timestamp = utcOpaque.value;
 
@@ -666,7 +660,6 @@ namespace fbcpp::impl
 			if (offsetDuration % std::chrono::minutes{1} != std::chrono::microseconds::zero())
 				throwInvalidTimestampValue();
 
-			// FIXME:
 			std::string resolvedTimeZoneName;
 			opaqueTimestampTzToTimestampTz(encoded, &resolvedTimeZoneName);
 

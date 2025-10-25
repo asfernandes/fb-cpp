@@ -1039,7 +1039,6 @@ namespace fbcpp
 					message[descriptor.offset] = numericConverter.stringToBoolean(value);
 					break;
 
-				// FIXME: scale
 				case DescriptorAdjustedType::INT16:
 				case DescriptorAdjustedType::INT32:
 				case DescriptorAdjustedType::INT64:
@@ -1066,8 +1065,6 @@ namespace fbcpp
 					}
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-					// FIXME: try/rethrow when parsing
-					// FIXME: review
 					const auto parseDecimalToBoostInt128 = [this](std::string_view text)
 					{
 						bool isNegative = false;
@@ -1080,7 +1077,7 @@ namespace fbcpp
 						}
 
 						if (pos == text.size())
-							this->numericConverter.throwNumericOutOfRange();  // FIXME: conversion error
+							this->numericConverter.throwConversionErrorFromString(std::string{text});
 
 						BoostInt128 result{};
 
@@ -1089,7 +1086,7 @@ namespace fbcpp
 							const char c = text[pos];
 
 							if (c < '0' || c > '9')
-								this->numericConverter.throwNumericOutOfRange();  // FIXME: conversion error
+								this->numericConverter.throwConversionErrorFromString(std::string{text});
 
 							result *= 10;
 							result += static_cast<int>(c - '0');
@@ -1113,7 +1110,7 @@ namespace fbcpp
 					const auto convResult =
 						std::from_chars(strValue.data(), strValue.data() + strValue.size(), intValue);
 					if (convResult.ec != std::errc{} || convResult.ptr != strValue.data() + strValue.size())
-						numericConverter.throwNumericOutOfRange();  // FIXME: conversion error
+						numericConverter.throwConversionErrorFromString(strValue);
 					auto scaledValue = ScaledInt64{intValue, scale};
 
 					if (scale != descriptor.scale)
@@ -1134,7 +1131,7 @@ namespace fbcpp
 					double doubleValue;
 					const auto convResult = std::from_chars(value.data(), value.data() + value.size(), doubleValue);
 					if (convResult.ec != std::errc{} || convResult.ptr != value.data() + value.size())
-						numericConverter.throwNumericOutOfRange();  // FIXME: conversion error
+						numericConverter.throwConversionErrorFromString(std::string{value});
 					setDouble(index, doubleValue);
 					return;
 				}
@@ -1166,8 +1163,14 @@ namespace fbcpp
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 				case DescriptorAdjustedType::DECFLOAT16:
 				case DescriptorAdjustedType::DECFLOAT34:
-					// FIXME: try/rethrow when parsing
-					setBoostDecFloat34(index, BoostDecFloat34{value});
+					try
+					{
+						setBoostDecFloat34(index, BoostDecFloat34{value});
+					}
+					catch (...)
+					{
+						numericConverter.throwConversionErrorFromString(std::string{value});
+					}
 					return;
 #endif
 
@@ -2092,7 +2095,6 @@ namespace fbcpp
 			return outDescriptors[index];
 		}
 
-		// FIXME: typeName unneeded or incorrect?
 		///
 		/// @brief Converts and writes numeric parameter values following descriptor rules.
 		///
@@ -2237,7 +2239,7 @@ namespace fbcpp
 		T convertNumber(
 			const Descriptor& descriptor, const std::byte* data, std::optional<int>& toScale, const char* toTypeName)
 		{
-			if (!toScale.has_value())  // FIXME: ?
+			if (!toScale.has_value())
 			{
 				switch (descriptor.adjustedType)
 				{

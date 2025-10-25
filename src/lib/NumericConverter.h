@@ -163,6 +163,17 @@ namespace fbcpp::impl
 			throw DatabaseException(client, STATUS_NUMERIC_OUT_OF_RANGE);
 		}
 
+		[[noreturn]] void throwConversionErrorFromString(const std::string& str)
+		{
+			const std::intptr_t STATUS_CONVERSION_ERROR_FROM_STRING[] = {
+				isc_convert_error,
+				reinterpret_cast<std::intptr_t>(str.c_str()),
+				isc_arg_end,
+			};
+
+			throw DatabaseException(client, STATUS_CONVERSION_ERROR_FROM_STRING);
+		}
+
 	public:
 		template <IntegralNumber To, IntegralNumber From>
 		To numberToNumber(const ScaledNumber<From>& from, int toScale)
@@ -426,17 +437,6 @@ namespace fbcpp::impl
 		}
 
 	private:
-		[[noreturn]] void throwConversionErrorFromString(const std::string& str)
-		{
-			const std::intptr_t STATUS_CONVERSION_ERROR_FROM_STRING[] = {
-				isc_convert_error,
-				reinterpret_cast<std::intptr_t>(str.c_str()),
-				isc_arg_end,
-			};
-
-			throw DatabaseException(client, STATUS_CONVERSION_ERROR_FROM_STRING);
-		}
-
 		double powerOfTen(int scale) noexcept  // FIXME: only for double?
 		{
 			/* FIXME:
