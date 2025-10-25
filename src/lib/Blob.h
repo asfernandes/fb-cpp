@@ -30,6 +30,8 @@
 #include "Exception.h"
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
+#include <optional>
 #include <span>
 #include <utility>
 #include <vector>
@@ -60,6 +62,24 @@ namespace fbcpp
 		/// Stores the raw Firebird blob identifier value.
 		///
 		ISC_QUAD id{0, 0};
+	};
+
+	///
+	/// Blob storage options.
+	///
+	enum class BlobStorage : std::uint8_t
+	{
+		MAIN = isc_bpb_storage_main,
+		TEMPORARY = isc_bpb_storage_temp
+	};
+
+	///
+	/// Blob type.
+	///
+	enum class BlobType : std::uint8_t
+	{
+		SEGMENTED = isc_bpb_type_segmented,
+		STREAM = isc_bpb_type_stream
 	};
 
 	///
@@ -95,8 +115,116 @@ namespace fbcpp
 			return *this;
 		}
 
+		///
+		/// Retrieves the blob type to be used for blob operations.
+		///
+		const std::optional<BlobType> getType() const
+		{
+			return type;
+		}
+
+		///
+		/// Sets the blob type to be used for blob operations.
+		///
+		BlobOptions& setType(BlobType value)
+		{
+			type = value;
+			return *this;
+		}
+
+		///
+		/// Retrieves the source blob subtype.
+		///
+		const std::optional<BlobType> getSourceType() const
+		{
+			return sourceType;
+		}
+
+		///
+		/// Sets the source blob subtype.
+		///
+		BlobOptions& setSourceType(BlobType value)
+		{
+			sourceType = value;
+			return *this;
+		}
+
+		///
+		/// Retrieves the target blob subtype.
+		///
+		const std::optional<BlobType> getTargetType() const
+		{
+			return targetType;
+		}
+
+		///
+		/// Sets the target blob subtype.
+		///
+		BlobOptions& setTargetType(BlobType value)
+		{
+			targetType = value;
+			return *this;
+		}
+
+		///
+		/// Retrieves the source character set identifier.
+		///
+		const std::optional<std::int16_t> getSourceCharSet() const
+		{
+			return sourceCharSet;
+		}
+
+		///
+		/// Sets the source character set identifier.
+		///
+		BlobOptions& setSourceCharSet(std::int16_t value)
+		{
+			sourceCharSet = value;
+			return *this;
+		}
+
+		///
+		/// Retrieves the target character set identifier.
+		///
+		const std::optional<std::int16_t> getTargetCharSet() const
+		{
+			return targetCharSet;
+		}
+
+		///
+		/// Sets the target character set identifier.
+		///
+		BlobOptions& setTargetCharSet(std::int16_t value)
+		{
+			targetCharSet = value;
+			return *this;
+		}
+
+		///
+		/// Retrieves the blob storage mode.
+		///
+		const std::optional<BlobStorage> getStorage() const
+		{
+			return storage;
+		}
+
+		///
+		/// Sets the blob storage mode.
+		///
+		BlobOptions& setStorage(BlobStorage value)
+		{
+			storage = value;
+			return *this;
+		}
+
 	private:
 		std::vector<std::byte> bpb;
+		std::optional<BlobType> type;
+		std::optional<BlobType> sourceType;
+		std::optional<BlobType> targetType;
+		std::optional<std::int16_t> sourceCharSet;
+		std::optional<std::int16_t> targetCharSet;
+		std::optional<BlobStorage> storage;
 	};
 
 	///
@@ -235,6 +363,9 @@ namespace fbcpp
 		/// Closes the blob and finalizes any pending changes.
 		///
 		void close();
+
+	private:
+		std::vector<std::uint8_t> prepareBpb(const BlobOptions& options);
 
 	private:
 		Attachment& attachment;

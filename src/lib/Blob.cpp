@@ -27,27 +27,13 @@
 #include "Client.h"
 #include "Transaction.h"
 #include "fb-api/firebird/impl/inf_pub.h"
+#include <cstdint>
+#include <cstring>
 #include <limits>
+#include <vector>
 
 using namespace fbcpp;
 using namespace fbcpp::impl;
-
-namespace
-{
-	std::pair<unsigned, const unsigned char*> getBpb(const BlobOptions& options)
-	{
-		const auto& bpb = options.getBpb();
-
-		if (bpb.size() > std::numeric_limits<unsigned>::max())
-			throw FbCppException("BPB too large");
-
-		const auto length = static_cast<unsigned>(bpb.size());
-		const auto data = bpb.empty() ? nullptr : reinterpret_cast<const unsigned char*>(bpb.data());
-
-		return {length, data};
-	}
-}  // namespace
-
 
 Blob::Blob(Attachment& attachment, Transaction& transaction, const BlobOptions& options)
 	: attachment{attachment},
@@ -58,10 +44,10 @@ Blob::Blob(Attachment& attachment, Transaction& transaction, const BlobOptions& 
 	assert(attachment.isValid());
 	assert(transaction.isValid());
 
-	const auto [bpbLength, bpbData] = getBpb(options);
+	const auto preparedBpb = prepareBpb(options);
 
-	handle.reset(
-		attachment.getHandle()->createBlob(&statusWrapper, transaction.getHandle().get(), &id.id, bpbLength, bpbData));
+	handle.reset(attachment.getHandle()->createBlob(&statusWrapper, transaction.getHandle().get(), &id.id,
+		static_cast<unsigned>(preparedBpb.size()), preparedBpb.data()));
 }
 
 Blob::Blob(Attachment& attachment, Transaction& transaction, const BlobId& blobId, const BlobOptions& options)
@@ -74,18 +60,55 @@ Blob::Blob(Attachment& attachment, Transaction& transaction, const BlobId& blobI
 	assert(attachment.isValid());
 	assert(transaction.isValid());
 
-	const auto [bpbLength, bpbData] = getBpb(options);
+	const auto preparedBpb = prepareBpb(options);
 
-	handle.reset(
-		attachment.getHandle()->openBlob(&statusWrapper, transaction.getHandle().get(), &id.id, bpbLength, bpbData));
+	handle.reset(attachment.getHandle()->openBlob(&statusWrapper, transaction.getHandle().get(), &id.id,
+		static_cast<unsigned>(preparedBpb.size()), preparedBpb.data()));
+}
+
+std::vector<std::uint8_t> Blob::prepareBpb(const BlobOptions& options)
+{
+	const auto util = attachment.getClient().getUtil();
+
+	auto builder = fbUnique(util->getXpbBuilder(&statusWrapper, fb::IXpbBuilder::BPB,
+		reinterpret_cast<const std::uint8_t*>(options.getBpb().data()),
+		static_cast<unsigned>(options.getBpb().size())));
+
+	if (const auto type = options.getType(); type.has_value())
+		builder->insertInt(&statusWrapper, isc_bpb_type, static_cast<int>(type.value()));
+
+	if (const auto sourceType = options.getSourceType(); sourceType.has_value())
+		builder->insertInt(&statusWrapper, isc_bpb_source_type, static_cast<int>(sourceType.value()));
+
+	if (const auto targetType = options.getTargetType(); targetType.has_value())
+		builder->insertInt(&statusWrapper, isc_bpb_target_type, static_cast<int>(targetType.value()));
+
+	if (const auto sourceCharSet = options.getSourceCharSet(); sourceCharSet.has_value())
+		builder->insertInt(&statusWrapper, isc_bpb_source_interp, static_cast<int>(sourceCharSet.value()));
+
+	if (const auto targetCharSet = options.getTargetCharSet(); targetCharSet.has_value())
+		builder->insertInt(&statusWrapper, isc_bpb_target_interp, static_cast<int>(targetCharSet.value()));
+
+	if (const auto storage = options.getStorage(); storage.has_value())
+		builder->insertInt(&statusWrapper, isc_bpb_storage, static_cast<int>(storage.value()));
+
+	const auto buffer = builder->getBuffer(&statusWrapper);
+	const auto length = builder->getBufferLength(&statusWrapper);
+
+	std::vector<std::uint8_t> bpb(length);
+
+	if (length != 0)
+		std::memcpy(bpb.data(), buffer, length);
+
+	return bpb;
 }
 
 unsigned Blob::getLength()
 {
 	assert(isValid());
 
-	const unsigned char items[] = {isc_info_blob_total_length};
-	unsigned char buffer[16]{};
+	const std::uint8_t items[] = {isc_info_blob_total_length};
+	std::uint8_t buffer[16]{};
 
 	handle->getInfo(&statusWrapper, sizeof(items), items, sizeof(buffer), buffer);
 

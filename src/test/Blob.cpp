@@ -34,17 +34,6 @@
 #include <vector>
 
 
-static BlobOptions makeStreamOptions()
-{
-	return BlobOptions().setBpb({
-		std::byte{isc_bpb_version1},
-		std::byte{isc_bpb_type},
-		std::byte{1},
-		std::byte{isc_bpb_type_stream},
-	});
-}
-
-
 BOOST_AUTO_TEST_SUITE(BlobSuite)
 
 BOOST_AUTO_TEST_CASE(readWriteMultiSegment)
@@ -62,7 +51,7 @@ BOOST_AUTO_TEST_CASE(readWriteMultiSegment)
 		transaction.commit();
 	}
 
-	const auto streamOptions = makeStreamOptions();
+	const auto streamOptions = BlobOptions().setType(BlobType::STREAM);
 
 	const auto multiSegmentSize =
 		static_cast<std::size_t>(std::numeric_limits<std::uint16_t>::max()) + std::size_t{1024};
@@ -146,8 +135,7 @@ BOOST_AUTO_TEST_CASE(createWriteRead)
 	const std::string text = "Firebird blob support!";
 	const auto firstPartSize = text.size() / 2;
 
-	// FIXME: Add to BlobOptions
-	const auto streamOptions = makeStreamOptions();
+	const auto streamOptions = BlobOptions().setType(BlobType::STREAM);
 
 	BlobId blobId;
 
