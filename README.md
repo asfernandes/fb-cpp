@@ -3,6 +3,7 @@
 A modern C++ wrapper for the Firebird database API.
 
 [Documentation](https://asfernandes.github.io/fb-cpp)
+[Repository](https://github.com/asfernandes/fb-cpp)
 
 ## Overview
 
