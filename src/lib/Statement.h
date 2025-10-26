@@ -37,6 +37,8 @@
 #include "SmartPtrs.h"
 #include "Exception.h"
 #include <charconv>
+#include <cerrno>
+#include <cstdlib>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -1129,9 +1131,18 @@ namespace fbcpp
 				case DescriptorAdjustedType::DOUBLE:
 				{
 					double doubleValue;
+#if defined(__APPLE__)
+					errno = 0;
+					std::string valueString{value};
+					char* parseEnd = nullptr;
+					doubleValue = std::strtod(valueString.c_str(), &parseEnd);
+					if (parseEnd != valueString.c_str() + valueString.size() || errno == ERANGE)
+						numericConverter.throwConversionErrorFromString(std::move(valueString));
+#else
 					const auto convResult = std::from_chars(value.data(), value.data() + value.size(), doubleValue);
 					if (convResult.ec != std::errc{} || convResult.ptr != value.data() + value.size())
 						numericConverter.throwConversionErrorFromString(std::string{value});
+#endif
 					setDouble(index, doubleValue);
 					return;
 				}
