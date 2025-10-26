@@ -117,9 +117,9 @@ namespace fbcpp
 	///
 	struct Timestamp final
 	{
-		bool operator==(const Timestamp& other) const noexcept
+		bool operator==(const Timestamp& o) const noexcept
 		{
-			return date == other.date && time.to_duration() == other.time.to_duration();
+			return date == o.date && time.to_duration() == o.time.to_duration();
 		}
 
 		///
@@ -160,9 +160,9 @@ namespace fbcpp
 	///
 	struct TimeTz final
 	{
-		bool operator==(const TimeTz& other) const noexcept
+		bool operator==(const TimeTz& o) const noexcept
 		{
-			return utcTime.to_duration() == other.utcTime.to_duration() && zone == other.zone;
+			return utcTime.to_duration() == o.utcTime.to_duration() && zone == o.zone;
 		}
 
 		///
@@ -245,10 +245,9 @@ namespace fbcpp
 	///
 	struct alignas(alignof(ISC_TIMESTAMP)) OpaqueTimestamp final
 	{
-		bool operator==(const OpaqueTimestamp& other) const noexcept
+		bool operator==(const OpaqueTimestamp& o) const noexcept
 		{
-			return value.timestamp_date == other.value.timestamp_date &&
-				value.timestamp_time == other.value.timestamp_time;
+			return value.timestamp_date == o.value.timestamp_date && value.timestamp_time == o.value.timestamp_time;
 		}
 
 		///
@@ -262,7 +261,10 @@ namespace fbcpp
 	///
 	struct alignas(alignof(ISC_TIME_TZ)) OpaqueTimeTz final
 	{
-		bool operator==(const OpaqueTimeTz&) const noexcept = default;
+		bool operator==(const OpaqueTimeTz& o) const noexcept
+		{
+			return value.utc_time == o.value.utc_time && value.time_zone == o.value.time_zone;
+		}
 
 		///
 		/// Raw Firebird time-with-time-zone representation.
@@ -275,7 +277,12 @@ namespace fbcpp
 	///
 	struct alignas(alignof(ISC_TIMESTAMP_TZ)) OpaqueTimestampTz final
 	{
-		bool operator==(const OpaqueTimestampTz&) const noexcept = default;
+		bool operator==(const OpaqueTimestampTz& o) const noexcept
+		{
+			return value.utc_timestamp.timestamp_date == o.value.utc_timestamp.timestamp_date &&
+				value.utc_timestamp.timestamp_time == o.value.utc_timestamp.timestamp_time &&
+				value.time_zone == o.value.time_zone;
+		}
 
 		///
 		/// Raw Firebird timestamp-with-time-zone representation.

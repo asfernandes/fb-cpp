@@ -134,8 +134,6 @@ namespace fbcpp::impl
 
 		OpaqueTime timeToOpaqueTime(const Time& time)
 		{
-			const auto duration = time.to_duration();
-
 			const auto hours = static_cast<unsigned>(time.hours().count());
 			const auto minutes = static_cast<unsigned>(time.minutes().count());
 			const auto seconds = static_cast<unsigned>(time.seconds().count());
