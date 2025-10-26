@@ -91,7 +91,7 @@ namespace fbcpp
 		///
 		/// Retrieves the blob parameter block (BPB) used during blob operations.
 		///
-		const std::vector<std::byte>& getBpb() const noexcept
+		const std::vector<std::uint8_t>& getBpb() const noexcept
 		{
 			return bpb;
 		}
@@ -99,17 +99,16 @@ namespace fbcpp
 		///
 		/// Sets the blob parameter block (BPB) using a copy of the provided value.
 		///
-		BlobOptions& setBpb(const std::vector<std::byte>& value)
+		BlobOptions& setBpb(const std::vector<std::uint8_t>& value)
 		{
 			bpb = value;
 			return *this;
 		}
 
-		// FIXME: review all usages of std::byte
 		///
 		/// Sets the blob parameter block (BPB) by moving the provided value.
 		///
-		BlobOptions& setBpb(std::vector<std::byte>&& value)
+		BlobOptions& setBpb(std::vector<std::uint8_t>&& value)
 		{
 			bpb = std::move(value);
 			return *this;
@@ -218,7 +217,7 @@ namespace fbcpp
 		}
 
 	private:
-		std::vector<std::byte> bpb;
+		std::vector<std::uint8_t> bpb;
 		std::optional<BlobType> type;
 		std::optional<BlobType> sourceType;
 		std::optional<BlobType> targetType;

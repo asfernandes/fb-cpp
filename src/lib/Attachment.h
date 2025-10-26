@@ -119,7 +119,7 @@ namespace fbcpp
 		///
 		/// Returns the DPB (Database Parameter Block) which will be used to connect to the database.
 		///
-		const std::vector<std::byte>& getDpb() const
+		const std::vector<std::uint8_t>& getDpb() const
 		{
 			return dpb;
 		}
@@ -127,7 +127,7 @@ namespace fbcpp
 		///
 		/// Sets the DPB (Database Parameter Block) which will be used to connect to the database.
 		///
-		AttachmentOptions& setDpb(const std::vector<std::byte>& value)
+		AttachmentOptions& setDpb(const std::vector<std::uint8_t>& value)
 		{
 			dpb = value;
 			return *this;
@@ -136,7 +136,7 @@ namespace fbcpp
 		///
 		/// Sets the DPB (Database Parameter Block) which will be used to connect to the database.
 		///
-		AttachmentOptions& setDpb(std::vector<std::byte>&& value)
+		AttachmentOptions& setDpb(std::vector<std::uint8_t>&& value)
 		{
 			dpb = std::move(value);
 			return *this;
@@ -164,7 +164,7 @@ namespace fbcpp
 		std::optional<std::string> userName;
 		std::optional<std::string> password;
 		std::optional<std::string> role;
-		std::vector<std::byte> dpb;
+		std::vector<std::uint8_t> dpb;
 		bool createDatabase = false;
 	};
 

@@ -90,7 +90,7 @@ namespace fbcpp
 		/// Returns the TPB (Transaction Parameter Block) which will be used to start
 		/// the transaction.
 		///
-		const std::vector<std::byte>& getTpb() const
+		const std::vector<std::uint8_t>& getTpb() const
 		{
 			return tpb;
 		}
@@ -99,7 +99,7 @@ namespace fbcpp
 		/// Sets the TPB (Transaction Parameter Block) which will be used to start the
 		/// transaction.
 		///
-		TransactionOptions& setTpb(const std::vector<std::byte>& value)
+		TransactionOptions& setTpb(const std::vector<std::uint8_t>& value)
 		{
 			tpb = value;
 			return *this;
@@ -109,7 +109,7 @@ namespace fbcpp
 		/// Sets the TPB (Transaction Parameter Block) which will be used to start the
 		/// transaction.
 		///
-		TransactionOptions& setTpb(std::vector<std::byte>&& value)
+		TransactionOptions& setTpb(std::vector<std::uint8_t>&& value)
 		{
 			tpb = std::move(value);
 			return *this;
@@ -254,7 +254,7 @@ namespace fbcpp
 		}
 
 	private:
-		std::vector<std::byte> tpb;
+		std::vector<std::uint8_t> tpb;
 		std::optional<TransactionIsolationLevel> isolationLevel;
 		std::optional<TransactionReadCommittedMode> readCommittedMode;
 		std::optional<TransactionAccessMode> accessMode;
