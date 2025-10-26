@@ -30,6 +30,7 @@
 #include "Client.h"
 #include "Exception.h"
 #include "types.h"
+#include <array>
 #include <charconv>
 #include <chrono>
 #include <cstdlib>
@@ -268,14 +269,14 @@ namespace fbcpp::impl
 			unsigned minutes;
 			unsigned seconds;
 			unsigned fractions;
-			char timeZoneBuffer[128] = {'\0'};
+			std::array<char, 128> timeZoneBuffer;
 
 			client.getUtil()->decodeTimeTz(statusWrapper, &opaqueTime.value, &hours, &minutes, &seconds, &fractions,
-				static_cast<unsigned>(sizeof(timeZoneBuffer)), timeZoneBuffer);
+				static_cast<unsigned>(timeZoneBuffer.size()), timeZoneBuffer.data());
 
 			TimeTz timeTz;
 			timeTz.utcTime = Time{std::chrono::microseconds{ticks}};
-			timeTz.zone = timeZoneBuffer;
+			timeTz.zone = timeZoneBuffer.data();
 
 			if (decodedTimeZoneName)
 				*decodedTimeZoneName = timeTz.zone;
@@ -294,12 +295,12 @@ namespace fbcpp::impl
 			unsigned minutes;
 			unsigned seconds;
 			unsigned fractions;
-			char timeZoneBuffer[128] = {'\0'};
+			std::array<char, 128> timeZoneBuffer;
 
 			client.getUtil()->decodeTimeTz(statusWrapper, &time.value, &hours, &minutes, &seconds, &fractions,
-				static_cast<unsigned>(sizeof(timeZoneBuffer)), timeZoneBuffer);
+				static_cast<unsigned>(timeZoneBuffer.size()), timeZoneBuffer.data());
 
-			return std::format("{:02}:{:02}:{:02}.{:04} {}", hours, minutes, seconds, fractions, timeZoneBuffer);
+			return std::format("{:02}:{:02}:{:02}.{:04} {}", hours, minutes, seconds, fractions, timeZoneBuffer.data());
 		}
 
 		TimeTz stringToTimeTz(std::string_view value)
@@ -538,15 +539,15 @@ namespace fbcpp::impl
 			unsigned minutes;
 			unsigned seconds;
 			unsigned subseconds;
-			char timeZoneBuffer[128] = {'\0'};
+			std::array<char, 128> timeZoneBuffer;
 
 			client.getUtil()->decodeTimeStampTz(statusWrapper, &opaqueTimestamp.value, &year, &month, &day, &hours,
-				&minutes, &seconds, &subseconds, static_cast<unsigned>(sizeof(timeZoneBuffer)), timeZoneBuffer);
+				&minutes, &seconds, &subseconds, static_cast<unsigned>(timeZoneBuffer.size()), timeZoneBuffer.data());
 
 			TimestampTz timestampTz;
 			const auto utcLocalTime = BASE_EPOCH + std::chrono::microseconds{ticks};
 			timestampTz.utcTimestamp = Timestamp::fromLocalTime(utcLocalTime);
-			timestampTz.zone = timeZoneBuffer;
+			timestampTz.zone = timeZoneBuffer.data();
 
 			if (decodedTimeZoneName)
 				*decodedTimeZoneName = timestampTz.zone;
@@ -568,13 +569,13 @@ namespace fbcpp::impl
 			unsigned minutes;
 			unsigned seconds;
 			unsigned subseconds;
-			char timeZoneBuffer[128] = {'\0'};
+			std::array<char, 128> timeZoneBuffer;
 
 			client.getUtil()->decodeTimeStampTz(statusWrapper, &timestamp.value, &year, &month, &day, &hours, &minutes,
-				&seconds, &subseconds, static_cast<unsigned>(sizeof(timeZoneBuffer)), timeZoneBuffer);
+				&seconds, &subseconds, static_cast<unsigned>(timeZoneBuffer.size()), timeZoneBuffer.data());
 
 			return std::format("{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:04} {}", year, month, day, hours, minutes,
-				seconds, subseconds, timeZoneBuffer);
+				seconds, subseconds, timeZoneBuffer.data());
 		}
 
 		TimestampTz stringToTimestampTz(std::string_view value)
