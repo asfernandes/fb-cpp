@@ -284,7 +284,7 @@ namespace fbcpp::impl
 			auto unsignedValue = isMinLimit ? static_cast<UnsignedType>(-(from.value + 1)) + 1
 											: static_cast<UnsignedType>(isNegative ? -from.value : from.value);
 
-			unsigned digitCount = 0u;
+			int digitCount = 0;
 
 			do
 			{
@@ -299,10 +299,10 @@ namespace fbcpp::impl
 
 			if (from.scale >= 0)
 			{
-				for (unsigned i = digitCount; i > 0u; --i)
-					result += buffer[i - 1u];
+				for (int i = digitCount - 1; i >= 0; --i)
+					result += buffer[i];
 
-				result.append(from.scale, '0');
+				result.append(static_cast<std::string::size_type>(from.scale), '0');
 			}
 			else
 			{
@@ -312,7 +312,7 @@ namespace fbcpp::impl
 				{
 					result += "0.";
 					const int leadingZeros = decimalPlaces - digitCount;
-					result.append(leadingZeros, '0');
+					result.append(static_cast<std::string::size_type>(leadingZeros), '0');
 
 					for (int i = digitCount - 1; i >= 0; --i)
 						result += buffer[i];
