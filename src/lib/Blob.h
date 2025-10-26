@@ -334,9 +334,25 @@ namespace fbcpp
 		unsigned read(std::span<std::byte> buffer);
 
 		///
+		/// Reads data from the blob into the provided buffer.
+		///
+		unsigned read(std::span<char> buffer)
+		{
+			return read(std::as_writable_bytes(buffer));
+		}
+
+		///
 		/// Reads a single segment from the blob into the provided buffer.
 		///
 		unsigned readSegment(std::span<std::byte> buffer);
+
+		///
+		/// Reads a single segment from the blob into the provided buffer.
+		///
+		unsigned readSegment(std::span<char> buffer)
+		{
+			return readSegment(std::as_writable_bytes(buffer));
+		}
 
 		///
 		/// Writes data from the buffer into the blob.
@@ -344,9 +360,25 @@ namespace fbcpp
 		void write(std::span<const std::byte> buffer);
 
 		///
+		/// Writes data from the buffer into the blob.
+		///
+		void write(std::span<const char> buffer)
+		{
+			write(std::as_bytes(buffer));
+		}
+
+		///
 		/// Writes a single segment from the buffer into the blob.
 		///
 		void writeSegment(std::span<const std::byte> buffer);
+
+		///
+		/// Writes a single segment from the buffer into the blob.
+		///
+		void writeSegment(std::span<const char> buffer)
+		{
+			writeSegment(std::as_bytes(buffer));
+		}
 
 		///
 		/// Repositions the blob read/write cursor.
