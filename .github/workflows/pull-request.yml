@@ -6,6 +6,24 @@ on:
       - main
 
 jobs:
+  clang-format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+
+      - name: Check clang-format
+        run: |
+          ./check-format.sh
+
   build-linux:
     runs-on: ubuntu-latest
     steps:
