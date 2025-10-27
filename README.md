@@ -93,3 +93,12 @@ The complete API documentation is available in the build `doc/docs/` directory a
 ## License
 
 MIT License - see LICENSE.md for details.
+
+# Donation
+
+If this project help you reduce time to develop, you can show your appreciation with a donation.
+
+- GitHub Sponsor: https://github.com/sponsors/asfernandes
+- Pix (Brazil): 278dd4e5-8226-494d-93a9-f3fb8a027a99
+- BTC: 1Q1W3tLD1xbk81kTeFqobiyrEXcKN1GfHG
+- [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=DLH4FB4NJL8NS)
