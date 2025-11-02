@@ -47,19 +47,20 @@ statement.set(0, 42);
 */
 
 // Execute and get results
-statement.execute(transaction);
-
-// Process results...
-do
+if (statement.execute(transaction))
 {
-    const std::optional<std::int32_t> id = statement.getInt32(0);
-    const std::optional<std::string> name = statement.getString(1);
+    // Process results...
+    do
+    {
+        const std::optional<std::int32_t> id = statement.getInt32(0);
+        const std::optional<std::string> name = statement.getString(1);
 
-    /* Or
-    const auto id = statement.get<std::int32_t>(0);
-    const auto name = statement.get<std::string>(1);
-    */
-} while (statement.fetchNext());
+        /* Or
+        const auto id = statement.get<std::int32_t>(0);
+        const auto name = statement.get<std::string>(1);
+        */
+    } while (statement.fetchNext());
+}
 
 // Commit transaction
 transaction.commit();

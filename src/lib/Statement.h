@@ -340,7 +340,7 @@ namespace fbcpp
 		///
 		/// @brief Executes a prepared statement using the supplied transaction.
 		/// @param transaction Transaction that will own the execution context.
-		/// @return `true` when execution yields a result set that can be fetched.
+		/// @return `true` when execution yields a record.
 		///
 		bool execute(Transaction& transaction);
 
