@@ -40,12 +40,13 @@ namespace fbcpp::test
 
 	namespace
 	{
-		class TempDir
+		fs::path tempDir;
+
+		struct GlobalFixture
 		{
-		public:
-			explicit TempDir()
+			GlobalFixture()
 			{
-				fs::path tempPath = fs::temp_directory_path();
+				fs::path prefix = fs::temp_directory_path();
 
 				auto now = std::chrono::system_clock::now();
 				auto time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
@@ -53,38 +54,26 @@ namespace fbcpp::test
 				std::ostringstream oss;
 				oss << "fbcpp-test-" << time;
 
-				path = tempPath / oss.str();
+				tempDir = prefix / oss.str();
 
-				fs::create_directory(path);
+				fs::create_directory(tempDir);
 			}
 
-			~TempDir()
+			~GlobalFixture()
 			{
 				std::error_code ec;
-				fs::remove(path, ec);
-			}
+				fs::remove(tempDir, ec);
 
-		public:
-			auto get() const
-			{
-				return path;
-			}
-
-		private:
-			fs::path path;
-		} tempDir;
-
-		struct ClientCleanup final
-		{
-			~ClientCleanup()
-			{
 				CLIENT.shutdown();
 			}
-		} clientCleanup;
+		};
 	}  // namespace
 
 	std::string getTempFile(const std::string_view name)
 	{
-		return (tempDir.get() / name).string();
+		return (tempDir / name).string();
 	}
 }  // namespace fbcpp::test
+
+
+BOOST_GLOBAL_FIXTURE(GlobalFixture);
