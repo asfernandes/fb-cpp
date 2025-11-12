@@ -271,10 +271,17 @@ void EventListener::handleEvent(unsigned length, const std::uint8_t* events)
 		return;
 	}
 
-	std::lock_guard mutexGuard{mutex};
+	FbRef<fb::IEvents> previousHandle;
 
-	if (listening)
-		eventsHandle = std::move(newHandle);
+	{
+		std::lock_guard mutexGuard{mutex};
+
+		if (listening)
+		{
+			previousHandle = std::move(eventsHandle);
+			eventsHandle = std::move(newHandle);
+		}
+	}
 }
 
 void EventListener::dispatchLoop()
