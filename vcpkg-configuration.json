@@ -1,2 +1,15 @@
 {
+  "default-registry": {
+    "kind": "git",
+    "repository": "https://github.com/microsoft/vcpkg",
+    "baseline": "8fbf295ab5283313932f65a597a2c1f09a73fafd"
+  },
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://github.com/asfernandes/firebird-vcpkg-registry.git",
+      "baseline": "8c7aa9cb6e88265d0702497ec9699ab97593a0d3",
+      "packages": [ "firebird" ]
+    }
+  ]
 }
