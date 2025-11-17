@@ -5,7 +5,8 @@
     "boost-dll",
     "boost-multiprecision",
     "boost-test",
-    "firebird"
+    "firebird",
+    "icu"
   ],
   "overrides": [
     {
@@ -23,6 +24,10 @@
     {
       "name": "firebird",
       "version": "5.0.3"
+    },
+    {
+      "name": "icu",
+      "version": "78.1"
     }
   ],
   "builtin-baseline": "8fbf295ab5283313932f65a597a2c1f09a73fafd"
