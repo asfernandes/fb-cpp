@@ -36,7 +36,8 @@ namespace fs = std::filesystem;
 
 namespace fbcpp::test
 {
-	Client CLIENT{"fbclient"};
+	// Client CLIENT{"fbclient"};
+	Client CLIENT{fb::fb_get_master_interface()};
 
 	namespace
 	{
