@@ -49,6 +49,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
+              autoconf \
+              autoconf-archive \
+              automake \
+              libtool \
+              libtool-bin \
               doxygen \
               graphviz \
               ninja-build \
@@ -64,11 +69,10 @@ jobs:
 
       - name: Configure Firebird
         run: |
-          {
-            echo "FIREBIRD=/opt/firebird"
-            echo "FIREBIRD_LOCK=${RUNNER_TEMP}"
-            echo "LD_LIBRARY_PATH=/opt/firebird/lib:${LD_LIBRARY_PATH}"
-          } >> "$GITHUB_ENV"
+          sudo systemctl stop firebird
+          echo "alter user SYSDBA password 'masterkey';" | \
+              sudo /opt/firebird/bin/isql employee -user SYSDBA -q
+          sudo systemctl start firebird
 
       - name: Bootstrap vcpkg
         run: |
@@ -76,7 +80,15 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cmake -S . -B build/Release -DCMAKE_BUILD_TYPE=Release -G Ninja
+          ./gen-linux-x64-release.sh
+
+      - name: Upload vcpkg failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-logs-${{ github.job }}
+          path: vcpkg/buildtrees/**/*.log
+          if-no-files-found: ignore
 
       - name: Build Release targets
         run: |
@@ -84,7 +96,11 @@ jobs:
 
       - name: Run tests
         run: |
-          ./build/Release/out/bin/fb-cpp-test --log_level=all
+          export ISC_USER=sysdba
+          export ISC_PASSWORD=masterkey
+          export FBCPP_TEST_SERVER=localhost
+          export FBCPP_TEST_DIR=/tmp
+          ./build/Release/out/bin/fb-cpp-test
 
       - name: Build documentation
         run: |
@@ -122,7 +138,14 @@ jobs:
       - name: Configure Firebird
         shell: cmd
         run: |
-          echo C:\Firebird>>%GITHUB_PATH%
+          echo create user SYSDBA password 'masterkey'; ^
+              | "C:\Firebird\isql.exe" employee -user SYSDBA -q
+
+      - name: Start Firebird Server
+        shell: cmd
+        working-directory: C:\Firebird
+        run: |
+          call install_service.bat
 
       - name: Bootstrap vcpkg
         shell: cmd
@@ -132,7 +155,15 @@ jobs:
       - name: Configure CMake
         shell: cmd
         run: |
-          cmake -S . -B build -G "Visual Studio 17 2022"
+          .\gen-windows.bat
+
+      - name: Upload vcpkg failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-logs-${{ github.job }}
+          path: vcpkg/buildtrees/**/*.log
+          if-no-files-found: ignore
 
       - name: Build Release targets
         shell: cmd
@@ -142,6 +173,9 @@ jobs:
       - name: Run tests
         shell: cmd
         run: |
+          set ISC_USER=sysdba
+          set ISC_PASSWORD=masterkey
+          set FBCPP_TEST_SERVER=localhost
           build\out\bin\Release\fb-cpp-test.exe
 
   build-macos:
@@ -165,6 +199,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vcpkg-
 
+      - name: Install system dependencies
+        run: |
+          brew install \
+              autoconf \
+              autoconf-archive \
+              automake \
+              libtool
+
       - name: Install Firebird
         run: |
           wget -nv -O Firebird-5.0.3.1683-0-macos-arm64.pkg \
@@ -173,12 +215,10 @@ jobs:
 
       - name: Configure Firebird
         run: |
-          {
-            echo "FIREBIRD_LOCK=${RUNNER_TEMP}"
-            echo "DYLD_LIBRARY_PATH=/Library/Frameworks/Firebird.framework/Resources/lib:${DYLD_LIBRARY_PATH}"
-            echo "ISC_USER=sysdba"
-            echo "ISC_PASSWORD=masterkey"
-          } >> "$GITHUB_ENV"
+          sudo launchctl unload /Library/LaunchDaemons/org.firebird.gds.plist
+          echo "alter user SYSDBA password 'masterkey';" | \
+              sudo /Library/Frameworks/Firebird.framework/Versions/A/Resources/bin/isql employee -user SYSDBA -q
+          sudo launchctl load /Library/LaunchDaemons/org.firebird.gds.plist
 
       - name: Bootstrap vcpkg
         run: |
@@ -186,7 +226,15 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cmake -S . -B build/Release -DCMAKE_BUILD_TYPE=Release -G Ninja
+          ./gen-osx-arm64-release.sh
+
+      - name: Upload vcpkg failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-logs-${{ github.job }}
+          path: vcpkg/buildtrees/**/*.log
+          if-no-files-found: ignore
 
       - name: Build Release targets
         run: |
@@ -194,4 +242,7 @@ jobs:
 
       - name: Run tests
         run: |
-          ./build/Release/out/bin/fb-cpp-test --log_level=all
+          export ISC_USER=sysdba
+          export ISC_PASSWORD=masterkey
+          export FBCPP_TEST_SERVER=localhost
+          ./build/Release/out/bin/fb-cpp-test

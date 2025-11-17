@@ -8,7 +8,7 @@
     {
       "kind": "git",
       "repository": "https://github.com/asfernandes/firebird-vcpkg-registry.git",
-      "baseline": "8c7aa9cb6e88265d0702497ec9699ab97593a0d3",
+      "baseline": "aeb641e6d0b8dbbaf608fc973f07637c9888e47b",
       "packages": [ "firebird" ]
     }
   ]
