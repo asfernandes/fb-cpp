@@ -26,6 +26,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "TestUtil.h"
+#include <cstdlib>
 #include <filesystem>
 #include <sstream>
 #include <string>
@@ -42,12 +43,25 @@ namespace fbcpp::test
 	namespace
 	{
 		fs::path tempDir;
+		bool removeTempDir = false;
+		std::string testServerPrefix;
 
 		struct GlobalFixture
 		{
 			GlobalFixture()
 			{
-				fs::path prefix = fs::temp_directory_path();
+				const char* testDirEnv = std::getenv("FBCPP_TEST_DIR");
+				const char* testServerEnv = std::getenv("FBCPP_TEST_SERVER");
+				if (testServerEnv && *testServerEnv)
+					testServerPrefix = std::string(testServerEnv) + ":";
+
+				if (testDirEnv && *testDirEnv)
+				{
+					tempDir = testDirEnv;
+					return;
+				}
+
+				const fs::path prefix = fs::temp_directory_path();
 
 				auto now = std::chrono::system_clock::now();
 				auto time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
@@ -57,13 +71,17 @@ namespace fbcpp::test
 
 				tempDir = prefix / oss.str();
 
-				fs::create_directory(tempDir);
+				if (fs::create_directory(tempDir))
+					removeTempDir = true;
 			}
 
 			~GlobalFixture()
 			{
-				std::error_code ec;
-				fs::remove(tempDir, ec);
+				if (removeTempDir)
+				{
+					std::error_code ec;
+					fs::remove(tempDir, ec);
+				}
 
 				CLIENT.shutdown();
 			}
@@ -72,7 +90,7 @@ namespace fbcpp::test
 
 	std::string getTempFile(const std::string_view name)
 	{
-		return (tempDir / name).string();
+		return testServerPrefix + (tempDir / name).string();
 	}
 }  // namespace fbcpp::test
 
