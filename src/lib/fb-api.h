@@ -30,7 +30,7 @@
 #pragma GCC diagnostic ignored "-Wconversion"
 #endif
 
-#include "fb-api/firebird/Interface.h"
+#include "firebird/Interface.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
