@@ -26,7 +26,7 @@
 #include "Attachment.h"
 #include "Client.h"
 #include "Transaction.h"
-#include "fb-api/firebird/impl/inf_pub.h"
+#include "firebird/impl/inf_pub.h"
 #include <cstdint>
 #include <cstring>
 #include <limits>

@@ -19,12 +19,15 @@ find_package(Boost REQUIRED
 		unit_test_framework
 )
 
+find_package(firebird REQUIRED)
+
 target_include_directories(${PROJECT_NAME}
 	PUBLIC ${Boost_INCLUDE_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME}
 	PRIVATE fb-cpp
+	PRIVATE firebird
 	PRIVATE Boost::filesystem
 	PRIVATE Boost::unit_test_framework
 )

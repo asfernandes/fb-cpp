@@ -4,22 +4,31 @@
   "dependencies": [
     "boost-dll",
     "boost-multiprecision",
-    "boost-test"
+    "boost-test",
+    "firebird",
+    "icu"
   ],
   "overrides": [
     {
       "name": "boost-dll",
-      "version": "1.85.0"
+      "version": "1.89.0"
     },
     {
       "name": "boost-multiprecision",
-      "version": "1.85.0",
-      "port-version": 2
+      "version": "1.89.0"
     },
     {
       "name": "boost-test",
-      "version": "1.85.0"
+      "version": "1.89.0"
+    },
+    {
+      "name": "firebird",
+      "version": "5.0.3"
+    },
+    {
+      "name": "icu",
+      "version": "78.1"
     }
   ],
-  "builtin-baseline": "76d153790caf0592fce8fc4484aa6db18c7d00d4"
+  "builtin-baseline": "8fbf295ab5283313932f65a597a2c1f09a73fafd"
 }

@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(dropDatabase)
 BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 {
 	const auto database = getTempFile("Attachment-isNotValidAfterMove.fdb");
-	Attachment attachment1{CLIENT, getTempFile(database), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment1{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
 	BOOST_CHECK_EQUAL(attachment1.isValid(), true);
 
 	auto attachment2 = std::move(attachment1);
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 BOOST_AUTO_TEST_CASE(isNotValidAfterDisconnect)
 {
 	const auto database = getTempFile("Attachment-isNotValidAfterDisconnect.fdb");
-	Attachment attachment1{CLIENT, getTempFile(database), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment1{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
 	BOOST_CHECK_EQUAL(attachment1.isValid(), true);
 
 	attachment1.disconnect();

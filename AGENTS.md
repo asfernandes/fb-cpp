@@ -16,7 +16,7 @@
   ```
 
 ### Build
-- If .cpp files are added, it's necessary to run `./gen-linux-debug.sh` (non-Windows) or `gen-windows.bat` (Windows) from the repo root.
+- If .cpp files are added, it's necessary to run `./gen-linux-x64-debug.sh` (non-Windows) or `gen-windows.bat` (Windows) from the repo root.
 - Use `cmake --build build/Debug/` (non-Windows) or `cmake --build build --config Debug` (Windows) from the repo root.
 
 ### Tests
