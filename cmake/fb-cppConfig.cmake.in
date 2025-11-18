@@ -2,7 +2,7 @@
 
 include(CMakeFindDependencyMacro)
 
-find_dependency(Boost OPTIONAL
+find_dependency(Boost
 	COMPONENTS
 		dll
 		multiprecision
