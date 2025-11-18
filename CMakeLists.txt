@@ -57,6 +57,17 @@ if(BUILD_TESTING)
 endif()
 
 
+set(FB_CPP_USE_BOOST_DLL_VALUE 0)
+if(FB_CPP_USE_BOOST_DLL)
+	set(FB_CPP_USE_BOOST_DLL_VALUE 1)
+endif()
+
+set(FB_CPP_USE_BOOST_MULTIPRECISION_VALUE 0)
+if(FB_CPP_USE_BOOST_MULTIPRECISION)
+	set(FB_CPP_USE_BOOST_MULTIPRECISION_VALUE 1)
+endif()
+
+
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
 	"${CMAKE_CURRENT_BINARY_DIR}/fb-cppConfigVersion.cmake"

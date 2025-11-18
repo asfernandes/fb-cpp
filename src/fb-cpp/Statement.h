@@ -2207,9 +2207,11 @@ namespace fbcpp
 				return std::nullopt;
 
 			auto data = &message[descriptor.offset];
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 			std::optional<BoostInt128> boostInt128;
 			std::optional<BoostDecFloat16> boostDecFloat16;
 			std::optional<BoostDecFloat34> boostDecFloat34;
+#endif
 
 			switch (descriptor.adjustedType)
 			{
