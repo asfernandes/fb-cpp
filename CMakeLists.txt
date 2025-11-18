@@ -27,6 +27,7 @@ project(fb-cpp-main
 )
 
 enable_language(CXX)
+include(CTest)
 
 
 if(MSVC)
@@ -49,8 +50,11 @@ else()
 endif()
 
 add_subdirectory(src/lib)
-add_subdirectory(src/test)
 add_subdirectory(doc)
+
+if(BUILD_TESTING)
+	add_subdirectory(src/test)
+endif()
 
 
 include(CMakePackageConfigHelpers)
