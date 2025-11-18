@@ -22,9 +22,9 @@
  */
 
 #include "TestUtil.h"
-#include "EventListener.h"
-#include "Statement.h"
-#include "Transaction.h"
+#include "fb-cpp/EventListener.h"
+#include "fb-cpp/Statement.h"
+#include "fb-cpp/Transaction.h"
 #include <boost/test/unit_test.hpp>
 #include <chrono>
 #include <condition_variable>

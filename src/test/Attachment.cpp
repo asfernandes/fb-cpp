@@ -23,8 +23,8 @@
  */
 
 #include "TestUtil.h"
-#include "Attachment.h"
-#include "Exception.h"
+#include "fb-cpp/Attachment.h"
+#include "fb-cpp/Exception.h"
 #include <exception>
 
 

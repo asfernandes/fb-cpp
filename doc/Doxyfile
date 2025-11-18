@@ -106,7 +106,7 @@ CITE_BIB_FILES         =
 #---------------------------------------------------------------------------
 # Input related configuration options
 #---------------------------------------------------------------------------
-INPUT                  = @PROJECT_SOURCE_DIR@/src/lib \
+INPUT                  = @PROJECT_SOURCE_DIR@/src/fb-cpp \
                          @PROJECT_SOURCE_DIR@/README.md
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.c \

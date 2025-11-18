@@ -23,10 +23,10 @@
  */
 
 #include "TestUtil.h"
-#include "Attachment.h"
-#include "Blob.h"
-#include "Statement.h"
-#include "Transaction.h"
+#include "fb-cpp/Attachment.h"
+#include "fb-cpp/Blob.h"
+#include "fb-cpp/Statement.h"
+#include "fb-cpp/Transaction.h"
 #include <array>
 #include <limits>
 #include <span>

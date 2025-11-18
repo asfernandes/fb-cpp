@@ -23,9 +23,9 @@
  */
 
 #include "TestUtil.h"
-#include "Statement.h"
-#include "Transaction.h"
-#include "Exception.h"
+#include "fb-cpp/Statement.h"
+#include "fb-cpp/Transaction.h"
+#include "fb-cpp/Exception.h"
 #include <chrono>
 #include <exception>
 #include <string>

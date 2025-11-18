@@ -25,8 +25,8 @@
 #ifndef FBCPP_TEST_TEST_UTIL_H
 #define FBCPP_TEST_TEST_UTIL_H
 
-#include "Attachment.h"
-#include "Client.h"
+#include "fb-cpp/Attachment.h"
+#include "fb-cpp/Client.h"
 #include <string>
 #include <string_view>
 #include <boost/test/unit_test.hpp>

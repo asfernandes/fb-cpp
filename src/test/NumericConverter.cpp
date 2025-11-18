@@ -23,9 +23,9 @@
  */
 
 #include "TestUtil.h"
-#include "types.h"
-#include "NumericConverter.h"
-#include "Exception.h"
+#include "fb-cpp/types.h"
+#include "fb-cpp/NumericConverter.h"
+#include "fb-cpp/Exception.h"
 #include <limits>
 #include <cstdint>
 

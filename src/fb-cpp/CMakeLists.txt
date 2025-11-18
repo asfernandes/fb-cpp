@@ -20,7 +20,7 @@ add_library(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME}
 	PUBLIC
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/..>
 		$<INSTALL_INTERFACE:include/fb-cpp>
 )
 
@@ -58,5 +58,5 @@ install(TARGETS ${PROJECT_NAME}
 install(EXPORT ${PROJECT_NAME}Targets
 	FILE ${PROJECT_NAME}Targets.cmake
 	NAMESPACE ${PROJECT_NAME}::
-	DESTINATION lib/cmake/${PROJECT_NAME}
+	DESTINATION fb-cpp/cmake/${PROJECT_NAME}
 )
