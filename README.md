@@ -66,6 +66,32 @@ if (statement.execute(transaction))
 transaction.commit();
 ```
 
+## Using with vcpkg
+
+This library is present in [firebird-vcpkg-registry](https://github.com/asfernandes/firebird-vcpkg-registry).
+
+To install, add the registry or overlay to your vcpkg configuration and install the `fb-cpp` package:
+```bash
+vcpkg install fb-cpp
+```
+
+Or add it to your `vcpkg.json` manifest:
+```json
+{
+  ...
+  "dependencies": [
+    {
+      "name": "fb-cpp",
+      "default-features": true
+    }
+  ]
+}
+```
+
+The default features are:
+- `boost-dll`: Enable Boost.DLL support for runtime dynamic loading of Firebird client library
+- `boost-multiprecision`: Enable Boost.Multiprecision support for INT128 and DECFLOAT types
+
 ## Building
 
 This project uses CMake with vcpkg for dependency management.
