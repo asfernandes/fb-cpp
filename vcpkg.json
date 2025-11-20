@@ -1,6 +1,13 @@
 {
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "fb-cpp",
-  "version-string": "0.0.1",
+  "version-semver": "0.0.1",
+  "maintainers": "Adriano dos Santos Fernandes",
+  "description": "A modern C++ wrapper for the Firebird database API",
+  "homepage": "https://github.com/asfernandes/fb-cpp",
+  "documentation": "https://asfernandes.github.io/fb-cpp/",
+  "license": "MIT",
+  "supports": "(windows & !uwp) | linux | osx",
   "dependencies": [
     "boost-dll",
     "boost-multiprecision",
