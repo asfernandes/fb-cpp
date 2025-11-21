@@ -2,4 +2,5 @@
 
 git submodule update --init --recursive
 
-./gen-debug.sh
+cp CMakeUserPresets.json.posix.template CMakeUserPresets.json
+cmake --preset default

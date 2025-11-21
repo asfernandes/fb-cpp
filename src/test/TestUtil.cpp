@@ -46,6 +46,17 @@ namespace fbcpp::test
 		bool removeTempDir = false;
 		std::string testServerPrefix;
 
+		bool createAccessibleDirectory(const fs::path& path)
+		{
+			if (!fs::create_directory(path))
+				return false;
+
+			fs::permissions(
+				path, fs::perms::owner_all | fs::perms::group_all | fs::perms::others_all, fs::perm_options::replace);
+
+			return true;
+		}
+
 		struct GlobalFixture
 		{
 			GlobalFixture()
@@ -58,6 +69,7 @@ namespace fbcpp::test
 				if (testDirEnv && *testDirEnv)
 				{
 					tempDir = testDirEnv;
+					createAccessibleDirectory(tempDir);
 					return;
 				}
 
@@ -71,7 +83,7 @@ namespace fbcpp::test
 
 				tempDir = prefix / oss.str();
 
-				if (fs::create_directory(tempDir))
+				if (createAccessibleDirectory(tempDir))
 					removeTempDir = true;
 			}
 

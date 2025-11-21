@@ -1,0 +1,32 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "default",
+      "inherits": [
+        "posix-ninja-debug"
+      ]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "inherits": [
+        "posix-ninja-debug"
+      ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "inherits": [
+        "posix-ninja-debug"
+      ],
+      "environment": {
+        "FBCPP_TEST_SERVER": "localhost",
+		"ISC_USER": "sysdba",
+		"ISC_PASSWORD": "masterkey"
+      }
+    }
+  ]
+}

@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   clang-format-check:
@@ -80,7 +81,8 @@ jobs:
 
       - name: Configure CMake
         run: |
-          ./gen-linux-x64-release.sh
+          cp CMakeUserPresets.json.posix.template CMakeUserPresets.json
+          cmake --preset default
 
       - name: Upload vcpkg failure logs
         if: failure()
@@ -90,21 +92,17 @@ jobs:
           path: vcpkg/buildtrees/**/*.log
           if-no-files-found: ignore
 
-      - name: Build Release targets
+      - name: Build
         run: |
-          cmake --build build/Release
+          cmake --build --preset default
 
       - name: Run tests
         run: |
-          export ISC_USER=sysdba
-          export ISC_PASSWORD=masterkey
-          export FBCPP_TEST_SERVER=localhost
-          export FBCPP_TEST_DIR=/tmp
-          ./build/Release/out/bin/fb-cpp-test
+          ctest --preset default --verbose
 
       - name: Build documentation
         run: |
-          cmake --build build/Release --target docs
+          cmake --build --preset default --target docs
 
   build-windows:
     runs-on: windows-latest
@@ -155,7 +153,8 @@ jobs:
       - name: Configure CMake
         shell: cmd
         run: |
-          .\gen-windows.bat
+          copy CMakeUserPresets.json.windows.template CMakeUserPresets.json
+          cmake --preset default
 
       - name: Upload vcpkg failure logs
         if: failure()
@@ -165,18 +164,17 @@ jobs:
           path: vcpkg/buildtrees/**/*.log
           if-no-files-found: ignore
 
-      - name: Build Release targets
+      - name: Build
         shell: cmd
         run: |
-          cmake --build build --config Release
+          cmake --build --preset default
 
       - name: Run tests
         shell: cmd
         run: |
           set ISC_USER=sysdba
           set ISC_PASSWORD=masterkey
-          set FBCPP_TEST_SERVER=localhost
-          build\out\bin\Release\fb-cpp-test.exe
+          ctest --preset default --verbose
 
   build-macos:
     runs-on: macos-latest
@@ -226,7 +224,8 @@ jobs:
 
       - name: Configure CMake
         run: |
-          ./gen-osx-arm64-release.sh
+          cp CMakeUserPresets.json.posix.template CMakeUserPresets.json
+          cmake --preset default
 
       - name: Upload vcpkg failure logs
         if: failure()
@@ -236,13 +235,10 @@ jobs:
           path: vcpkg/buildtrees/**/*.log
           if-no-files-found: ignore
 
-      - name: Build Release targets
+      - name: Build
         run: |
-          cmake --build build/Release
+          cmake --build --preset default
 
       - name: Run tests
         run: |
-          export ISC_USER=sysdba
-          export ISC_PASSWORD=masterkey
-          export FBCPP_TEST_SERVER=localhost
-          ./build/Release/out/bin/fb-cpp-test
+          ctest --preset default --verbose

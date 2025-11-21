@@ -1,0 +1,96 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "ninja-base",
+      "displayName": "Ninja with vcpkg (base)",
+      "description": "Base preset for Ninja builds with vcpkg and local overlay triplets",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/triplets",
+        "VCPKG_ROOT": "${sourceDir}/vcpkg",
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/build/vcpkg_installed",
+        "CMAKE_VERBOSE_MAKEFILE": "ON"
+      }
+    },
+    {
+      "name": "posix-ninja-debug",
+      "displayName": "Linux/MacOS Debug (Ninja)",
+      "inherits": [
+        "ninja-base"
+      ],
+      "binaryDir": "${sourceDir}/build/Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "posix-ninja-release",
+      "displayName": "Linux/MacOS Release (Ninja)",
+      "inherits": [
+        "ninja-base"
+      ],
+      "binaryDir": "${sourceDir}/build/Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "windows-vs2022",
+      "displayName": "Windows (Visual Studio 2022)",
+      "description": "Multi-config build with the Visual Studio 17 2022 generator",
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_ROOT": "${sourceDir}/vcpkg"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "posix-ninja-debug",
+      "configurePreset": "posix-ninja-debug"
+    },
+    {
+      "name": "posix-ninja-release",
+      "configurePreset": "posix-ninja-release"
+    },
+    {
+      "name": "windows-vs2022-debug",
+      "configurePreset": "windows-vs2022",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-vs2022-release",
+      "configurePreset": "windows-vs2022",
+      "configuration": "Release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "posix-ninja-debug",
+      "configurePreset": "posix-ninja-debug"
+    },
+    {
+      "name": "posix-ninja-release",
+      "configurePreset": "posix-ninja-release"
+    },
+    {
+      "name": "windows-vs2022-debug",
+      "configurePreset": "windows-vs2022",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-vs2022-release",
+      "configurePreset": "windows-vs2022",
+      "configuration": "Release"
+    }
+  ]
+}

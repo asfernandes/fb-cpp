@@ -5,6 +5,7 @@
   },
   "cmake.sourceDirectory": "${workspaceFolder}",
   "cmake.buildDirectory": "${workspaceFolder}/build/${buildType}",
+  "cmake.useCMakePresets": "auto",
   "cmake.generator": "Ninja",
   "cmake.configureSettings": {
     "CMAKE_VERBOSE_MAKEFILE": "ON",

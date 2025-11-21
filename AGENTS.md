@@ -16,10 +16,10 @@
   ```
 
 ### Build
-- If .cpp files are added, it's necessary to run `./gen-linux-x64-debug.sh` (non-Windows) or `gen-windows.bat` (Windows) from the repo root.
-- Use `cmake --build build/Debug/` (non-Windows) or `cmake --build build --config Debug` (Windows) from the repo root.
+- If .cpp files are added, it's necessary to run `cmake --preset default` from the repo root.
+- Use `cmake --build --preset default` from the repo root.
 
 ### Tests
 - Test code can use Boost.Multiprecision without conditional compilation.
-- Run the Boost.Test suite with `./run-tests.sh` (non-Windows) or `run-tests.bat` (Windows).
-  Boost.Test options can be used (for example, `./run-tests.sh --log_level=all` or `run-tests.bat --log_level=all`).
+- Run the Boost.Test suite with `ctest --preset default --verbose`.
+- Boost.Test options can be used with environments variables like `BOOST_TEST_LOG_LEVEL=all`.

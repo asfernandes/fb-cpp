@@ -94,23 +94,23 @@ The default features are:
 
 ## Building
 
-This project uses CMake with vcpkg for dependency management.
+This project uses CMake presets (`CMakePresets.json`) and vcpkg for dependency management.
+
+Copy the appropriate `CMakeUserPresets.json.<platform>.template` file to `CMakeUserPresets.json` to set environment
+variables for tests and define the default preset.
 
 ```bash
-# Clone the repository
-git clone --recursive-submodules https://github.com/asfernandes/fb-cpp.git
-
 # Configure
-cmake -S . -B build/Release -DCMAKE_BUILD_TYPE=Release
+cmake --preset default
 
 # Build
-cmake --build build/Release
+cmake --build --preset default
 
-# Install
-cmake --install build/Release
+# Run tests
+ctest --preset default
 
-# Generate documentation
-cmake --build build/Release --target docs
+# Build docs
+cmake --build --preset default --target docs
 ```
 
 ## Documentation

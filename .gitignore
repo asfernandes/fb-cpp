@@ -1,3 +1,5 @@
 build/
 temp/
 .env
+.env.bat
+/CMakeUserPresets.json
