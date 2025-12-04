@@ -353,6 +353,7 @@ BOOST_AUTO_TEST_CASE(scaledInt64Type)
 	transaction.commit();
 }
 
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 BOOST_AUTO_TEST_CASE(scaledBoostInt128Type)
 {
 	Attachment attachment{
@@ -385,6 +386,7 @@ BOOST_AUTO_TEST_CASE(scaledBoostInt128Type)
 
 	transaction.commit();
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(floatType)
 {
@@ -780,17 +782,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK(!statement.getInt32(index).has_value());
 	BOOST_CHECK(!statement.getInt64(index).has_value());
 	BOOST_CHECK(!statement.getScaledOpaqueInt128(index).has_value());
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK(!statement.getBoostInt128(index).has_value());
+#endif
 	BOOST_CHECK(!statement.getScaledInt16(index).has_value());
 	BOOST_CHECK(!statement.getScaledInt32(index).has_value());
 	BOOST_CHECK(!statement.getScaledInt64(index).has_value());
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK(!statement.getScaledBoostInt128(index).has_value());
+#endif
 	BOOST_CHECK(!statement.getFloat(index).has_value());
 	BOOST_CHECK(!statement.getDouble(index).has_value());
 	BOOST_CHECK(!statement.getOpaqueDecFloat16(index).has_value());
 	BOOST_CHECK(!statement.getOpaqueDecFloat34(index).has_value());
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK(!statement.getBoostDecFloat16(index).has_value());
 	BOOST_CHECK(!statement.getBoostDecFloat34(index).has_value());
+#endif
 	BOOST_CHECK(!statement.getString(index).has_value());
 
 	// boolean: true
@@ -801,17 +809,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_THROW(statement.getInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getInt64(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getBoostInt128(index), FbCppException);
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getScaledBoostInt128(index), FbCppException);
+#endif
 	BOOST_CHECK_THROW(statement.getFloat(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getDouble(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getBoostDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getBoostDecFloat34(index), FbCppException);
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "true");
 
 	// smallint: cast(1 as smallint)
@@ -822,17 +836,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 1);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{1});
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{1, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{1, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{1, 0}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{1}, 0}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 1.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 1.0);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"1"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"1"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "1");
 
 	// smallint min: cast(-32768 as smallint)
@@ -843,17 +863,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), -32'768);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), -32'768);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{-32'768});
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{-32'768, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{-32'768, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{-32'768, 0}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{-32'768}, 0}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), -32'768.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), -32'768.0);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"-32768"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"-32768"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "-32768");
 
 	// smallint max: cast(32767 as smallint)
@@ -864,17 +890,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 32'767);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 32'767);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{32'767});
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{32'767, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{32'767, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{32'767, 0}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{32'767}, 0}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 32'767.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 32'767.0);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"32767"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"32767"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "32767");
 
 	// integer that fits in smallint: cast(2 as integer)
@@ -885,17 +917,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 2);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 2);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{2});
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{2, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{2, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{2, 0}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{2}, 0}));
+#endif
 	BOOST_CHECK_EQUAL((statement.getFloat(index).value()), 2.0f);
 	BOOST_CHECK_EQUAL((statement.getDouble(index).value()), 2.0);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"2"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"2"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "2");
 
 	// integer that does not fit in smallint: cast(200000 as integer)
@@ -906,17 +944,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 200'000);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 200'000);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{200'000});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{200'000, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{200'000, 0}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{200'000}, 0}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 200'000.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 200'000.0);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"200000"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"200000"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "200000");
 
 	// integer min: cast(-2147483648 as integer)
@@ -927,18 +971,24 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), -2'147'483'648);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), -2'147'483'648);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{-2'147'483'648});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{-2'147'483'648, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{-2'147'483'648, 0}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{-2'147'483'648}, 0}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), -2'147'483'648.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), -2'147'483'648.0);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"-2147483648"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"-2147483648"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "-2147483648");
 
 	// integer max: cast(2147483647 as integer)
@@ -949,18 +999,24 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 2'147'483'647);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 2'147'483'647);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{2'147'483'647});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{2'147'483'647, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{2'147'483'647, 0}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{2'147'483'647}, 0}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 2'147'483'647.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 2'147'483'647.0);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"2147483647"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"2147483647"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "2147483647");
 
 	// numeric(6,3): 200.678
@@ -971,17 +1027,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 201);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 201);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{201});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{200'678, -3}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{200'678, -3}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{200'678}, -3}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 200.678f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 200.678);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"200.678"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"200.678"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "200.678");
 
 	// bigint that fits in smallint: cast(3 as bigint)
@@ -992,17 +1054,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 3);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 3);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{3});
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{3, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{3, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{3, 0}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{3}, 0}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 3.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 3.0);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"3"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"3"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "3");
 
 	// bigint that does not fit in integer: cast(300000000000 as bigint)
@@ -1013,18 +1081,24 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_THROW(statement.getInt32(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 300'000'000'000);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{300'000'000'000});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{300'000'000'000, 0}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{300'000'000'000}, 0}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 300'000'000'000.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 300'000'000'000.0);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"300000000000"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"300000000000"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "300000000000");
 
 	// bigint min: cast(-9223372036854775808 as bigint)
@@ -1035,18 +1109,24 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_THROW(statement.getInt32(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), -9223372036854775807LL - 1);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{-9223372036854775807LL - 1});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{-9223372036854775807LL - 1, 0}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{-9223372036854775807LL - 1}, 0}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), static_cast<float>(-9223372036854775807LL - 1));
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), static_cast<double>(-9223372036854775807LL - 1));
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"-9223372036854775808"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"-9223372036854775808"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "-9223372036854775808");
 
 	// bigint max: cast(9223372036854775807 as bigint)
@@ -1057,18 +1137,24 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_THROW(statement.getInt32(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 9223372036854775807LL);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{9223372036854775807LL});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{9223372036854775807LL, 0}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{9223372036854775807LL}, 0}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), static_cast<float>(9223372036854775807LL));
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), static_cast<double>(9223372036854775807LL));
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"9223372036854775807"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"9223372036854775807"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "9223372036854775807");
 
 	// numeric(12,3): 300000000.678
@@ -1079,28 +1165,37 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 300'000'001);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 300'000'001);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{300'000'001});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{300'000'000'678, -3}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{300'000'000'678}, -3}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 300'000'000.678f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 300'000'000.678);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"300000000.678"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"300000000.678"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "300000000.678");
 
 	// int128 that fits in smallint: cast(4 as int128)
 	++index;
 	BOOST_CHECK(!statement.isNull(index));
 	BOOST_CHECK_THROW(statement.getBool(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getInt16(index).value(), 4);
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 4);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 4);
+#endif
 	BOOST_CHECK(statement.getScaledOpaqueInt128(index).has_value());
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{4});
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{4, 0}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{4, 0}));
@@ -1108,10 +1203,13 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{4}, 0}));
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 4.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 4.0);
+#endif
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"4"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"4"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "4");
 
 	// int128 that does not fit in bigint: cast(400000000000000000000 as int128)
@@ -1122,18 +1220,24 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_THROW(statement.getInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getInt64(index), FbCppException);
 	BOOST_CHECK(statement.getScaledOpaqueInt128(index).has_value());
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{"400000000000000000000"});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{"400000000000000000000"}, 0}));
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 400'000'000'000'000'000'000.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 400'000'000'000'000'000'000.0);
+#endif
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"400000000000000000000"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"400000000000000000000"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "400000000000000000000");
 
 	// int128 min: cast(-170141183460469231731687303715884105728 as int128)
@@ -1144,22 +1248,28 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_THROW(statement.getInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getInt64(index), FbCppException);
 	BOOST_CHECK(statement.getScaledOpaqueInt128(index).has_value());
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{"-170141183460469231731687303715884105728"});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(),
 		(ScaledBoostInt128{BoostInt128{"-170141183460469231731687303715884105728"}, 0}));
 	BOOST_CHECK_EQUAL(
 		statement.getFloat(index).value(), static_cast<float>(BoostInt128{"-170141183460469231731687303715884105728"}));
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(),
 		static_cast<double>(BoostInt128{"-170141183460469231731687303715884105728"}));
+#endif
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"-170141183460469231731687303715884105728"});
 	BOOST_CHECK_EQUAL(
 		statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"-170141183460469231731687303715884105728"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "-170141183460469231731687303715884105728");
 
 	// int128 max: cast(170141183460469231731687303715884105727 as int128)
@@ -1170,22 +1280,28 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_THROW(statement.getInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getInt64(index), FbCppException);
 	BOOST_CHECK(statement.getScaledOpaqueInt128(index).has_value());
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{"170141183460469231731687303715884105727"});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(),
 		(ScaledBoostInt128{BoostInt128{"170141183460469231731687303715884105727"}, 0}));
 	BOOST_CHECK_EQUAL(
 		statement.getFloat(index).value(), static_cast<float>(BoostInt128{"170141183460469231731687303715884105727"}));
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(),
 		static_cast<double>(BoostInt128{"170141183460469231731687303715884105727"}));
+#endif
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"170141183460469231731687303715884105727"});
 	BOOST_CHECK_EQUAL(
 		statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"170141183460469231731687303715884105727"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "170141183460469231731687303715884105727");
 
 	// numeric(21,3): 400000000000000000.678
@@ -1194,20 +1310,29 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_THROW(statement.getBool(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getInt32(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+	// FIXME:
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 400000000000000001);
+#endif
 	BOOST_CHECK(statement.getScaledOpaqueInt128(index).has_value());
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{"400000000000000001"});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{"400000000000000000678"}, -3}));
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 400'000'000'000'000'000.678f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 400'000'000'000'000'000.678);
+#endif
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"400000000000000000.678"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"400000000000000000.678"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "400000000000000000.678");
 
 	// numeric(4,1): 0.6
@@ -1218,17 +1343,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 1);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{1});
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{6, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{6}, -1}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 0.6f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 0.6);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"0.6"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"0.6"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "0.6");
 
 	// numeric(4,1): -0.6
@@ -1239,17 +1370,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), -1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), -1);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{-1});
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{-6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{-6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{-6, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{-6}, -1}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), -0.6f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), -0.6);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"-0.6"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"-0.6"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "-0.6");
 
 	// numeric(9,1): 0.6
@@ -1260,17 +1397,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 1);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{1});
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{6, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{6}, -1}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 0.6f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 0.6);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"0.6"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"0.6"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "0.6");
 
 	// numeric(9,1): -0.6
@@ -1281,17 +1424,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), -1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), -1);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{-1});
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{-6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{-6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{-6, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{-6}, -1}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), -0.6f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), -0.6);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"-0.6"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"-0.6"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "-0.6");
 
 	// numeric(18,1): 0.6
@@ -1302,17 +1451,23 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 1);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{1});
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{6, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{6}, -1}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 0.6f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 0.6);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"0.6"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"0.6"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "0.6");
 
 	// numeric(18,1): -0.6
@@ -1323,27 +1478,36 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), -1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), -1);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{-1});
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{-6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{-6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index).value(), (ScaledInt64{-6, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{-6}, -1}));
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), -0.6f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), -0.6);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"-0.6"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"-0.6"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "-0.6");
 
 	// numeric(34,1): 0.6
 	++index;
 	BOOST_CHECK(!statement.isNull(index));
 	BOOST_CHECK_THROW(statement.getBool(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getInt16(index).value(), 1);
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 1);
+#endif
 	BOOST_CHECK(statement.getScaledOpaqueInt128(index).has_value());
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{1});
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{6, -1}));
@@ -1351,20 +1515,26 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{6}, -1}));
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 0.6f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 0.6);
+#endif
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"0.6"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"0.6"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "0.6");
 
 	// numeric(34,1): -0.6
 	++index;
 	BOOST_CHECK(!statement.isNull(index));
 	BOOST_CHECK_THROW(statement.getBool(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getInt16(index).value(), -1);
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), -1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), -1);
+#endif
 	BOOST_CHECK(statement.getScaledOpaqueInt128(index).has_value());
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{-1});
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index).value(), (ScaledInt16{-6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index).value(), (ScaledInt32{-6, -1}));
@@ -1372,97 +1542,132 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index).value(), (ScaledBoostInt128{BoostInt128{-6}, -1}));
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), -0.6f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), -0.6);
+#endif
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"-0.6"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"-0.6"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "-0.6");
 
 	// decfloat(16): 0.6
 	++index;
 	BOOST_CHECK(!statement.isNull(index));
 	BOOST_CHECK_THROW(statement.getBool(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getInt16(index).value(), 1);
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 1);
+#endif
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{1});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getScaledBoostInt128(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 0.6f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 0.6);
+#endif
 	BOOST_CHECK(statement.getOpaqueDecFloat16(index).has_value());
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"0.6"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"0.6"});
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "0.6");
 
 	// decfloat(16): -0.6
 	++index;
 	BOOST_CHECK(!statement.isNull(index));
 	BOOST_CHECK_THROW(statement.getBool(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getInt16(index).value(), -1);
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), -1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), -1);
+#endif
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{-1});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getScaledBoostInt128(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), -0.6f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), -0.6);
+#endif
 	BOOST_CHECK(statement.getOpaqueDecFloat16(index).has_value());
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"-0.6"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"-0.6"});
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), -0.6);
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "-0.6");
 
 	// decfloat(34): 0.6
 	++index;
 	BOOST_CHECK(!statement.isNull(index));
 	BOOST_CHECK_THROW(statement.getBool(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getInt16(index).value(), 1);
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 1);
+#endif
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{1});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getScaledBoostInt128(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 0.6f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 0.6);
+#endif
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK(statement.getOpaqueDecFloat34(index).has_value());
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"0.6"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"0.6"});
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 0.6);
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "0.6");
 
 	// decfloat(34): -0.6
 	++index;
 	BOOST_CHECK(!statement.isNull(index));
 	BOOST_CHECK_THROW(statement.getBool(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getInt16(index).value(), -1);
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), -1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), -1);
+#endif
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{-1});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getScaledBoostInt128(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), -0.6f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), -0.6);
+#endif
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK(statement.getOpaqueDecFloat34(index).has_value());
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"-0.6"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"-0.6"});
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), -0.6);
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "-0.6");
 
 	// float: cast(12345.67 as float)
@@ -1473,19 +1678,25 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 12346);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 12346);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{12346});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getScaledBoostInt128(index), FbCppException);
+#endif
 	BOOST_CHECK_CLOSE(statement.getFloat(index).value(), 12345.67f, 0.00001);
 	BOOST_CHECK_CLOSE(statement.getDouble(index).value(), 12345.67, 0.00001);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK(
 		boost::multiprecision::abs(statement.getBoostDecFloat16(index).value() - BoostDecFloat16{"12345.67"}) < 0.0001);
 	BOOST_CHECK(
 		boost::multiprecision::abs(statement.getBoostDecFloat34(index).value() - BoostDecFloat34{"12345.67"}) < 0.0001);
+#endif
 	BOOST_CHECK(statement.getString(index).value().starts_with("12345.6"));
 
 	// double precision: cast(123456.789 as double precision)
@@ -1496,59 +1707,81 @@ BOOST_AUTO_TEST_CASE(getters)
 	BOOST_CHECK_EQUAL(statement.getInt32(index).value(), 123457);
 	BOOST_CHECK_EQUAL(statement.getInt64(index).value(), 123457);
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index).value(), BoostInt128{123457});
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getScaledBoostInt128(index), FbCppException);
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index).value(), 123456.789f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index).value(), 123456.789);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index).value(), BoostDecFloat16{"123456.789"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index).value(), BoostDecFloat34{"123456.789"});
+#endif
 	BOOST_CHECK(statement.getString(index).value().starts_with("123456.789"));
 
 	// alpha ascii string: _ascii 'abc'
 	++index;
 	BOOST_CHECK(!statement.isNull(index));
 	BOOST_CHECK_THROW(statement.getBool(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getInt64(index), FbCppException);
+#endif
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getBoostInt128(index), FbCppException);
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getScaledBoostInt128(index), FbCppException);
+#endif
 	BOOST_CHECK_THROW(statement.getFloat(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getDouble(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getBoostDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getBoostDecFloat34(index), FbCppException);
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "abc");
 
 	// numeric utf8 string: _utf8 '12345'
 	++index;
 	BOOST_CHECK(!statement.isNull(index));
 	BOOST_CHECK_THROW(statement.getBool(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getInt64(index), FbCppException);
+#endif
 	BOOST_CHECK_THROW(statement.getScaledOpaqueInt128(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getBoostInt128(index), FbCppException);
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt32(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getScaledInt64(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getScaledBoostInt128(index), FbCppException);
+#endif
 	BOOST_CHECK_THROW(statement.getFloat(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getDouble(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getOpaqueDecFloat34(index), FbCppException);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_THROW(statement.getBoostDecFloat16(index), FbCppException);
 	BOOST_CHECK_THROW(statement.getBoostDecFloat34(index), FbCppException);
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index).value(), "12345");
 
 	transaction.commit();
@@ -1634,13 +1867,23 @@ BOOST_AUTO_TEST_CASE(setInt16)
 	statement.setInt16(index++, -32768);
 	statement.setInt16(index++, 32767);
 	statement.setInt16(index++, -32768);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setInt16(index++, 32767);
+#else
+	statement.setNull(index++);
+#endif
 	statement.setInt16(index++, -32768);
 	statement.setInt16(index++, 32767);
 	statement.setInt16(index++, -32768);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setInt16(index++, 32767);
 	statement.setInt16(index++, -32768);
 	statement.setInt16(index++, 32767);
+#else
+	statement.setNull(index++);
+	statement.setNull(index++);
+	statement.setNull(index++);
+#endif
 	statement.setInt16(index++, -32768);
 	statement.setInt16(index++, 32767);
 	BOOST_CHECK(statement.execute(transaction));
@@ -1648,14 +1891,22 @@ BOOST_AUTO_TEST_CASE(setInt16)
 	BOOST_CHECK_EQUAL(statement.getInt16(index++).value(), -32768);
 	BOOST_CHECK_EQUAL(statement.getInt32(index++).value(), 32767);
 	BOOST_CHECK_EQUAL(statement.getInt64(index++).value(), -32768);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index++).value(), BoostInt128{32767});
+#else
+	++index;
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index++).value(), (ScaledInt32{-327680, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index++).value(), (ScaledInt32{327670, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index++).value(), (ScaledInt64{-327680, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index++).value(), (ScaledBoostInt128{BoostInt128{327670}, -1}));
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index++).value(), BoostDecFloat16{"-32768.0"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index++).value(), BoostDecFloat34{"32767.0"});
+#else
+	index += 3;
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index++).value(), -32768.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index++).value(), 32767.0);
 
@@ -1691,13 +1942,23 @@ BOOST_AUTO_TEST_CASE(setScaledInt16)
 	statement.setScaledInt16(index++, ScaledInt16{-32768, -1});
 	statement.setScaledInt16(index++, ScaledInt16{32767, -1});
 	statement.setScaledInt16(index++, ScaledInt16{-32768, -1});
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setScaledInt16(index++, ScaledInt16{32767, -1});
+#else
+	statement.setNull(index++);
+#endif
 	statement.setScaledInt16(index++, ScaledInt16{-32768, -1});
 	statement.setScaledInt16(index++, ScaledInt16{32767, -1});
 	statement.setScaledInt16(index++, ScaledInt16{-32768, -1});
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setScaledInt16(index++, ScaledInt16{32767, -1});
 	statement.setScaledInt16(index++, ScaledInt16{-32768, -1});
 	statement.setScaledInt16(index++, ScaledInt16{32767, -1});
+#else
+	statement.setNull(index++);
+	statement.setNull(index++);
+	statement.setNull(index++);
+#endif
 	statement.setScaledInt16(index++, ScaledInt16{-32768, -1});
 	statement.setScaledInt16(index++, ScaledInt16{32767, -1});
 	BOOST_CHECK(statement.execute(transaction));
@@ -1705,13 +1966,21 @@ BOOST_AUTO_TEST_CASE(setScaledInt16)
 	BOOST_CHECK_EQUAL(statement.getInt16(index++).value(), -3277);
 	BOOST_CHECK_EQUAL(statement.getInt32(index++).value(), 3277);
 	BOOST_CHECK_EQUAL(statement.getInt64(index++).value(), -3277);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index++).value(), BoostInt128{3277});
+#else
+	++index;
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index++).value(), (ScaledInt16{-32768, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index++).value(), (ScaledInt32{32767, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index++).value(), (ScaledInt64{-32768, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index++).value(), (ScaledBoostInt128{BoostInt128{32767}, -1}));
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index++).value(), BoostDecFloat16{"-3276.8"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index++).value(), BoostDecFloat34{"3276.7"});
+#else
+	index += 3;
+#endif
 	BOOST_CHECK_CLOSE(statement.getFloat(index++).value(), -3276.8f, 0.001);
 	BOOST_CHECK_CLOSE(statement.getDouble(index++).value(), 3276.7, 0.0000001);
 
@@ -1746,13 +2015,23 @@ BOOST_AUTO_TEST_CASE(setInt32)
 	statement.setInt32(index++, -32768);
 	statement.setInt32(index++, 2147483647);
 	statement.setInt32(index++, -2147483647 - 1);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setInt32(index++, 2147483647);
+#else
+	statement.setNull(index++);
+#endif
 	statement.setInt32(index++, -32768);
 	statement.setInt32(index++, 214748364);
 	statement.setInt32(index++, -2147483647 - 1);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setInt32(index++, 2147483647);
 	statement.setInt32(index++, -2147483647 - 1);
 	statement.setInt32(index++, 2147483647);
+#else
+	statement.setNull(index++);
+	statement.setNull(index++);
+	statement.setNull(index++);
+#endif
 	statement.setInt32(index++, -2147483647 - 1);
 	statement.setInt32(index++, 2147483647);
 	BOOST_CHECK(statement.execute(transaction));
@@ -1760,15 +2039,23 @@ BOOST_AUTO_TEST_CASE(setInt32)
 	BOOST_CHECK_EQUAL(statement.getInt16(index++).value(), -32768);
 	BOOST_CHECK_EQUAL(statement.getInt32(index++).value(), 2147483647);
 	BOOST_CHECK_EQUAL(statement.getInt64(index++).value(), -2147483648LL);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index++).value(), BoostInt128{2147483647});
+#else
+	++index;
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index++).value(), (ScaledInt32{-327680, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index++).value(), (ScaledInt32{2147483640, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index++).value(), (ScaledInt64{-21474836480LL, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getScaledBoostInt128(index++).value(), (ScaledBoostInt128{BoostInt128{21474836470LL}, -1}));
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index++).value(), BoostDecFloat16{"-2147483648.0"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index++).value(), BoostDecFloat34{"2147483647.0"});
+#else
+	index += 3;
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index++).value(), -2147483648.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index++).value(), 2147483647.0);
 
@@ -1804,13 +2091,23 @@ BOOST_AUTO_TEST_CASE(setScaledInt32)
 	statement.setScaledInt32(index++, ScaledInt32{-327680, -1});
 	statement.setScaledInt32(index++, ScaledInt32{2147483647, 0});
 	statement.setScaledInt32(index++, ScaledInt32{-2147483647 - 1, 0});
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setScaledInt32(index++, ScaledInt32{2147483647, 0});
+#else
+	statement.setNull(index++);
+#endif
 	statement.setScaledInt32(index++, ScaledInt32{-327680, -1});
 	statement.setScaledInt32(index++, ScaledInt32{214748364, -1});
 	statement.setScaledInt32(index++, ScaledInt32{-2147483647 - 1, -1});
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setScaledInt32(index++, ScaledInt32{2147483647, -1});
 	statement.setScaledInt32(index++, ScaledInt32{-2147483647 - 1, 0});
 	statement.setScaledInt32(index++, ScaledInt32{2147483647, 0});
+#else
+	statement.setNull(index++);
+	statement.setNull(index++);
+	statement.setNull(index++);
+#endif
 	statement.setScaledInt32(index++, ScaledInt32{-2147483647 - 1, 0});
 	statement.setScaledInt32(index++, ScaledInt32{2147483647, 0});
 	BOOST_CHECK(statement.execute(transaction));
@@ -1818,14 +2115,26 @@ BOOST_AUTO_TEST_CASE(setScaledInt32)
 	BOOST_CHECK_EQUAL(statement.getInt16(index++).value(), -32768);
 	BOOST_CHECK_EQUAL(statement.getInt32(index++).value(), 2147483647);
 	BOOST_CHECK_EQUAL(statement.getInt64(index++).value(), -2147483648LL);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index++).value(), BoostInt128{2147483647});
+#else
+	++index;
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index++).value(), (ScaledInt32{-327680, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index++).value(), (ScaledInt32{214748364, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index++).value(), (ScaledInt64{-2147483648, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getScaledBoostInt128(index++).value(), (ScaledBoostInt128{BoostInt128{2147483647}, -1}));
+#else
+	++index;
+#endif
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index++).value(), BoostDecFloat16{"-2147483648.0"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index++).value(), BoostDecFloat34{"2147483647.0"});
+#else
+	index += 2;
+#endif
 	BOOST_CHECK_EQUAL(statement.getFloat(index++).value(), -2147483648.0f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index++).value(), 2147483647.0);
 
@@ -1863,13 +2172,23 @@ BOOST_AUTO_TEST_CASE(setInt64)
 	statement.setInt64(index++, -32768);
 	statement.setInt64(index++, 2147483647);
 	statement.setInt64(index++, int64Min);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setInt64(index++, int64Max);
+#else
+	statement.setNull(index++);
+#endif
 	statement.setInt64(index++, -32768);
 	statement.setInt64(index++, 214748364);
 	statement.setInt64(index++, -9223372036854775LL);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setInt64(index++, int64Max);
 	statement.setInt64(index++, -9223372036854775LL);
 	statement.setInt64(index++, int64Max);
+#else
+	statement.setNull(index++);
+	statement.setNull(index++);
+	statement.setNull(index++);
+#endif
 	statement.setInt64(index++, -9223372036854775LL);
 	statement.setInt64(index++, int64Max);
 	BOOST_CHECK(statement.execute(transaction));
@@ -1877,15 +2196,27 @@ BOOST_AUTO_TEST_CASE(setInt64)
 	BOOST_CHECK_EQUAL(statement.getInt16(index++).value(), -32768);
 	BOOST_CHECK_EQUAL(statement.getInt32(index++).value(), 2147483647);
 	BOOST_CHECK_EQUAL(statement.getInt64(index++).value(), int64Min);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index++).value(), BoostInt128{int64Max});
+#else
+	++index;
+#endif
 	BOOST_CHECK_THROW(statement.getScaledInt16(index), FbCppException);
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index++).value(), (ScaledInt32{-327680, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index++).value(), (ScaledInt64{2147483640LL, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index++).value(), (ScaledInt64{-92233720368547750LL, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(
 		statement.getScaledBoostInt128(index++).value(), (ScaledBoostInt128{BoostInt128{"92233720368547758070"}, -1}));
+#else
+	++index;
+#endif
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index++).value(), BoostDecFloat16{"-9223372036854775.0"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index++).value(), BoostDecFloat34{"9223372036854775807.0"});
+#else
+	index += 2;
+#endif
 	BOOST_CHECK_CLOSE(statement.getFloat(index++).value(), static_cast<float>(-9223372036854775LL), 0.001);
 	BOOST_CHECK_CLOSE(statement.getDouble(index++).value(), static_cast<double>(int64Max), 1e-7);
 
@@ -1924,13 +2255,23 @@ BOOST_AUTO_TEST_CASE(setScaledInt64)
 	statement.setScaledInt64(index++, ScaledInt64{-327680, -1});
 	statement.setScaledInt64(index++, ScaledInt64{2147483647, 0});
 	statement.setScaledInt64(index++, ScaledInt64{int64Min, 0});
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setScaledInt64(index++, ScaledInt64{int64Max, 0});
+#else
+	statement.setNull(index++);
+#endif
 	statement.setScaledInt64(index++, ScaledInt64{-327680, -1});
 	statement.setScaledInt64(index++, ScaledInt64{2147483640LL, -1});
 	statement.setScaledInt64(index++, ScaledInt64{-922337203685477580, -1});
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setScaledInt64(index++, ScaledInt64{int64Max, -1});
 	statement.setScaledInt64(index++, ScaledInt64{-9223372036854775LL, 0});
 	statement.setScaledInt64(index++, ScaledInt64{int64Max, 0});
+#else
+	statement.setNull(index++);
+	statement.setNull(index++);
+	statement.setNull(index++);
+#endif
 	statement.setScaledInt64(index++, ScaledInt64{-9223372036854775LL, 0});
 	statement.setScaledInt64(index++, ScaledInt64{int64Max, 0});
 	BOOST_CHECK(statement.execute(transaction));
@@ -1938,19 +2279,28 @@ BOOST_AUTO_TEST_CASE(setScaledInt64)
 	BOOST_CHECK_EQUAL(statement.getInt16(index++).value(), -32768);
 	BOOST_CHECK_EQUAL(statement.getInt32(index++).value(), 2147483647);
 	BOOST_CHECK_EQUAL(statement.getInt64(index++).value(), int64Min);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index++).value(), BoostInt128{int64Max});
+#else
+	++index;
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index++).value(), (ScaledInt32{-327680, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index++).value(), (ScaledInt64{2147483640LL, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index++).value(), (ScaledInt64{-922337203685477580, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index++).value(), (ScaledBoostInt128{BoostInt128{int64Max}, -1}));
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat16(index++).value(), BoostDecFloat16{"-9223372036854775.0"});
 	BOOST_CHECK_EQUAL(statement.getBoostDecFloat34(index++).value(), BoostDecFloat34{"9223372036854775807.0"});
+#else
+	index += 3;
+#endif
 	BOOST_CHECK_CLOSE(statement.getFloat(index++).value(), static_cast<float>(-9223372036854775LL), 0.001);
 	BOOST_CHECK_CLOSE(statement.getDouble(index++).value(), static_cast<double>(int64Max), 1e-7);
 
 	transaction.commit();
 }
 
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 BOOST_AUTO_TEST_CASE(setBoostInt128)
 {
 	Attachment attachment{
@@ -2077,6 +2427,7 @@ BOOST_AUTO_TEST_CASE(setScaledBoostInt128)
 
 	transaction.commit();
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(setString)
 {
@@ -2108,13 +2459,23 @@ BOOST_AUTO_TEST_CASE(setString)
 	statement.setString(index++, "1");
 	statement.setString(index++, "1");
 	statement.setString(index++, "1");
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setString(index++, "1");
+#else
+	statement.setNull(index++);
+#endif
 	statement.setString(index++, "0.6");
 	statement.setString(index++, "-0.6");
 	statement.setString(index++, "0.67");
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	statement.setString(index++, "-0.67");
 	statement.setString(index++, "0.78");
 	statement.setString(index++, "-0.78");
+#else
+	statement.setNull(index++);
+	statement.setNull(index++);
+	statement.setNull(index++);
+#endif
 	BOOST_CHECK_THROW(statement.setString(index, "123456"), FbCppException);
 	statement.setString(index++, "abc");
 	statement.setString(index++, "defgh");
@@ -2124,13 +2485,25 @@ BOOST_AUTO_TEST_CASE(setString)
 	BOOST_CHECK_EQUAL(statement.getInt16(index++).value(), 1);
 	BOOST_CHECK_EQUAL(statement.getInt32(index++).value(), 1);
 	BOOST_CHECK_EQUAL(statement.getInt64(index++).value(), 1);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getBoostInt128(index++).value(), BoostInt128{1});
+#else
+	++index;
+#endif
 	BOOST_CHECK_EQUAL(statement.getScaledInt16(index++).value(), (ScaledInt16{6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt32(index++).value(), (ScaledInt32{-6, -1}));
 	BOOST_CHECK_EQUAL(statement.getScaledInt64(index++).value(), (ScaledInt64{7, -1}));
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getScaledBoostInt128(index++).value(), (ScaledBoostInt128{BoostInt128{-7}, -1}));
+#else
+	++index;
+#endif
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 	BOOST_CHECK_EQUAL(statement.getFloat(index++).value(), 0.78f);
 	BOOST_CHECK_EQUAL(statement.getDouble(index++).value(), -0.78);
+#else
+	index += 2;
+#endif
 	BOOST_CHECK_EQUAL(statement.getString(index++).value(), "abc");
 	BOOST_CHECK_EQUAL(statement.getString(index++).value(), "defgh     ");
 

@@ -1044,9 +1044,6 @@ namespace fbcpp
 				case DescriptorAdjustedType::INT16:
 				case DescriptorAdjustedType::INT32:
 				case DescriptorAdjustedType::INT64:
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-				case DescriptorAdjustedType::INT128:
-#endif
 				{
 					std::string strValue(value);
 					int scale = 0;
@@ -1066,47 +1063,6 @@ namespace fbcpp
 						strValue.erase(dotPos, 1);
 					}
 
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-					const auto parseDecimalToBoostInt128 = [this](std::string_view text)
-					{
-						bool isNegative = false;
-						std::size_t pos = 0;
-
-						if (!text.empty() && (text.front() == '+' || text.front() == '-'))
-						{
-							isNegative = text.front() == '-';
-							++pos;
-						}
-
-						if (pos == text.size())
-							this->numericConverter.throwConversionErrorFromString(std::string{text});
-
-						BoostInt128 result{};
-
-						for (; pos < text.size(); ++pos)
-						{
-							const char c = text[pos];
-
-							if (c < '0' || c > '9')
-								this->numericConverter.throwConversionErrorFromString(std::string{text});
-
-							result *= 10;
-							result += static_cast<int>(c - '0');
-						}
-
-						return isNegative ? -result : result;
-					};
-
-					auto scaledValue = ScaledBoostInt128{parseDecimalToBoostInt128(strValue), scale};
-
-					if (scale != descriptor.scale)
-					{
-						scaledValue.value = numericConverter.numberToNumber<BoostInt128>(scaledValue, descriptor.scale);
-						scaledValue.scale = descriptor.scale;
-					}
-
-					setScaledBoostInt128(index, scaledValue);
-#else
 					static_assert(sizeof(long long) == sizeof(std::int64_t));
 					std::int64_t intValue;
 					const auto convResult =
@@ -1123,8 +1079,17 @@ namespace fbcpp
 					}
 
 					setScaledInt64(index, scaledValue);
-#endif
 					return;
+				}
+
+				case DescriptorAdjustedType::INT128:
+				{
+					std::string strValue(value);
+					attachment.getClient()
+						.getInt128Util(&statusWrapper)
+						->fromString(&statusWrapper, descriptor.scale, strValue.c_str(),
+							reinterpret_cast<OpaqueInt128*>(&message[descriptor.offset]));
+					break;
 				}
 
 				case DescriptorAdjustedType::FLOAT:
@@ -1172,6 +1137,7 @@ namespace fbcpp
 						calendarConverter.stringToOpaqueTimestampTz(value);
 					break;
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+				// FIXME: use IDecFloat
 				case DescriptorAdjustedType::DECFLOAT16:
 				case DescriptorAdjustedType::DECFLOAT34:
 					try
@@ -2025,12 +1991,9 @@ namespace fbcpp
 					return numericConverter.numberToString(
 						ScaledInt64{*reinterpret_cast<const std::int64_t*>(data), descriptor.scale});
 
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 				case DescriptorAdjustedType::INT128:
-					return numericConverter.numberToString(ScaledBoostInt128{
-						numericConverter.opaqueInt128ToBoostInt128(*reinterpret_cast<const OpaqueInt128*>(data)),
-						descriptor.scale});
-#endif
+					return numericConverter.opaqueInt128ToString(
+						*reinterpret_cast<const OpaqueInt128*>(data), descriptor.scale);
 
 				case DescriptorAdjustedType::FLOAT:
 					return numericConverter.numberToString(*reinterpret_cast<const float*>(data));
@@ -2054,15 +2017,11 @@ namespace fbcpp
 					return calendarConverter.opaqueTimestampTzToString(
 						*reinterpret_cast<const OpaqueTimestampTz*>(data));
 
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 				case DescriptorAdjustedType::DECFLOAT16:
-					return numericConverter.numberToString(numericConverter.opaqueDecFloat16ToBoostDecFloat16(
-						*reinterpret_cast<const OpaqueDecFloat16*>(data)));
+					return numericConverter.opaqueDecFloat16ToString(*reinterpret_cast<const OpaqueDecFloat16*>(data));
 
 				case DescriptorAdjustedType::DECFLOAT34:
-					return numericConverter.numberToString(numericConverter.opaqueDecFloat34ToBoostDecFloat34(
-						*reinterpret_cast<const OpaqueDecFloat34*>(data)));
-#endif
+					return numericConverter.opaqueDecFloat34ToString(*reinterpret_cast<const OpaqueDecFloat34*>(data));
 
 				case DescriptorAdjustedType::STRING:
 					return std::string{reinterpret_cast<const char*>(data + sizeof(std::uint16_t)),
@@ -2213,6 +2172,7 @@ namespace fbcpp
 			std::optional<BoostDecFloat34> boostDecFloat34;
 #endif
 
+			// FIXME: Use IUtil
 			switch (descriptor.adjustedType)
 			{
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0

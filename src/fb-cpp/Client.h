@@ -94,6 +94,7 @@ namespace fbcpp
 		Client(Client&& o) noexcept
 			: master{o.master},
 			  util{o.util},
+			  int128Util{o.int128Util},
 			  decFloat16Util{o.decFloat16Util},
 			  decFloat34Util{o.decFloat34Util}
 #if FB_CPP_USE_BOOST_DLL != 0
@@ -103,6 +104,7 @@ namespace fbcpp
 		{
 			o.master = nullptr;
 			o.util = nullptr;
+			o.int128Util = nullptr;
 			o.decFloat16Util = nullptr;
 			o.decFloat34Util = nullptr;
 		}
@@ -150,6 +152,20 @@ namespace fbcpp
 		}
 
 		///
+		/// Returns a Firebird IInt128 interface.
+		///
+		template <std::derived_from<fb::IStatus> StatusType>
+		fb::IInt128* getInt128Util(StatusType* status)
+		{
+			assert(status);
+
+			if (!int128Util)
+				int128Util = getUtil()->getInt128(status);
+
+			return int128Util;
+		}
+
+		///
 		/// Returns a Firebird IDecFloat16 interface.
 		///
 		template <std::derived_from<fb::IStatus> StatusType>
@@ -194,6 +210,7 @@ namespace fbcpp
 	private:
 		fb::IMaster* master;
 		fb::IUtil* util = nullptr;
+		fb::IInt128* int128Util = nullptr;
 		fb::IDecFloat16* decFloat16Util = nullptr;
 		fb::IDecFloat34* decFloat34Util = nullptr;
 #if FB_CPP_USE_BOOST_DLL != 0

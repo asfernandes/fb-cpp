@@ -43,4 +43,11 @@ BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 	BOOST_CHECK_EQUAL(client1.isValid(), false);
 }
 
+#if FB_CPP_USE_BOOST_DLL != 0
+BOOST_AUTO_TEST_CASE(loadWithBoostDll)
+{
+	BOOST_CHECK_THROW(Client("invalid_library_name"), boost::system::system_error);
+}
+#endif
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -47,8 +47,11 @@ using namespace std::chrono_literals;
 
 static constexpr float floatTolerance = 0.00001f;
 static constexpr double doubleTolerance = 0.0000000000001;
+
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 static const BoostDecFloat16 decFloat16Tolerance{"0.00000000000001"};
 static const BoostDecFloat34 decFloat34Tolerance{"0.00000000000000000000000000000001"};
+#endif
 
 
 // FIXME: join with test/Statement.cpp
@@ -253,18 +256,6 @@ namespace
 		blob.write(std::as_bytes(std::span{text.data(), text.size()}));
 		blob.close();
 	}
-
-	void verifyDecFloatEqual(const BoostDecFloat16& expected, const BoostDecFloat16& actual)
-	{
-		using boost::multiprecision::abs;
-		BOOST_CHECK(abs(actual - expected) <= decFloat16Tolerance);
-	}
-
-	void verifyDecFloatEqual(const BoostDecFloat34& expected, const BoostDecFloat34& actual)
-	{
-		using boost::multiprecision::abs;
-		BOOST_CHECK(abs(actual - expected) <= decFloat34Tolerance);
-	}
 }  // namespace
 
 BOOST_AUTO_TEST_CASE(parameterBindingAndGetters)
@@ -333,20 +324,29 @@ BOOST_AUTO_TEST_CASE(parameterBindingAndGetters)
 		const std::int64_t bigIntValue = 9876543210123;
 		const ScaledInt64 scaledInt64Value{9876543210123, -4};
 
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 		const BoostInt128 boostIntValue{"123456789012345678901234567890"};
 		const BoostInt128 boostScaledIntValue{"222222222222222222222222222222"};
 		const OpaqueInt128 opaqueIntValue = numericConverter.boostInt128ToOpaqueInt128(boostIntValue);
 		const ScaledBoostInt128 scaledBoostValue{boostScaledIntValue, -2};
+#else
+		const OpaqueInt128 opaqueIntValue = {0, 0};  // Dummy
+#endif
 
 		const float floatValue = 12.3456f;
 		const double doubleValue = 9876.54321;
 
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 		const BoostDecFloat16 boostDecFloat16Value{"12345.6789"};
 		const BoostDecFloat34 boostDecFloat34Value{"98765.4321987654321"};
 		const OpaqueDecFloat16 opaqueDecFloat16Value =
 			numericConverter.boostDecFloat16ToOpaqueDecFloat16(boostDecFloat16Value);
 		const OpaqueDecFloat34 opaqueDecFloat34Value =
 			numericConverter.boostDecFloat34ToOpaqueDecFloat34(boostDecFloat34Value);
+#else
+		const OpaqueDecFloat16 opaqueDecFloat16Value = {0};  // Dummy
+		const OpaqueDecFloat34 opaqueDecFloat34Value = {0};  // Dummy
+#endif
 
 		const Date dateValue{2024y / March / 15d};
 		const Time timeValue{13h + 14min + 15s + 123456us};
@@ -408,11 +408,16 @@ BOOST_AUTO_TEST_CASE(parameterBindingAndGetters)
 		insertStmt.setOpaqueInt128(8, opaqueIntValue);
 		insertStmt.set(8, opaqueIntValue);
 
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 		insertStmt.setBoostInt128(9, boostIntValue);
 		insertStmt.set(9, boostIntValue);
 
 		insertStmt.setScaledBoostInt128(10, scaledBoostValue);
 		insertStmt.set(10, scaledBoostValue);
+#else
+		insertStmt.setNull(9);
+		insertStmt.setNull(10);
+#endif
 
 		insertStmt.setFloat(11, floatValue);
 		insertStmt.set(11, floatValue);
@@ -423,6 +428,7 @@ BOOST_AUTO_TEST_CASE(parameterBindingAndGetters)
 		insertStmt.setOpaqueDecFloat16(13, opaqueDecFloat16Value);
 		insertStmt.set(13, opaqueDecFloat16Value);
 
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 		insertStmt.setBoostDecFloat16(14, boostDecFloat16Value);
 		insertStmt.set(14, boostDecFloat16Value);
 
@@ -431,6 +437,12 @@ BOOST_AUTO_TEST_CASE(parameterBindingAndGetters)
 
 		insertStmt.setBoostDecFloat34(16, boostDecFloat34Value);
 		insertStmt.set(16, boostDecFloat34Value);
+#else
+		insertStmt.setNull(14);
+		insertStmt.setOpaqueDecFloat34(15, opaqueDecFloat34Value);
+		insertStmt.set(15, opaqueDecFloat34Value);
+		insertStmt.setNull(16);
+#endif
 
 		insertStmt.setDate(17, dateValue);
 		insertStmt.set(17, dateValue);
@@ -531,6 +543,7 @@ BOOST_AUTO_TEST_CASE(parameterBindingAndGetters)
 		BOOST_CHECK_EQUAL(scaledBigInt.value().value, scaledInt64Value.value);
 		BOOST_CHECK_EQUAL(scaledBigInt.value().scale, scaledInt64Value.scale);
 
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 		const auto scaledOpaqueInt = selectStmt.getScaledOpaqueInt128(8);
 		BOOST_REQUIRE(scaledOpaqueInt.has_value());
 		const auto boostFromOpaque = numericConverter.opaqueInt128ToBoostInt128(scaledOpaqueInt.value().value);
@@ -544,6 +557,7 @@ BOOST_AUTO_TEST_CASE(parameterBindingAndGetters)
 		BOOST_REQUIRE(scaledBoost.has_value());
 		BOOST_CHECK(scaledBoost.value().value == scaledBoostValue.value);
 		BOOST_CHECK_EQUAL(scaledBoost.value().scale, scaledBoostValue.scale);
+#endif
 
 		const auto floatResult = selectStmt.getFloat(11);
 		BOOST_REQUIRE(floatResult.has_value());
@@ -558,18 +572,22 @@ BOOST_AUTO_TEST_CASE(parameterBindingAndGetters)
 		BOOST_CHECK_EQUAL(numericConverter.opaqueDecFloat16ToString(opaqueDec16.value()),
 			numericConverter.opaqueDecFloat16ToString(opaqueDecFloat16Value));
 
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 		const auto boostDec16 = selectStmt.getBoostDecFloat16(14);
 		BOOST_REQUIRE(boostDec16.has_value());
-		verifyDecFloatEqual(boostDecFloat16Value, boostDec16.value());
+		BOOST_CHECK_CLOSE(boostDec16.value(), boostDecFloat16Value, decFloat16Tolerance);
+#endif
 
 		const auto opaqueDec34 = selectStmt.getOpaqueDecFloat34(15);
 		BOOST_REQUIRE(opaqueDec34.has_value());
 		BOOST_CHECK_EQUAL(numericConverter.opaqueDecFloat34ToString(opaqueDec34.value()),
 			numericConverter.opaqueDecFloat34ToString(opaqueDecFloat34Value));
 
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 		const auto boostDec34 = selectStmt.getBoostDecFloat34(16);
 		BOOST_REQUIRE(boostDec34.has_value());
-		verifyDecFloatEqual(boostDecFloat34Value, boostDec34.value());
+		BOOST_CHECK_CLOSE(boostDec34.value(), boostDecFloat34Value, decFloat34Tolerance);
+#endif
 
 		const auto dateResult = selectStmt.getDate(17);
 		BOOST_REQUIRE(dateResult.has_value());

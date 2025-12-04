@@ -20,6 +20,5 @@
 - Use `cmake --build --preset default` from the repo root.
 
 ### Tests
-- Test code can use Boost.Multiprecision without conditional compilation.
 - Run the Boost.Test suite with `ctest --preset default --verbose`.
 - Boost.Test options can be used with environments variables like `BOOST_TEST_LOG_LEVEL=all`.
