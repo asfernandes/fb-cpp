@@ -31,6 +31,7 @@
 #include <cassert>
 #include <cctype>
 #include <charconv>
+#include <cmath>
 #include <concepts>
 #include <cstddef>
 #include <cstdlib>
@@ -204,6 +205,12 @@ namespace fbcpp::impl
 		{
 			using ComputeType = GreaterNumberType<double, From>;
 
+			if constexpr (std::is_floating_point_v<From>)
+			{
+				if (std::isnan(from) || std::isinf(from))
+					throwNumericOutOfRange();
+			}
+
 			ComputeType value{from};
 			const ComputeType eps = conversionEpsilon<ComputeType>();
 
@@ -336,7 +343,13 @@ namespace fbcpp::impl
 		std::string numberToString(const From& from)
 		{
 			if constexpr (std::is_floating_point_v<From>)
+			{
+				if (std::isnan(from))
+					return "NaN";
+				if (std::isinf(from))
+					return from > 0 ? "Infinity" : "-Infinity";
 				return std::to_string(from);
+			}
 			else
 				return from.str();
 		}
