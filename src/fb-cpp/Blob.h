@@ -69,7 +69,14 @@ namespace fbcpp
 	///
 	enum class BlobStorage : std::uint8_t
 	{
+		///
+		/// Blob is stored in the main database file.
+		///
 		MAIN = isc_bpb_storage_main,
+
+		///
+		/// Blob is stored in temporary storage and will not persist beyond the transaction.
+		///
 		TEMPORARY = isc_bpb_storage_temp
 	};
 
@@ -78,7 +85,14 @@ namespace fbcpp
 	///
 	enum class BlobType : std::uint8_t
 	{
+		///
+		/// Blob is stored and accessed as discrete segments.
+		///
 		SEGMENTED = isc_bpb_type_segmented,
+
+		///
+		/// Blob is treated as a continuous stream of bytes.
+		///
 		STREAM = isc_bpb_type_stream
 	};
 
@@ -231,8 +245,19 @@ namespace fbcpp
 	///
 	enum class BlobSeekMode : int
 	{
+		///
+		/// Offset is relative to the beginning of the blob.
+		///
 		FROM_BEGIN = 0,
+
+		///
+		/// Offset is relative to the current position in the blob.
+		///
 		FROM_CURRENT = blb_seek_relative,
+
+		///
+		/// Offset is relative to the end of the blob.
+		///
 		FROM_END = blb_seek_from_tail
 	};
 

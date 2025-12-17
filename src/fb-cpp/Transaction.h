@@ -48,8 +48,19 @@ namespace fbcpp
 	///
 	enum class TransactionIsolationLevel
 	{
+		///
+		/// Ensures full transaction consistency at the expense of concurrency.
+		///
 		CONSISTENCY,
+
+		///
+		/// Allows reading of committed changes from other transactions.
+		///
 		READ_COMMITTED,
+
+		///
+		/// Provides a stable snapshot of the database at transaction start time.
+		///
 		SNAPSHOT
 	};
 
@@ -58,7 +69,14 @@ namespace fbcpp
 	///
 	enum class TransactionReadCommittedMode
 	{
+		///
+		/// Does not allow reading of record versions; waits for or errors on uncommitted changes.
+		///
 		NO_RECORD_VERSION,
+
+		///
+		/// Allows reading of the latest committed version of a record.
+		///
 		RECORD_VERSION
 	};
 
@@ -67,7 +85,14 @@ namespace fbcpp
 	///
 	enum class TransactionAccessMode
 	{
+		///
+		/// Transaction can only read data; write operations are not permitted.
+		///
 		READ_ONLY,
+
+		///
+		/// Transaction can read and write data.
+		///
 		READ_WRITE
 	};
 
@@ -76,7 +101,14 @@ namespace fbcpp
 	///
 	enum class TransactionWaitMode
 	{
+		///
+		/// Transaction returns an error immediately if a lock conflict occurs.
+		///
 		NO_WAIT,
+
+		///
+		/// Transaction waits until a conflicting lock is released.
+		///
 		WAIT
 	};
 

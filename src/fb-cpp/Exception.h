@@ -176,22 +176,34 @@ namespace fbcpp::impl
 ///
 namespace fbcpp
 {
+	///
+	/// Base exception class for all fb-cpp exceptions.
+	///
 	class FbCppException : public std::runtime_error
 	{
 	public:
 		using std::runtime_error::runtime_error;
 
+		///
+		/// Constructs an FbCppException with the specified error message.
+		///
 		explicit FbCppException(const std::string& message)
 			: std::runtime_error{message}
 		{
 		}
 	};
 
+	///
+	/// Exception thrown when a Firebird database operation fails.
+	///
 	class DatabaseException final : public FbCppException
 	{
 	public:
 		using FbCppException::FbCppException;
 
+		///
+		/// Constructs a DatabaseException from a Firebird status vector.
+		///
 		explicit DatabaseException(Client& client, const std::intptr_t* status)
 			: FbCppException{buildMessage(client, status)}
 		{

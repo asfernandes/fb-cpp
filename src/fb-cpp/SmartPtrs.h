@@ -45,9 +45,15 @@ namespace fbcpp
 		};
 	}  // namespace impl
 
+	///
+	/// Unique pointer type for Firebird disposable objects.
+	///
 	template <typename T>
 	using FbUniquePtr = std::unique_ptr<T, impl::FbDisposeDeleter>;
 
+	///
+	/// Creates a unique pointer for a Firebird disposable object.
+	///
 	template <typename T>
 	FbUniquePtr<T> fbUnique(T* obj) noexcept
 	{
@@ -55,6 +61,9 @@ namespace fbcpp
 	}
 
 	// FIXME: Review every usage to see if is not leaking one reference count.
+	///
+	/// Reference-counted smart pointer for Firebird objects using addRef/release semantics.
+	///
 	template <typename T>
 	class FbRef final
 	{
@@ -212,6 +221,9 @@ namespace fbcpp
 		T* ptr;
 	};
 
+	///
+	/// Creates a reference-counted smart pointer for a Firebird object.
+	///
 	template <typename T>
 	FbRef<T> fbRef(T* arg) noexcept
 	{
