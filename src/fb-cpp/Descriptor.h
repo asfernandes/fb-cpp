@@ -38,25 +38,104 @@ namespace fbcpp
 	///
 	enum class DescriptorOriginalType : unsigned
 	{
+		///
+		/// Null type indicator.
+		///
 		NULL_TYPE = SQL_NULL,
+
+		///
+		/// Fixed-length text.
+		///
 		TEXT = SQL_TEXT,
+
+		///
+		/// Variable-length text.
+		///
 		VARYING = SQL_VARYING,
+
+		///
+		/// 16-bit signed integer.
+		///
 		SHORT = SQL_SHORT,
+
+		///
+		/// 32-bit signed integer.
+		///
 		LONG = SQL_LONG,
+
+		///
+		/// Single-precision floating point.
+		///
 		FLOAT = SQL_FLOAT,
+
+		///
+		/// Double-precision floating point.
+		///
 		DOUBLE = SQL_DOUBLE,
+
+		///
+		/// Timestamp without time zone.
+		///
 		TIMESTAMP = SQL_TIMESTAMP,
+
+		///
+		/// Binary large object.
+		///
 		BLOB = SQL_BLOB,
+
+		///
+		/// Time of day without time zone.
+		///
 		TIME = SQL_TYPE_TIME,
+
+		///
+		/// Calendar date.
+		///
 		DATE = SQL_TYPE_DATE,
+
+		///
+		/// 64-bit signed integer.
+		///
 		INT64 = SQL_INT64,
+
+		///
+		/// Timestamp with time zone.
+		///
 		TIMESTAMP_TZ = SQL_TIMESTAMP_TZ,
+
+		///
+		/// Extended timestamp with time zone.
+		///
 		TIMESTAMP_TZ_EX = SQL_TIMESTAMP_TZ_EX,
+
+		///
+		/// Time of day with time zone.
+		///
 		TIME_TZ = SQL_TIME_TZ,
+
+		///
+		/// Extended time of day with time zone.
+		///
 		TIME_TZ_EX = SQL_TIME_TZ_EX,
+
+		///
+		/// 128-bit signed integer.
+		///
 		INT128 = SQL_INT128,
+
+		///
+		/// 16-digit decimal floating point.
+		///
 		DEC16 = SQL_DEC16,
+
+		///
+		/// 34-digit decimal floating point.
+		///
 		DEC34 = SQL_DEC34,
+
+		///
+		/// Boolean value.
+		///
 		BOOLEAN = SQL_BOOLEAN,
 	};
 
@@ -65,24 +144,99 @@ namespace fbcpp
 	///
 	enum class DescriptorAdjustedType : unsigned
 	{
+		///
+		/// Null type indicator.
+		///
 		NULL_TYPE = SQL_NULL,
+
+		///
+		/// String type (variable-length).
+		///
 		STRING = SQL_VARYING,
+
+		///
+		/// 16-bit signed integer.
+		///
 		INT16 = SQL_SHORT,
+
+		///
+		/// 32-bit signed integer.
+		///
 		INT32 = SQL_LONG,
+
+		///
+		/// Single-precision floating point.
+		///
 		FLOAT = SQL_FLOAT,
+
+		///
+		/// Double-precision floating point.
+		///
 		DOUBLE = SQL_DOUBLE,
+
+		///
+		/// Timestamp without time zone.
+		///
 		TIMESTAMP = SQL_TIMESTAMP,
+
+		///
+		/// Binary large object.
+		///
 		BLOB = SQL_BLOB,
+
+		///
+		/// Time of day without time zone.
+		///
 		TIME = SQL_TYPE_TIME,
+
+		///
+		/// Calendar date.
+		///
 		DATE = SQL_TYPE_DATE,
+
+		///
+		/// 64-bit signed integer.
+		///
 		INT64 = SQL_INT64,
+
+		///
+		/// Timestamp with time zone.
+		///
 		TIMESTAMP_TZ = SQL_TIMESTAMP_TZ,
+
+		///
+		/// Extended timestamp with time zone.
+		///
 		TIMESTAMP_TZ_EX = SQL_TIMESTAMP_TZ_EX,
+
+		///
+		/// Time of day with time zone.
+		///
 		TIME_TZ = SQL_TIME_TZ,
+
+		///
+		/// Extended time of day with time zone.
+		///
 		TIME_TZ_EX = SQL_TIME_TZ_EX,
+
+		///
+		/// 128-bit signed integer.
+		///
 		INT128 = SQL_INT128,
+
+		///
+		/// 16-digit decimal floating point.
+		///
 		DECFLOAT16 = SQL_DEC16,
+
+		///
+		/// 34-digit decimal floating point.
+		///
 		DECFLOAT34 = SQL_DEC34,
+
+		///
+		/// Boolean value.
+		///
 		BOOLEAN = SQL_BOOLEAN,
 	};
 
@@ -91,12 +245,39 @@ namespace fbcpp
 	///
 	struct Descriptor final
 	{
+		///
+		/// Original SQL type as reported by Firebird.
+		///
 		DescriptorOriginalType originalType;
+
+		///
+		/// Adjusted type after normalization for easier handling.
+		///
 		DescriptorAdjustedType adjustedType;
+
+		///
+		/// Decimal scale for numeric types; zero for non-numeric types.
+		///
 		int scale;
+
+		///
+		/// Length in bytes of the column or parameter data.
+		///
 		unsigned length;
+
+		///
+		/// Byte offset of this field within the message buffer.
+		///
 		unsigned offset;
+
+		///
+		/// Byte offset of the null indicator within the message buffer.
+		///
 		unsigned nullOffset;
+
+		///
+		/// Indicates whether the column or parameter can contain null values.
+		///
 		bool isNullable;
 		// FIXME: more things
 	};
