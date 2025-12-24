@@ -40,7 +40,8 @@ namespace fbcpp
 		{
 			void operator()(fb::IDisposable* obj) noexcept
 			{
-				obj->dispose();
+				if (obj)
+					obj->dispose();
 			}
 		};
 	}  // namespace impl

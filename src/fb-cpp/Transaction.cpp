@@ -32,16 +32,9 @@ using namespace fbcpp;
 using namespace fbcpp::impl;
 
 
-Transaction::Transaction(Attachment& attachment, const TransactionOptions& options)
-	: client{attachment.getClient()}
+static FbUniquePtr<fb::IXpbBuilder> buildTpb(
+	fb::IMaster* master, StatusWrapper& statusWrapper, const TransactionOptions& options)
 {
-	assert(attachment.isValid());
-
-	const auto master = client.getMaster();
-
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
-
 	auto tpbBuilder = fbUnique(master->getUtilInterface()->getXpbBuilder(&statusWrapper, fb::IXpbBuilder::TPB,
 		reinterpret_cast<const std::uint8_t*>(options.getTpb().data()),
 		static_cast<unsigned>(options.getTpb().size())));
@@ -135,6 +128,21 @@ Transaction::Transaction(Attachment& attachment, const TransactionOptions& optio
 	if (options.getAutoCommit())
 		tpbBuilder->insertTag(&statusWrapper, isc_tpb_autocommit);
 
+	return tpbBuilder;
+}
+
+
+Transaction::Transaction(Attachment& attachment, const TransactionOptions& options)
+	: client{attachment.getClient()}
+{
+	assert(attachment.isValid());
+
+	const auto master = client.getMaster();
+
+	const auto status = client.newStatus();
+	StatusWrapper statusWrapper{client, status.get()};
+
+	auto tpbBuilder = buildTpb(master, statusWrapper, options);
 	const auto tpbBuffer = tpbBuilder->getBuffer(&statusWrapper);
 	const auto tpbBufferLen = tpbBuilder->getBufferLength(&statusWrapper);
 
@@ -154,32 +162,72 @@ Transaction::Transaction(Attachment& attachment, std::string_view setTransaction
 			setTransactionCmd.data(), SQL_DIALECT_V6, nullptr, nullptr, nullptr, nullptr));
 }
 
+Transaction::Transaction(std::span<std::reference_wrapper<Attachment>> attachments, const TransactionOptions& options)
+	: client{attachments[0].get().getClient()},
+	  isMultiDatabase{true}
+{
+	assert(!attachments.empty());
+
+	// Validate all attachments use the same Client
+	for (const auto& attachment : attachments)
+	{
+		assert(attachment.get().isValid());
+
+		if (&attachment.get().getClient() != &client)
+			throw std::invalid_argument("All attachments must use the same Client for multi-database transactions");
+	}
+
+	const auto master = client.getMaster();
+
+	const auto status = client.newStatus();
+	StatusWrapper statusWrapper{client, status.get()};
+
+	auto tpbBuilder = buildTpb(master, statusWrapper, options);
+	const auto tpbBuffer = tpbBuilder->getBuffer(&statusWrapper);
+	const auto tpbBufferLen = tpbBuilder->getBufferLength(&statusWrapper);
+
+	auto dtcInterface = master->getDtc();
+	auto dtcStart = fbUnique(dtcInterface->startBuilder(&statusWrapper));
+
+	// Add each attachment with the same TPB
+	for (const auto& attachment : attachments)
+		dtcStart->addWithTpb(&statusWrapper, attachment.get().getHandle().get(), tpbBufferLen, tpbBuffer);
+
+	// Start the multi-database transaction, which disposes the IDtcStart instance
+	handle.reset(dtcStart->start(&statusWrapper));
+	dtcStart.release();
+}
+
 void Transaction::rollback()
 {
 	assert(isValid());
+	assert(state == TransactionState::ACTIVE || state == TransactionState::PREPARED);
 
 	const auto status = client.newStatus();
 	StatusWrapper statusWrapper{client, status.get()};
 
 	handle->rollback(&statusWrapper);
 	handle.reset();
+	state = TransactionState::ROLLED_BACK;
 }
-
 
 void Transaction::commit()
 {
 	assert(isValid());
+	assert(state == TransactionState::ACTIVE || state == TransactionState::PREPARED);
 
 	const auto status = client.newStatus();
 	StatusWrapper statusWrapper{client, status.get()};
 
 	handle->commit(&statusWrapper);
 	handle.reset();
+	state = TransactionState::COMMITTED;
 }
 
 void Transaction::commitRetaining()
 {
 	assert(isValid());
+	assert(state == TransactionState::ACTIVE);
 
 	const auto status = client.newStatus();
 	StatusWrapper statusWrapper{client, status.get()};
@@ -190,9 +238,33 @@ void Transaction::commitRetaining()
 void Transaction::rollbackRetaining()
 {
 	assert(isValid());
+	assert(state == TransactionState::ACTIVE);
 
 	const auto status = client.newStatus();
 	StatusWrapper statusWrapper{client, status.get()};
 
 	handle->rollbackRetaining(&statusWrapper);
+}
+
+void Transaction::prepare()
+{
+	prepare(std::span<const std::uint8_t>{});
+}
+
+void Transaction::prepare(std::span<const std::uint8_t> message)
+{
+	assert(isValid());
+	assert(state == TransactionState::ACTIVE);
+
+	const auto status = client.newStatus();
+	StatusWrapper statusWrapper{client, status.get()};
+
+	handle->prepare(&statusWrapper, static_cast<unsigned>(message.size()), message.data());
+	state = TransactionState::PREPARED;
+}
+
+void Transaction::prepare(std::string_view message)
+{
+	const auto messageBytes = reinterpret_cast<const std::uint8_t*>(message.data());
+	prepare(std::span<const std::uint8_t>{messageBytes, message.size()});
 }

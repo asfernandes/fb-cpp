@@ -29,6 +29,7 @@
 #include "SmartPtrs.h"
 #include <memory>
 #include <optional>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -300,16 +301,55 @@ namespace fbcpp
 	class Client;
 
 	///
-	/// Represents a transaction in a Firebird database.
+	/// Transaction state for tracking two-phase commit lifecycle.
+	///
+	enum class TransactionState
+	{
+		///
+		/// Transaction is active and can execute statements.
+		///
+		ACTIVE,
+
+		///
+		/// Transaction has been prepared (2PC phase 1).
+		///
+		PREPARED,
+
+		///
+		/// Transaction has been committed.
+		///
+		COMMITTED,
+
+		///
+		/// Transaction has been rolled back.
+		///
+		ROLLED_BACK
+	};
+
+	///
+	/// Represents a transaction in one or more Firebird databases.
+	///
+	/// Single-database transactions are created using the Attachment constructor.
+	/// Multi-database transactions are created using the vector of Attachments constructor
+	/// and support two-phase commit (2PC) protocol via the prepare() method.
+	///
+	/// For 2PC:
+	/// 1. Create multi-database transaction with multiple Attachments
+	/// 2. Execute statements across databases
+	/// 3. Call prepare() to enter prepared state
+	/// 4. Call commit() or rollback() to complete
+	///
+	/// Important: Prepared transactions MUST be explicitly committed or rolled back.
+	/// The destructor will NOT automatically rollback prepared transactions.
+	///
 	/// The Transaction must exist and remain valid while there are other objects
 	/// using it, such as Statement. If a Transaction object is destroyed before
-	/// being committed or rolled back, it will be automatically rolled back.
+	/// being committed or rolled back (and not prepared), it will be automatically
+	/// rolled back.
 	///
 	class Transaction final
 	{
 	public:
-		//// TODO: 2PC transactions.
-
 		///
 		/// Constructs a Transaction object that starts a transaction in the specified
 		/// Attachment using the specified options.
@@ -323,13 +363,28 @@ namespace fbcpp
 		explicit Transaction(Attachment& attachment, std::string_view setTransactionCmd);
 
 		///
+		/// Constructs a Transaction object that starts a multi-database transaction
+		/// across the specified Attachments using the specified options.
+		///
+		/// All attachments must use the same Client. The same TransactionOptions
+		/// (TPB) will be applied to all databases.
+		///
+		/// This constructor enables two-phase commit (2PC) support via the prepare() method.
+		///
+		explicit Transaction(
+			std::span<std::reference_wrapper<Attachment>> attachments, const TransactionOptions& options = {});
+
+		///
 		/// Move constructor.
 		/// A moved Transaction object becomes invalid.
 		///
 		Transaction(Transaction&& o) noexcept
 			: client{o.client},
-			  handle{std::move(o.handle)}
+			  handle{std::move(o.handle)},
+			  state{o.state},
+			  isMultiDatabase{o.isMultiDatabase}
 		{
+			o.state = TransactionState::ROLLED_BACK;
 		}
 
 		Transaction& operator=(Transaction&&) = delete;
@@ -340,13 +395,20 @@ namespace fbcpp
 		///
 		/// Rolls back the transaction if it is still active.
 		///
+		/// Prepared transactions are NOT automatically rolled back and must be
+		/// explicitly committed or rolled back before destruction.
+		///
 		~Transaction() noexcept
 		{
 			if (isValid())
 			{
+				assert(state != TransactionState::PREPARED &&
+					"Prepared transaction must be explicitly committed or rolled back");
+
 				try
 				{
-					rollback();
+					if (state == TransactionState::ACTIVE)
+						rollback();
 				}
 				catch (...)
 				{
@@ -373,28 +435,68 @@ namespace fbcpp
 		}
 
 		///
+		/// Returns the current transaction state.
+		///
+		TransactionState getState() const noexcept
+		{
+			return state;
+		}
+
+		///
+		/// Prepares the transaction for two-phase commit (2PC phase 1).
+		///
+		/// After prepare() is called, the transaction must be explicitly committed or rolled back.
+		/// The destructor will NOT automatically rollback prepared transactions.
+		///
+		void prepare();
+
+		///
+		/// Prepares the transaction for two-phase commit with a text message identifier.
+		///
+		/// The message can be used to identify the transaction during recovery operations.
+		///
+		void prepare(std::string_view message);
+
+		///
+		/// Prepares the transaction for two-phase commit with a binary message identifier.
+		///
+		/// The message can be used to identify the transaction during recovery operations.
+		///
+		void prepare(std::span<const std::uint8_t> message);
+
+		///
 		/// Commits the transaction.
+		///
+		/// Can be called from ACTIVE or PREPARED state.
 		///
 		void commit();
 
 		///
 		/// Commits the transaction while maintains it active.
 		///
+		/// Cannot be called on a prepared transaction.
+		///
 		void commitRetaining();
 
 		///
 		/// Rolls back the transaction.
 		///
+		/// Can be called from ACTIVE or PREPARED state.
+		///
 		void rollback();
 
 		///
 		/// Rolls back the transaction while maintains it active.
-		//
+		///
+		/// Cannot be called on a prepared transaction.
+		///
 		void rollbackRetaining();
 
 	private:
 		Client& client;
 		FbRef<fb::ITransaction> handle;
+		TransactionState state = TransactionState::ACTIVE;
+		const bool isMultiDatabase = false;
 	};
 }  // namespace fbcpp
 
