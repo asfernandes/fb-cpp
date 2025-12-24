@@ -36,6 +36,7 @@
 #include "Descriptor.h"
 #include "SmartPtrs.h"
 #include "Exception.h"
+#include "StructBinding.h"
 #include <charconv>
 #include <cerrno>
 #include <cstdlib>
@@ -2042,6 +2043,51 @@ namespace fbcpp
 		template <typename T>
 		T get(unsigned index);
 
+		///
+		/// @brief Retrieves all output columns into a user-defined aggregate struct.
+		/// @tparam T An aggregate type whose fields match the output column count and types.
+		/// @return The populated struct with values from the current row.
+		/// @throws FbCppException if field count mismatches output column count.
+		/// @throws FbCppException if a NULL value is encountered for a non-optional field.
+		///
+		template <Aggregate T>
+		T get()
+		{
+			using namespace impl::reflection;
+
+			constexpr std::size_t N = fieldCountV<T>;
+
+			if (N != outDescriptors.size())
+			{
+				throw FbCppException("Struct field count (" + std::to_string(N) +
+					") does not match output column count (" + std::to_string(outDescriptors.size()) + ")");
+			}
+
+			return getStruct<T>(std::make_index_sequence<N>{});
+		}
+
+		///
+		/// @brief Sets all input parameters from fields of a user-defined aggregate struct.
+		/// @tparam T An aggregate type whose fields match the input parameter count.
+		/// @param value The struct containing parameter values.
+		/// @throws FbCppException if field count mismatches input parameter count.
+		///
+		template <Aggregate T>
+		void set(const T& value)
+		{
+			using namespace impl::reflection;
+
+			constexpr std::size_t N = fieldCountV<T>;
+
+			if (N != inDescriptors.size())
+			{
+				throw FbCppException("Struct field count (" + std::to_string(N) +
+					") does not match input parameter count (" + std::to_string(inDescriptors.size()) + ")");
+			}
+
+			setStruct(value, std::make_index_sequence<N>{});
+		}
+
 	private:
 		///
 		/// @brief Validates and returns the descriptor for the given input parameter index.
@@ -2063,6 +2109,53 @@ namespace fbcpp
 				throw std::out_of_range("index out of range");
 
 			return outDescriptors[index];
+		}
+
+		///
+		/// @brief Helper to retrieve all output columns into a struct.
+		///
+		template <typename T, std::size_t... Is>
+		T getStruct(std::index_sequence<Is...>)
+		{
+			using namespace impl::reflection;
+
+			return T{getStructField<FieldType<T, Is>>(static_cast<unsigned>(Is))...};
+		}
+
+		///
+		/// @brief Helper to get a single field value, throwing if NULL for non-optional fields.
+		///
+		template <typename F>
+		auto getStructField(unsigned index)
+		{
+			using namespace impl::reflection;
+
+			if constexpr (isOptionalV<F>)
+				return get<F>(index);
+			else
+			{
+				auto opt = get<std::optional<F>>(index);
+
+				if (!opt.has_value())
+				{
+					throw FbCppException(
+						"Null value encountered for non-optional field at index " + std::to_string(index));
+				}
+
+				return std::move(opt.value());
+			}
+		}
+
+		///
+		/// @brief Helper to set all input parameters from a struct.
+		///
+		template <typename T, std::size_t... Is>
+		void setStruct(const T& value, std::index_sequence<Is...>)
+		{
+			using namespace impl::reflection;
+
+			const auto tuple = toTupleRef(value);
+			(set(static_cast<unsigned>(Is), std::get<Is>(tuple)), ...);
 		}
 
 		///
