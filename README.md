@@ -43,8 +43,12 @@ Statement statement{attachment, transaction, "select id, name from users where i
 
 // Set parameters
 statement.setInt32(0, 42);
-/* Or
+/*
+// Or:
 statement.set(0, 42);
+
+// Or:
+statement.set(SomeStructOrTuple{42});
 */
 
 // Execute and get results
@@ -56,9 +60,13 @@ if (statement.execute(transaction))
         const std::optional<std::int32_t> id = statement.getInt32(0);
         const std::optional<std::string> name = statement.getString(1);
 
-        /* Or
+        /*
+        // Or:
         const auto id = statement.get<std::int32_t>(0);
         const auto name = statement.get<std::string>(1);
+
+        // Or:
+        const auto [id, name] = statement.get<SomeStructOrTuple>();
         */
     } while (statement.fetchNext());
 }

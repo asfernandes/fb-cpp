@@ -2521,3 +2521,185 @@ BOOST_AUTO_TEST_CASE(opaqueDecFloat34NullHandling)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+
+BOOST_AUTO_TEST_SUITE(StructBindingSuite)
+
+BOOST_AUTO_TEST_CASE(getStructRetrievesAllColumns)
+{
+	struct Result
+	{
+		std::optional<std::int32_t> col1;
+		std::optional<std::string> col2;
+		std::optional<double> col3;
+	};
+
+	const auto database = getTempFile("Statement-getStructRetrievesAllColumns.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 42, 'hello', 3.14e0 from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<Result>();
+	BOOST_CHECK(result.col1.has_value());
+	BOOST_CHECK_EQUAL(result.col1.value(), 42);
+	BOOST_CHECK(result.col2.has_value());
+	BOOST_CHECK_EQUAL(result.col2.value(), "hello");
+	BOOST_CHECK(result.col3.has_value());
+	BOOST_CHECK_CLOSE(result.col3.value(), 3.14, 0.001);
+}
+
+BOOST_AUTO_TEST_CASE(setStructSetsAllParameters)
+{
+	struct Params
+	{
+		std::int32_t val1;
+		std::string_view val2;
+	};
+
+	const auto database = getTempFile("Statement-setStructSetsAllParameters.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(? as integer), cast(? as varchar(50)) from rdb$database"};
+
+	Params params{123, "test"};
+	stmt.set(params);
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 123);
+	BOOST_CHECK_EQUAL(stmt.getString(1).value(), "test");
+}
+
+BOOST_AUTO_TEST_CASE(getStructFieldCountMismatchThrows)
+{
+	struct WrongSize
+	{
+		std::optional<std::int32_t> col1;
+		std::optional<std::int32_t> col2;
+	};
+
+	const auto database = getTempFile("Statement-getStructFieldCountMismatchThrows.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 1, 2, 3 from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK_THROW(stmt.get<WrongSize>(), FbCppException);
+}
+
+BOOST_AUTO_TEST_CASE(setStructFieldCountMismatchThrows)
+{
+	struct WrongSize
+	{
+		std::int32_t val1;
+		std::int32_t val2;
+		std::int32_t val3;
+	};
+
+	const auto database = getTempFile("Statement-setStructFieldCountMismatchThrows.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(? as integer) from rdb$database"};
+
+	WrongSize params{1, 2, 3};
+	BOOST_CHECK_THROW(stmt.set(params), FbCppException);
+}
+
+BOOST_AUTO_TEST_CASE(nullForNonOptionalFieldThrows)
+{
+	struct NonOptional
+	{
+		std::int32_t value;
+	};
+
+	const auto database = getTempFile("Statement-nullForNonOptionalFieldThrows.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(null as integer) from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK_THROW(stmt.get<NonOptional>(), FbCppException);
+}
+
+BOOST_AUTO_TEST_CASE(mixedOptionalAndNonOptionalFields)
+{
+	struct Mixed
+	{
+		std::int32_t required;
+		std::optional<std::string> optional;
+	};
+
+	const auto database = getTempFile("Statement-mixedOptionalAndNonOptionalFields.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 42, cast(null as varchar(10)) from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<Mixed>();
+	BOOST_CHECK_EQUAL(result.required, 42);
+	BOOST_CHECK(!result.optional.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(structWithDateTimeFields)
+{
+	struct DateTimeResult
+	{
+		std::optional<Date> dateCol;
+		std::optional<Time> timeCol;
+	};
+
+	const auto database = getTempFile("Statement-structWithDateTimeFields.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{
+		attachment, transaction, "select cast('2025-01-15' as date), cast('10:30:00' as time) from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<DateTimeResult>();
+	BOOST_CHECK(result.dateCol.has_value());
+	BOOST_CHECK(result.timeCol.has_value());
+
+	const auto& date = result.dateCol.value();
+	BOOST_CHECK_EQUAL(static_cast<int>(date.year()), 2025);
+	BOOST_CHECK_EQUAL(static_cast<unsigned>(date.month()), 1);
+	BOOST_CHECK_EQUAL(static_cast<unsigned>(date.day()), 15);
+}
+
+BOOST_AUTO_TEST_CASE(setStructWithOptionalNull)
+{
+	struct ParamsWithNull
+	{
+		std::int32_t val1;
+		std::optional<std::string_view> val2;
+	};
+
+	const auto database = getTempFile("Statement-setStructWithOptionalNull.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(? as integer), cast(? as varchar(50)) from rdb$database"};
+
+	ParamsWithNull params{999, std::nullopt};
+	stmt.set(params);
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 999);
+	BOOST_CHECK(!stmt.getString(1).has_value());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
