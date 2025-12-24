@@ -2088,6 +2088,49 @@ namespace fbcpp
 			setStruct(value, std::make_index_sequence<N>{});
 		}
 
+		///
+		/// @brief Retrieves all output columns into a tuple-like type.
+		/// @tparam T A tuple-like type (std::tuple, std::pair) whose elements match the output column count and types.
+		/// @return The populated tuple with values from the current row.
+		/// @throws FbCppException if element count mismatches output column count.
+		/// @throws FbCppException if a NULL value is encountered for a non-optional element.
+		///
+		template <TupleLike T>
+		T get()
+		{
+			using namespace impl::reflection;
+
+			constexpr std::size_t N = std::tuple_size_v<T>;
+
+			if (N != outDescriptors.size())
+			{
+				throw FbCppException("Tuple element count (" + std::to_string(N) +
+					") does not match output column count (" + std::to_string(outDescriptors.size()) + ")");
+			}
+
+			return getTuple<T>(std::make_index_sequence<N>{});
+		}
+
+		///
+		/// @brief Sets all input parameters from elements of a tuple-like type.
+		/// @tparam T A tuple-like type (std::tuple, std::pair) whose elements match the input parameter count.
+		/// @param value The tuple containing parameter values.
+		/// @throws FbCppException if element count mismatches input parameter count.
+		///
+		template <TupleLike T>
+		void set(const T& value)
+		{
+			constexpr std::size_t N = std::tuple_size_v<T>;
+
+			if (N != inDescriptors.size())
+			{
+				throw FbCppException("Tuple element count (" + std::to_string(N) +
+					") does not match input parameter count (" + std::to_string(inDescriptors.size()) + ")");
+			}
+
+			setTuple(value, std::make_index_sequence<N>{});
+		}
+
 	private:
 		///
 		/// @brief Validates and returns the descriptor for the given input parameter index.
@@ -2156,6 +2199,26 @@ namespace fbcpp
 
 			const auto tuple = toTupleRef(value);
 			(set(static_cast<unsigned>(Is), std::get<Is>(tuple)), ...);
+		}
+
+		///
+		/// @brief Helper to retrieve all output columns into a tuple.
+		///
+		template <typename T, std::size_t... Is>
+		T getTuple(std::index_sequence<Is...>)
+		{
+			using namespace impl::reflection;
+
+			return T{getStructField<std::tuple_element_t<Is, T>>(static_cast<unsigned>(Is))...};
+		}
+
+		///
+		/// @brief Helper to set all input parameters from a tuple.
+		///
+		template <typename T, std::size_t... Is>
+		void setTuple(const T& value, std::index_sequence<Is...>)
+		{
+			(set(static_cast<unsigned>(Is), std::get<Is>(value)), ...);
 		}
 
 		///

@@ -2703,3 +2703,128 @@ BOOST_AUTO_TEST_CASE(setStructWithOptionalNull)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+
+BOOST_AUTO_TEST_SUITE(TupleBindingSuite)
+
+BOOST_AUTO_TEST_CASE(getTupleRetrievesAllColumns)
+{
+	using ResultTuple = std::tuple<std::optional<std::int32_t>, std::optional<std::string>, std::optional<double>>;
+
+	const auto database = getTempFile("Statement-getTupleRetrievesAllColumns.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 42, 'hello', 3.14e0 from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<ResultTuple>();
+	BOOST_CHECK(std::get<0>(result).has_value());
+	BOOST_CHECK_EQUAL(std::get<0>(result).value(), 42);
+	BOOST_CHECK(std::get<1>(result).has_value());
+	BOOST_CHECK_EQUAL(std::get<1>(result).value(), "hello");
+	BOOST_CHECK(std::get<2>(result).has_value());
+	BOOST_CHECK_CLOSE(std::get<2>(result).value(), 3.14, 0.001);
+}
+
+BOOST_AUTO_TEST_CASE(setTupleSetsAllParameters)
+{
+	using ParamTuple = std::tuple<std::int32_t, std::string_view>;
+
+	const auto database = getTempFile("Statement-setTupleSetsAllParameters.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(? as integer), cast(? as varchar(50)) from rdb$database"};
+
+	stmt.set(ParamTuple{123, "test"});
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 123);
+	BOOST_CHECK_EQUAL(stmt.getString(1).value(), "test");
+}
+
+BOOST_AUTO_TEST_CASE(getTupleElementCountMismatchThrows)
+{
+	using WrongTuple = std::tuple<std::optional<std::int32_t>, std::optional<std::int32_t>>;
+
+	const auto database = getTempFile("Statement-getTupleElementCountMismatchThrows.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 1, 2, 3 from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK_THROW(stmt.get<WrongTuple>(), FbCppException);
+}
+
+BOOST_AUTO_TEST_CASE(setTupleElementCountMismatchThrows)
+{
+	using WrongTuple = std::tuple<std::int32_t, std::int32_t, std::int32_t>;
+
+	const auto database = getTempFile("Statement-setTupleElementCountMismatchThrows.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(? as integer) from rdb$database"};
+
+	BOOST_CHECK_THROW(stmt.set(WrongTuple{1, 2, 3}), FbCppException);
+}
+
+BOOST_AUTO_TEST_CASE(nullForNonOptionalTupleElementThrows)
+{
+	using NonOptionalTuple = std::tuple<std::int32_t>;
+
+	const auto database = getTempFile("Statement-nullForNonOptionalTupleElementThrows.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(null as integer) from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK_THROW(stmt.get<NonOptionalTuple>(), FbCppException);
+}
+
+BOOST_AUTO_TEST_CASE(pairAsResultType)
+{
+	using ResultPair = std::pair<std::optional<std::int32_t>, std::optional<std::string>>;
+
+	const auto database = getTempFile("Statement-pairAsResultType.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 100, 'pair test' from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<ResultPair>();
+	BOOST_CHECK(result.first.has_value());
+	BOOST_CHECK_EQUAL(result.first.value(), 100);
+	BOOST_CHECK(result.second.has_value());
+	BOOST_CHECK_EQUAL(result.second.value(), "pair test");
+}
+
+BOOST_AUTO_TEST_CASE(setTupleWithOptionalNull)
+{
+	using ParamTuple = std::tuple<std::int32_t, std::optional<std::string_view>>;
+
+	const auto database = getTempFile("Statement-setTupleWithOptionalNull.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(? as integer), cast(? as varchar(50)) from rdb$database"};
+
+	stmt.set(ParamTuple{999, std::nullopt});
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 999);
+	BOOST_CHECK(!stmt.getString(1).has_value());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
