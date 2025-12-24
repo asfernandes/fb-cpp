@@ -35,6 +35,7 @@ if(MSVC)
 		# disable
 		/wd4100			# 'identifier': unreferenced parameter
 	)
+	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else()
 	add_compile_options(
 		-Wall
