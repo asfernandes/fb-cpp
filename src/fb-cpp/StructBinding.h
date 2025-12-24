@@ -39,6 +39,12 @@ namespace fbcpp
 	///
 	template <typename T>
 	concept Aggregate = std::is_aggregate_v<T> && !std::is_array_v<T> && !std::is_union_v<T>;
+
+	///
+	/// Concept constraining types to tuple-like types (std::tuple, std::pair, std::array).
+	///
+	template <typename T>
+	concept TupleLike = !Aggregate<T> && requires { typename std::tuple_size<T>::type; };
 }  // namespace fbcpp
 
 namespace fbcpp::impl::reflection
