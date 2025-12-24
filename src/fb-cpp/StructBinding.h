@@ -64,10 +64,12 @@ namespace fbcpp::impl::reflection
 	struct UniversalType
 	{
 		template <typename T>
-		requires(!isOptionalV<T>)
 		constexpr operator T() const noexcept
 		{
-			return T{};
+			if constexpr (isOptionalV<T>)
+				return T{std::nullopt};
+			else
+				return T{};
 		}
 	};
 
@@ -77,11 +79,20 @@ namespace fbcpp::impl::reflection
 	{
 	};
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
+
 	template <typename T, std::size_t... Is>
 	struct IsBraceConstructibleImpl<T, std::index_sequence<Is...>,
 		std::void_t<decltype(T{(void(Is), UniversalType{})...})>> : std::true_type
 	{
 	};
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 	template <typename T, std::size_t N>
 	inline constexpr bool isBraceConstructibleV = IsBraceConstructibleImpl<T, std::make_index_sequence<N>>::value;
