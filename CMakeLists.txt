@@ -16,7 +16,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out/bin)
 
 project(fb-cpp-main
-	VERSION 0.0.1
+	VERSION 0.0.2
 	DESCRIPTION "C++ client library for Firebird"
 	HOMEPAGE_URL "https://github.com/asfernandes/fb-cpp"
 	LANGUAGES CXX

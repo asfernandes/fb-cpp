@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "fb-cpp",
-  "version-semver": "0.0.1",
+  "version-semver": "0.0.2",
   "maintainers": "Adriano dos Santos Fernandes",
   "description": "A modern C++ wrapper for the Firebird database API",
   "homepage": "https://github.com/asfernandes/fb-cpp",
