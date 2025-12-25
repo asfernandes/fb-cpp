@@ -2828,3 +2828,483 @@ BOOST_AUTO_TEST_CASE(setTupleWithOptionalNull)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+
+BOOST_AUTO_TEST_SUITE(VariantSuite)
+
+BOOST_AUTO_TEST_CASE(getVariantNullReturnsMonostate)
+{
+	using MyVariant = std::variant<std::monostate, std::int32_t>;
+
+	const auto database = getTempFile("Statement-getVariantNullReturnsMonostate.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(null as integer) from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_CHECK(std::holds_alternative<std::monostate>(result));
+}
+
+BOOST_AUTO_TEST_CASE(getVariantNullWithoutMonostateThrows)
+{
+	using MyVariant = std::variant<std::int32_t, std::string>;
+
+	const auto database = getTempFile("Statement-getVariantNullWithoutMonostateThrows.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(null as integer) from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK_THROW(stmt.get<MyVariant>(0), FbCppException);
+}
+
+BOOST_AUTO_TEST_CASE(getVariantExactMatchInt32)
+{
+	using MyVariant = std::variant<std::monostate, std::int32_t, double>;
+
+	const auto database = getTempFile("Statement-getVariantExactMatchInt32.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 42 from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<std::int32_t>(result));
+	BOOST_CHECK_EQUAL(std::get<std::int32_t>(result), 42);
+}
+
+BOOST_AUTO_TEST_CASE(getVariantExactMatchFloat)
+{
+	using MyVariant = std::variant<std::monostate, float, double>;
+
+	const auto database = getTempFile("Statement-getVariantExactMatchFloat.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(3.14 as float) from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<float>(result));
+	BOOST_CHECK_CLOSE(std::get<float>(result), 3.14f, 0.01f);
+}
+
+BOOST_AUTO_TEST_CASE(getVariantExactMatchString)
+{
+	using MyVariant = std::variant<std::monostate, std::int32_t, std::string>;
+
+	const auto database = getTempFile("Statement-getVariantExactMatchString.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 'hello' from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<std::string>(result));
+	BOOST_CHECK_EQUAL(std::get<std::string>(result), "hello");
+}
+
+BOOST_AUTO_TEST_CASE(getVariantScaledIntPreferred)
+{
+	using MyVariant = std::variant<std::monostate, ScaledInt32, std::int32_t>;
+
+	const auto database = getTempFile("Statement-getVariantScaledIntPreferred.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(123.45 as numeric(10, 2)) from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<ScaledInt32>(result));
+	const auto scaled = std::get<ScaledInt32>(result);
+	BOOST_CHECK_EQUAL(scaled.value, 12345);
+	BOOST_CHECK_EQUAL(scaled.scale, -2);
+}
+
+BOOST_AUTO_TEST_CASE(getVariantScaledIntFallback)
+{
+	using MyVariant = std::variant<std::monostate, std::int32_t>;
+
+	const auto database = getTempFile("Statement-getVariantScaledIntFallback.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(100.00 as numeric(10, 2)) from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<std::int32_t>(result));
+	// When reading a scaled numeric as plain int, the library converts to scale 0
+	// so 100.00 becomes 100 (not the raw stored value 10000)
+	BOOST_CHECK_EQUAL(std::get<std::int32_t>(result), 100);
+}
+
+BOOST_AUTO_TEST_CASE(getVariantScaledToLargerScaled)
+{
+	// NUMERIC(10,2) is INT32 with scale, but variant only has ScaledInt64
+	// Should use ScaledInt64 to preserve precision instead of falling back to int32
+	using MyVariant = std::variant<std::monostate, ScaledInt64, std::int32_t>;
+
+	const auto database = getTempFile("Statement-getVariantScaledToLargerScaled.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(123.45 as numeric(10, 2)) from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<ScaledInt64>(result));
+	const auto scaled = std::get<ScaledInt64>(result);
+	BOOST_CHECK_EQUAL(scaled.value, 12345);
+	BOOST_CHECK_EQUAL(scaled.scale, -2);
+}
+
+BOOST_AUTO_TEST_CASE(getVariantScaledToDouble)
+{
+	using MyVariant = std::variant<std::monostate, double>;
+
+	const auto database = getTempFile("Statement-getVariantScaledToDouble.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(123.45 as numeric(10, 2)) from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<double>(result));
+	BOOST_CHECK_CLOSE(std::get<double>(result), 123.45, 0.01);
+}
+
+BOOST_AUTO_TEST_CASE(getVariantFallbackToDouble)
+{
+	using MyVariant = std::variant<std::monostate, double>;
+
+	const auto database = getTempFile("Statement-getVariantFallbackToDouble.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 42 from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<double>(result));
+	BOOST_CHECK_CLOSE(std::get<double>(result), 42.0, 0.01);
+}
+
+BOOST_AUTO_TEST_CASE(getVariantFallbackOrder)
+{
+	using MyVariant = std::variant<std::monostate, std::int64_t, std::int32_t>;
+
+	const auto database = getTempFile("Statement-getVariantFallbackOrder.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(10 as smallint) from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	// int64 comes first in the variant, so it should be selected for the fallback
+	BOOST_REQUIRE(std::holds_alternative<std::int64_t>(result));
+	BOOST_CHECK_EQUAL(std::get<std::int64_t>(result), 10);
+}
+
+BOOST_AUTO_TEST_CASE(setVariantValue)
+{
+	using MyVariant = std::variant<std::monostate, std::int32_t, std::string>;
+
+	const auto database = getTempFile("Statement-setVariantValue.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(? as integer), cast(? as varchar(50)) from rdb$database"};
+
+	MyVariant intValue = 123;
+	MyVariant strValue = std::string{"test"};
+	stmt.set(0, intValue);
+	stmt.set(1, strValue);
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 123);
+	BOOST_CHECK_EQUAL(stmt.getString(1).value(), "test");
+}
+
+BOOST_AUTO_TEST_CASE(setVariantMonostate)
+{
+	using MyVariant = std::variant<std::monostate, std::int32_t>;
+
+	const auto database = getTempFile("Statement-setVariantMonostate.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(? as integer) from rdb$database"};
+
+	MyVariant nullValue = std::monostate{};
+	stmt.set(0, nullValue);
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK(!stmt.getInt32(0).has_value());
+}
+
+BOOST_AUTO_TEST_CASE(getTupleWithVariant)
+{
+	using MyVariant = std::variant<std::monostate, std::int32_t, std::string>;
+	using ResultTuple = std::tuple<std::int32_t, MyVariant>;
+
+	const auto database = getTempFile("Statement-getTupleWithVariant.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 100, 'variant value' from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<ResultTuple>();
+	BOOST_CHECK_EQUAL(std::get<0>(result), 100);
+	BOOST_REQUIRE(std::holds_alternative<std::string>(std::get<1>(result)));
+	BOOST_CHECK_EQUAL(std::get<std::string>(std::get<1>(result)), "variant value");
+}
+
+BOOST_AUTO_TEST_CASE(getStructWithVariant)
+{
+	using MyVariant = std::variant<std::monostate, std::int32_t, std::string>;
+
+	struct Result
+	{
+		std::int32_t id;
+		MyVariant dynamicCol;
+	};
+
+	const auto database = getTempFile("Statement-getStructWithVariant.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 42, 'dynamic' from rdb$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<Result>();
+	BOOST_CHECK_EQUAL(result.id, 42);
+	BOOST_REQUIRE(std::holds_alternative<std::string>(result.dynamicCol));
+	BOOST_CHECK_EQUAL(std::get<std::string>(result.dynamicCol), "dynamic");
+}
+
+BOOST_AUTO_TEST_CASE(setTupleWithVariant)
+{
+	using MyVariant = std::variant<std::monostate, std::int32_t, std::string>;
+	using ParamTuple = std::tuple<std::int32_t, MyVariant>;
+
+	const auto database = getTempFile("Statement-setTupleWithVariant.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(? as integer), cast(? as varchar(50)) from rdb$database"};
+
+	MyVariant strValue = std::string{"from tuple"};
+	stmt.set(ParamTuple{999, strValue});
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 999);
+	BOOST_CHECK_EQUAL(stmt.getString(1).value(), "from tuple");
+}
+
+BOOST_AUTO_TEST_CASE(setStructWithVariant)
+{
+	using MyVariant = std::variant<std::monostate, std::int32_t, std::string>;
+
+	struct Params
+	{
+		std::int32_t id;
+		MyVariant dynamicCol;
+	};
+
+	const auto database = getTempFile("Statement-setStructWithVariant.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(? as integer), cast(? as varchar(50)) from rdb$database"};
+
+	Params params{888, std::string{"from struct"}};
+	stmt.set(params);
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 888);
+	BOOST_CHECK_EQUAL(stmt.getString(1).value(), "from struct");
+}
+
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+
+BOOST_AUTO_TEST_CASE(getVariantScaledOpaqueInt128Preferred)
+{
+	// When variant has both ScaledOpaqueInt128 and ScaledBoostInt128, prefer ScaledOpaqueInt128
+	using MyVariant = std::variant<std::monostate, ScaledOpaqueInt128, ScaledBoostInt128>;
+
+	const auto database = getTempFile("Statement-getVariantScaledOpaqueInt128Preferred.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(123.45 as numeric(38, 2)) from rdb$database"};
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<ScaledOpaqueInt128>(result));
+	const auto scaled = std::get<ScaledOpaqueInt128>(result);
+	BOOST_CHECK_EQUAL(scaled.scale, -2);
+}
+
+BOOST_AUTO_TEST_CASE(getVariantOpaqueDecFloat16Preferred)
+{
+	// When variant has both OpaqueDecFloat16 and BoostDecFloat16, prefer OpaqueDecFloat16
+	using MyVariant = std::variant<std::monostate, OpaqueDecFloat16, BoostDecFloat16>;
+
+	const auto database = getTempFile("Statement-getVariantOpaqueDecFloat16Preferred.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(123.456 as decfloat(16)) from rdb$database"};
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<OpaqueDecFloat16>(result));
+}
+
+BOOST_AUTO_TEST_CASE(getVariantOpaqueDecFloat34Preferred)
+{
+	// When variant has both OpaqueDecFloat34 and BoostDecFloat34, prefer OpaqueDecFloat34
+	using MyVariant = std::variant<std::monostate, OpaqueDecFloat34, BoostDecFloat34>;
+
+	const auto database = getTempFile("Statement-getVariantOpaqueDecFloat34Preferred.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(123.456 as decfloat(34)) from rdb$database"};
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<OpaqueDecFloat34>(result));
+}
+
+#endif
+
+BOOST_AUTO_TEST_CASE(getVariantOpaqueDatePreferred)
+{
+	// When variant has both OpaqueDate and Date, prefer OpaqueDate
+	using MyVariant = std::variant<std::monostate, OpaqueDate, Date>;
+
+	const auto database = getTempFile("Statement-getVariantOpaqueDatePreferred.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select date '2025-12-25' from rdb$database"};
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<OpaqueDate>(result));
+}
+
+BOOST_AUTO_TEST_CASE(getVariantOpaqueTimePreferred)
+{
+	// When variant has both OpaqueTime and Time, prefer OpaqueTime
+	using MyVariant = std::variant<std::monostate, OpaqueTime, Time>;
+
+	const auto database = getTempFile("Statement-getVariantOpaqueTimePreferred.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select time '14:30:00' from rdb$database"};
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<OpaqueTime>(result));
+}
+
+BOOST_AUTO_TEST_CASE(getVariantOpaqueTimestampPreferred)
+{
+	// When variant has both OpaqueTimestamp and Timestamp, prefer OpaqueTimestamp
+	using MyVariant = std::variant<std::monostate, OpaqueTimestamp, Timestamp>;
+
+	const auto database = getTempFile("Statement-getVariantOpaqueTimestampPreferred.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select timestamp '2025-12-25 14:30:00' from rdb$database"};
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<OpaqueTimestamp>(result));
+}
+
+BOOST_AUTO_TEST_CASE(getVariantOpaqueTimeTzPreferred)
+{
+	// When variant has both OpaqueTimeTz and TimeTz, prefer OpaqueTimeTz
+	using MyVariant = std::variant<std::monostate, OpaqueTimeTz, TimeTz>;
+
+	const auto database = getTempFile("Statement-getVariantOpaqueTimeTzPreferred.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select time '14:30:00 America/New_York' from rdb$database"};
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<OpaqueTimeTz>(result));
+}
+
+BOOST_AUTO_TEST_CASE(getVariantOpaqueTimestampTzPreferred)
+{
+	// When variant has both OpaqueTimestampTz and TimestampTz, prefer OpaqueTimestampTz
+	using MyVariant = std::variant<std::monostate, OpaqueTimestampTz, TimestampTz>;
+
+	const auto database = getTempFile("Statement-getVariantOpaqueTimestampTzPreferred.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{
+		attachment, transaction, "select timestamp '2025-12-25 14:30:00 America/New_York' from rdb$database"};
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+
+	const auto result = stmt.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<OpaqueTimestampTz>(result));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
