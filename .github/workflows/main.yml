@@ -10,6 +10,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  packages: write
 
 concurrency:
   group: main
@@ -35,6 +36,11 @@ jobs:
 
   build-linux:
     runs-on: ubuntu-latest
+    env:
+      USERNAME: asfernandes
+      VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
+      FEED_URL: https://nuget.pkg.github.com/asfernandes/index.json
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -67,7 +73,8 @@ jobs:
               graphviz \
               ninja-build \
               libtommath1 \
-              libtomcrypt1
+              libtomcrypt1 \
+              mono-complete
 
       - name: Install Firebird
         run: |
@@ -86,6 +93,20 @@ jobs:
       - name: Bootstrap vcpkg
         run: |
           ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+
+      - name: Configure vcpkg binary caching
+        if: github.repository == 'asfernandes/fb-cpp'
+        run: |
+          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
+            sources add \
+            -Source "${{ env.FEED_URL }}" \
+            -StorePasswordInClearText \
+            -Name GitHubPackages \
+            -UserName "${{ env.USERNAME }}" \
+            -Password "${{ secrets.GITHUB_TOKEN }}"
+          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
+            setapikey "${{ secrets.GITHUB_TOKEN }}" \
+            -Source "${{ env.FEED_URL }}"
 
       - name: Configure CMake
         run: |
@@ -119,6 +140,11 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
+    env:
+      USERNAME: asfernandes
+      VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
+      FEED_URL: https://nuget.pkg.github.com/asfernandes/index.json
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -163,6 +189,21 @@ jobs:
         run: |
           vcpkg\bootstrap-vcpkg.bat -disableMetrics
 
+      - name: Configure vcpkg binary caching
+        if: github.repository == 'asfernandes/fb-cpp'
+        shell: pwsh
+        run: |
+          .$(${{ env.VCPKG_EXE }} fetch nuget) `
+            sources add `
+            -Source "${{ env.FEED_URL }}" `
+            -StorePasswordInClearText `
+            -Name GitHubPackages `
+            -UserName "${{ env.USERNAME }}" `
+            -Password "${{ secrets.GITHUB_TOKEN }}"
+          .$(${{ env.VCPKG_EXE }} fetch nuget) `
+            setapikey "${{ secrets.GITHUB_TOKEN }}" `
+            -Source "${{ env.FEED_URL }}"
+
       - name: Configure CMake
         shell: cmd
         run: |
@@ -189,6 +230,11 @@ jobs:
 
   build-macos:
     runs-on: macos-latest
+    env:
+      USERNAME: asfernandes
+      VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
+      FEED_URL: https://nuget.pkg.github.com/asfernandes/index.json
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -214,7 +260,8 @@ jobs:
               autoconf \
               autoconf-archive \
               automake \
-              libtool
+              libtool \
+              mono
 
       - name: Install Firebird
         run: |
@@ -232,6 +279,20 @@ jobs:
       - name: Bootstrap vcpkg
         run: |
           ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+
+      - name: Configure vcpkg binary caching
+        if: github.repository == 'asfernandes/fb-cpp'
+        run: |
+          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
+            sources add \
+            -Source "${{ env.FEED_URL }}" \
+            -StorePasswordInClearText \
+            -Name GitHubPackages \
+            -UserName "${{ env.USERNAME }}" \
+            -Password "${{ secrets.GITHUB_TOKEN }}"
+          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
+            setapikey "${{ secrets.GITHUB_TOKEN }}" \
+            -Source "${{ env.FEED_URL }}"
 
       - name: Configure CMake
         run: |
