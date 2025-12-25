@@ -1032,9 +1032,11 @@ namespace fbcpp
 
 			assert(isValid());
 
+			auto& client = attachment.getClient();
 			const auto value = optValue.value();
 			const auto& descriptor = getInDescriptor(index);
 			const auto message = inMessage.data();
+			const auto data = &message[descriptor.offset];
 
 			switch (descriptor.adjustedType)
 			{
@@ -1086,10 +1088,9 @@ namespace fbcpp
 				case DescriptorAdjustedType::INT128:
 				{
 					std::string strValue(value);
-					attachment.getClient()
-						.getInt128Util(&statusWrapper)
-						->fromString(&statusWrapper, descriptor.scale, strValue.c_str(),
-							reinterpret_cast<OpaqueInt128*>(&message[descriptor.offset]));
+					client.getInt128Util(&statusWrapper)
+						->fromString(
+							&statusWrapper, descriptor.scale, strValue.c_str(), reinterpret_cast<OpaqueInt128*>(data));
 					break;
 				}
 
@@ -1114,42 +1115,41 @@ namespace fbcpp
 				}
 
 				case DescriptorAdjustedType::DATE:
-					*reinterpret_cast<OpaqueDate*>(&message[descriptor.offset]) =
-						calendarConverter.stringToOpaqueDate(value);
+					*reinterpret_cast<OpaqueDate*>(data) = calendarConverter.stringToOpaqueDate(value);
 					break;
 
 				case DescriptorAdjustedType::TIME:
-					*reinterpret_cast<OpaqueTime*>(&message[descriptor.offset]) =
-						calendarConverter.stringToOpaqueTime(value);
+					*reinterpret_cast<OpaqueTime*>(data) = calendarConverter.stringToOpaqueTime(value);
 					break;
 
 				case DescriptorAdjustedType::TIMESTAMP:
-					*reinterpret_cast<OpaqueTimestamp*>(&message[descriptor.offset]) =
-						calendarConverter.stringToOpaqueTimestamp(value);
+					*reinterpret_cast<OpaqueTimestamp*>(data) = calendarConverter.stringToOpaqueTimestamp(value);
 					break;
 
 				case DescriptorAdjustedType::TIME_TZ:
-					*reinterpret_cast<OpaqueTimeTz*>(&message[descriptor.offset]) =
-						calendarConverter.stringToOpaqueTimeTz(value);
+					*reinterpret_cast<OpaqueTimeTz*>(data) = calendarConverter.stringToOpaqueTimeTz(value);
 					break;
 
 				case DescriptorAdjustedType::TIMESTAMP_TZ:
-					*reinterpret_cast<OpaqueTimestampTz*>(&message[descriptor.offset]) =
-						calendarConverter.stringToOpaqueTimestampTz(value);
+					*reinterpret_cast<OpaqueTimestampTz*>(data) = calendarConverter.stringToOpaqueTimestampTz(value);
 					break;
+
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-				// FIXME: use IDecFloat
 				case DescriptorAdjustedType::DECFLOAT16:
+				{
+					std::string strValue{value};
+					client.getDecFloat16Util(&statusWrapper)
+						->fromString(&statusWrapper, strValue.c_str(), reinterpret_cast<OpaqueDecFloat16*>(data));
+					break;
+				}
+
 				case DescriptorAdjustedType::DECFLOAT34:
-					try
-					{
-						setBoostDecFloat34(index, BoostDecFloat34{value});
-					}
-					catch (...)
-					{
-						numericConverter.throwConversionErrorFromString(std::string{value});
-					}
-					return;
+				{
+					std::string strValue{value};
+					client.getDecFloat34Util(&statusWrapper)
+						->fromString(&statusWrapper, strValue.c_str(), reinterpret_cast<OpaqueDecFloat34*>(data));
+					break;
+				}
 #endif
 
 				case DescriptorAdjustedType::STRING:
@@ -1161,11 +1161,10 @@ namespace fbcpp
 							isc_arg_end,
 						};
 
-						throw DatabaseException(attachment.getClient(), STATUS_STRING_TRUNCATION);
+						throw DatabaseException(client, STATUS_STRING_TRUNCATION);
 					}
 
-					*reinterpret_cast<std::uint16_t*>(&message[descriptor.offset]) =
-						static_cast<std::uint16_t>(value.length());
+					*reinterpret_cast<std::uint16_t*>(data) = static_cast<std::uint16_t>(value.length());
 					std::copy(value.begin(), value.end(),
 						reinterpret_cast<char*>(&message[descriptor.offset + sizeof(std::uint16_t)]));
 					break;

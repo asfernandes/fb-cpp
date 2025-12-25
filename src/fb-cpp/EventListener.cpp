@@ -180,106 +180,128 @@ void EventListener::decodeEventCounts()
 
 void EventListener::handleEvent(unsigned length, const std::uint8_t* events)
 {
-	const auto eventBlockLength = static_cast<unsigned>(eventBuffer.size());
-	unsigned copyLength = 0;
-	bool notify = false;
-	bool shouldRequeue = false;
-
-	{
-		std::lock_guard mutexGuard{mutex};
-
-		if (!listening)
-			return;
-
-		copyLength =
-			static_cast<unsigned>(std::min<std::size_t>(length, std::min(eventBuffer.size(), resultBuffer.size())));
-
-		if (copyLength == 0)
-			return;
-
-		std::memcpy(resultBuffer.data(), events, copyLength);
-
-		decodeEventCounts();
-
-		std::vector<EventCount> counts;
-		counts.reserve(eventNames.size());
-
-		for (std::size_t i = 0; i < eventNames.size(); ++i)
-		{
-			const auto value = rawCounts[i];
-
-			if (value != 0)
-				counts.push_back(EventCount{eventNames[i], static_cast<std::uint32_t>(value)});
-		}
-
-		if (first)
-		{
-			if (!counts.empty())
-			{
-				pendingNotifications.emplace_back(std::move(counts));
-				notify = true;
-			}
-		}
-		else
-			first = true;
-
-		shouldRequeue = listening;
-	}
-
-	if (notify)
-		condition.notify_one();
-
-	if (!shouldRequeue)
-		return;
-
-	auto attachmentHandle = attachment.getHandle();
-
-	if (!attachmentHandle)
-	{
-		std::lock_guard mutexGuard{mutex};
-
-		if (listening)
-		{
-			listening = false;
-			condition.notify_all();
-		}
-
-		return;
-	}
-
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
-	FbRef<fb::IEvents> newHandle;
-
 	try
 	{
-		newHandle.reset(
-			attachmentHandle->queEvents(&statusWrapper, &firebirdCallback, eventBlockLength, eventBuffer.data()));
-	}
-	catch (...)
-	{
+		const auto eventBlockLength = static_cast<unsigned>(eventBuffer.size());
+		unsigned copyLength = 0;
+		bool notify = false;
+		bool shouldRequeue = false;
+
 		{  // scope
 			std::lock_guard mutexGuard{mutex};
 
 			if (!listening)
 				return;
 
-			listening = false;
-			condition.notify_all();
+			copyLength =
+				static_cast<unsigned>(std::min<std::size_t>(length, std::min(eventBuffer.size(), resultBuffer.size())));
+
+			if (copyLength == 0)
+				return;
+
+			std::memcpy(resultBuffer.data(), events, copyLength);
+
+			decodeEventCounts();
+
+			std::vector<EventCount> counts;
+			counts.reserve(eventNames.size());
+
+			for (std::size_t i = 0; i < eventNames.size(); ++i)
+			{
+				const auto value = rawCounts[i];
+
+				if (value != 0)
+					counts.push_back(EventCount{eventNames[i], static_cast<std::uint32_t>(value)});
+			}
+
+			if (first)
+			{
+				if (!counts.empty())
+				{
+					pendingNotifications.emplace_back(std::move(counts));
+					notify = true;
+				}
+			}
+			else
+				first = true;
+
+			shouldRequeue = listening;
 		}
 
-		return;
-	}
+		if (notify)
+			condition.notify_one();
 
-	FbRef<fb::IEvents> previousHandle;
+		if (!shouldRequeue)
+			return;
 
-	{
-		std::lock_guard mutexGuard{mutex};
+		auto attachmentHandle = attachment.getHandle();
 
-		if (listening)
+		if (!attachmentHandle)
 		{
-			previousHandle = std::move(eventsHandle);
-			eventsHandle = std::move(newHandle);
+			std::lock_guard mutexGuard{mutex};
+
+			if (listening)
+			{
+				listening = false;
+				condition.notify_all();
+			}
+
+			return;
+		}
+
+		const auto status = client.newStatus();
+		StatusWrapper statusWrapper{client, status.get()};
+		FbRef<fb::IEvents> newHandle;
+
+		try
+		{
+			newHandle.reset(
+				attachmentHandle->queEvents(&statusWrapper, &firebirdCallback, eventBlockLength, eventBuffer.data()));
+		}
+		catch (...)
+		{
+			{  // scope
+				std::lock_guard mutexGuard{mutex};
+
+				if (!listening)
+					return;
+
+				listening = false;
+				condition.notify_all();
+			}
+
+			return;
+		}
+
+		FbRef<fb::IEvents> previousHandle;
+
+		{
+			std::lock_guard mutexGuard{mutex};
+
+			if (listening)
+			{
+				previousHandle = std::move(eventsHandle);
+				eventsHandle = std::move(newHandle);
+			}
+		}
+	}
+	catch (...)
+	{
+		// Prevent exceptions from escaping into Firebird's C API callback.
+		// If we can't handle the event, stop listening to avoid repeated failures.
+		try
+		{
+			std::lock_guard mutexGuard{mutex};
+
+			if (listening)
+			{
+				listening = false;
+				condition.notify_all();
+			}
+		}
+		catch (...)
+		{
+			// If we can't even acquire the mutex, there's nothing we can do.
 		}
 	}
 }
