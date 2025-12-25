@@ -30,6 +30,7 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include <variant>
 
 
 namespace fbcpp
@@ -65,6 +66,50 @@ namespace fbcpp::impl::reflection
 
 	template <typename T>
 	inline constexpr bool isOptionalV = IsOptional<T>::value;
+
+	///
+	/// Helper to detect std::variant.
+	///
+	template <typename T>
+	struct IsVariant : std::false_type
+	{
+	};
+
+	template <typename... Ts>
+	struct IsVariant<std::variant<Ts...>> : std::true_type
+	{
+	};
+
+	template <typename T>
+	inline constexpr bool isVariantV = IsVariant<T>::value;
+
+	///
+	/// Check if variant contains a specific type.
+	///
+	template <typename T, typename Variant>
+	struct VariantContains : std::false_type
+	{
+	};
+
+	template <typename T, typename... Ts>
+	struct VariantContains<T, std::variant<Ts...>> : std::disjunction<std::is_same<T, Ts>...>
+	{
+	};
+
+	template <typename T, typename Variant>
+	inline constexpr bool variantContainsV = VariantContains<T, Variant>::value;
+
+	///
+	/// Helper to detect opaque (non-convertible) types that only match exact SQL types.
+	/// Forward declarations for opaque types from types.h.
+	///
+	template <typename T>
+	struct IsOpaqueType : std::false_type
+	{
+	};
+
+	template <typename T>
+	inline constexpr bool isOpaqueTypeV = IsOpaqueType<T>::value;
 
 	/// Universal converter for aggregate initialization detection.
 	struct UniversalType
@@ -333,6 +378,15 @@ namespace fbcpp::impl::reflection
 	template <typename T, std::size_t I>
 	using FieldType = std::remove_reference_t<std::tuple_element_t<I, TupleType<T>>>;
 }  // namespace fbcpp::impl::reflection
+
+namespace fbcpp
+{
+	///
+	/// Concept constraining types to std::variant types.
+	///
+	template <typename T>
+	concept VariantLike = impl::reflection::isVariantV<std::remove_cvref_t<T>>;
+}  // namespace fbcpp
 
 
 #endif  // FBCPP_STRUCT_BINDING_H

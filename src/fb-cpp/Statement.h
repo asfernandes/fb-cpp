@@ -37,6 +37,7 @@
 #include "SmartPtrs.h"
 #include "Exception.h"
 #include "StructBinding.h"
+#include "VariantTypeTraits.h"
 #include <charconv>
 #include <cerrno>
 #include <cstdlib>
@@ -1565,7 +1566,7 @@ namespace fbcpp
 		}
 
 		///
-		/// @brief Reads a Firebird 128-bit integer column.
+		/// @brief Reads a Firebird scaled 128-bit integer column.
 		///
 		std::optional<ScaledOpaqueInt128> getScaledOpaqueInt128(unsigned index)
 		{
@@ -1585,7 +1586,7 @@ namespace fbcpp
 						descriptor.scale};
 
 				default:
-					throwInvalidType("OpaqueInt128", descriptor.adjustedType);
+					throwInvalidType("ScaledOpaqueInt128", descriptor.adjustedType);
 			}
 		}
 
@@ -2130,6 +2131,72 @@ namespace fbcpp
 			setTuple(value, std::make_index_sequence<N>{});
 		}
 
+		///
+		/// @brief Retrieves a column value as a user-defined variant type.
+		/// @tparam V A std::variant type with possible C++ types. Use std::monostate for NULL.
+		/// @param index Zero-based column index.
+		/// @return The variant with column value, or std::monostate if NULL.
+		/// @throws FbCppException if NULL but variant lacks std::monostate.
+		/// @throws FbCppException if SQL type cannot convert to any alternative.
+		///
+		template <VariantLike V>
+		V get(unsigned index)
+		{
+			using namespace impl::reflection;
+
+			static_assert(variantAlternativesSupportedV<V>,
+				"Variant contains unsupported types. All variant alternatives must be types supported by fb-cpp "
+				"(e.g., std::int32_t, std::string, Date, ScaledOpaqueInt128, etc.). Check VariantTypeTraits.h for the "
+				"complete list of supported types.");
+
+			assert(isValid());
+
+			const auto& descriptor = getOutDescriptor(index);
+
+			if (isNull(index))
+			{
+				if constexpr (variantContainsV<std::monostate, V>)
+					return V{std::monostate{}};
+				else
+				{
+					throw FbCppException(
+						"NULL value encountered but variant does not contain std::monostate at index " +
+						std::to_string(index));
+				}
+			}
+
+			return getVariantValue<V>(index, descriptor);
+		}
+
+		///
+		/// @brief Sets a parameter from a variant value.
+		/// @tparam V A std::variant type.
+		/// @param index Zero-based parameter index.
+		/// @param value The variant containing the value.
+		///
+		template <VariantLike V>
+		void set(unsigned index, const V& value)
+		{
+			using namespace impl::reflection;
+
+			static_assert(variantAlternativesSupportedV<V>,
+				"Variant contains unsupported types. All variant alternatives must be types supported by fb-cpp "
+				"(e.g., std::int32_t, std::string, Date, ScaledOpaqueInt128, etc.). Check VariantTypeTraits.h for the "
+				"complete list of supported types.");
+
+			std::visit(
+				[this, index](const auto& v)
+				{
+					using T = std::decay_t<decltype(v)>;
+
+					if constexpr (std::is_same_v<T, std::monostate>)
+						setNull(index);
+					else
+						set(index, v);
+				},
+				value);
+		}
+
 	private:
 		///
 		/// @brief Validates and returns the descriptor for the given input parameter index.
@@ -2173,6 +2240,8 @@ namespace fbcpp
 			using namespace impl::reflection;
 
 			if constexpr (isOptionalV<F>)
+				return get<F>(index);
+			else if constexpr (isVariantV<F>)
 				return get<F>(index);
 			else
 			{
@@ -2218,6 +2287,211 @@ namespace fbcpp
 		void setTuple(const T& value, std::index_sequence<Is...>)
 		{
 			(set(static_cast<unsigned>(Is), std::get<Is>(value)), ...);
+		}
+
+		///
+		/// @brief Helper to retrieve a column value as a variant.
+		/// Uses priority: exact type match first, then declaration order for conversions.
+		///
+		template <typename V>
+		V getVariantValue(unsigned index, const Descriptor& descriptor)
+		{
+			using namespace impl::reflection;
+
+			// Try exact type matches first based on SQL type
+			switch (descriptor.adjustedType)
+			{
+				case DescriptorAdjustedType::BOOLEAN:
+					if constexpr (variantContainsV<bool, V>)
+						return V{get<std::optional<bool>>(index).value()};
+					break;
+
+				case DescriptorAdjustedType::INT16:
+					if (descriptor.scale != 0)
+					{
+						// For scaled numbers, prefer exact scaled type, then larger scaled types
+						if constexpr (variantContainsV<ScaledInt16, V>)
+							return V{get<std::optional<ScaledInt16>>(index).value()};
+						if constexpr (variantContainsV<ScaledInt32, V>)
+							return V{get<std::optional<ScaledInt32>>(index).value()};
+						if constexpr (variantContainsV<ScaledInt64, V>)
+							return V{get<std::optional<ScaledInt64>>(index).value()};
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+						if constexpr (variantContainsV<ScaledBoostInt128, V>)
+							return V{get<std::optional<ScaledBoostInt128>>(index).value()};
+#endif
+					}
+					if constexpr (variantContainsV<std::int16_t, V>)
+						return V{get<std::optional<std::int16_t>>(index).value()};
+					break;
+
+				case DescriptorAdjustedType::INT32:
+					if (descriptor.scale != 0)
+					{
+						// For scaled numbers, prefer exact scaled type, then larger scaled types
+						if constexpr (variantContainsV<ScaledInt32, V>)
+							return V{get<std::optional<ScaledInt32>>(index).value()};
+						if constexpr (variantContainsV<ScaledInt64, V>)
+							return V{get<std::optional<ScaledInt64>>(index).value()};
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+						if constexpr (variantContainsV<ScaledBoostInt128, V>)
+							return V{get<std::optional<ScaledBoostInt128>>(index).value()};
+#endif
+					}
+					if constexpr (variantContainsV<std::int32_t, V>)
+						return V{get<std::optional<std::int32_t>>(index).value()};
+					break;
+
+				case DescriptorAdjustedType::INT64:
+					if (descriptor.scale != 0)
+					{
+						// For scaled numbers, prefer exact scaled type, then larger scaled types
+						if constexpr (variantContainsV<ScaledInt64, V>)
+							return V{get<std::optional<ScaledInt64>>(index).value()};
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+						if constexpr (variantContainsV<ScaledBoostInt128, V>)
+							return V{get<std::optional<ScaledBoostInt128>>(index).value()};
+#endif
+					}
+					if constexpr (variantContainsV<std::int64_t, V>)
+						return V{get<std::optional<std::int64_t>>(index).value()};
+					break;
+
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+				case DescriptorAdjustedType::INT128:
+					// Prefer opaque (native Firebird) types first
+					if constexpr (variantContainsV<ScaledOpaqueInt128, V>)
+						return V{get<std::optional<ScaledOpaqueInt128>>(index).value()};
+					if (descriptor.scale != 0)
+					{
+						if constexpr (variantContainsV<ScaledBoostInt128, V>)
+							return V{get<std::optional<ScaledBoostInt128>>(index).value()};
+					}
+					if constexpr (variantContainsV<BoostInt128, V>)
+						return V{get<std::optional<BoostInt128>>(index).value()};
+					break;
+#endif
+
+				case DescriptorAdjustedType::FLOAT:
+					if constexpr (variantContainsV<float, V>)
+						return V{get<std::optional<float>>(index).value()};
+					break;
+
+				case DescriptorAdjustedType::DOUBLE:
+					if constexpr (variantContainsV<double, V>)
+						return V{get<std::optional<double>>(index).value()};
+					break;
+
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+				case DescriptorAdjustedType::DECFLOAT16:
+					// Prefer opaque (native Firebird) types first
+					if constexpr (variantContainsV<OpaqueDecFloat16, V>)
+						return V{get<std::optional<OpaqueDecFloat16>>(index).value()};
+					if constexpr (variantContainsV<BoostDecFloat16, V>)
+						return V{get<std::optional<BoostDecFloat16>>(index).value()};
+					break;
+
+				case DescriptorAdjustedType::DECFLOAT34:
+					// Prefer opaque (native Firebird) types first
+					if constexpr (variantContainsV<OpaqueDecFloat34, V>)
+						return V{get<std::optional<OpaqueDecFloat34>>(index).value()};
+					if constexpr (variantContainsV<BoostDecFloat34, V>)
+						return V{get<std::optional<BoostDecFloat34>>(index).value()};
+					break;
+#endif
+
+				case DescriptorAdjustedType::STRING:
+					if constexpr (variantContainsV<std::string, V>)
+						return V{get<std::optional<std::string>>(index).value()};
+					break;
+
+				case DescriptorAdjustedType::DATE:
+					// Prefer opaque (native Firebird) types first
+					if constexpr (variantContainsV<OpaqueDate, V>)
+						return V{get<std::optional<OpaqueDate>>(index).value()};
+					if constexpr (variantContainsV<Date, V>)
+						return V{get<std::optional<Date>>(index).value()};
+					break;
+
+				case DescriptorAdjustedType::TIME:
+					// Prefer opaque (native Firebird) types first
+					if constexpr (variantContainsV<OpaqueTime, V>)
+						return V{get<std::optional<OpaqueTime>>(index).value()};
+					if constexpr (variantContainsV<Time, V>)
+						return V{get<std::optional<Time>>(index).value()};
+					break;
+
+				case DescriptorAdjustedType::TIMESTAMP:
+					// Prefer opaque (native Firebird) types first
+					if constexpr (variantContainsV<OpaqueTimestamp, V>)
+						return V{get<std::optional<OpaqueTimestamp>>(index).value()};
+					if constexpr (variantContainsV<Timestamp, V>)
+						return V{get<std::optional<Timestamp>>(index).value()};
+					break;
+
+				case DescriptorAdjustedType::TIME_TZ:
+					// Prefer opaque (native Firebird) types first
+					if constexpr (variantContainsV<OpaqueTimeTz, V>)
+						return V{get<std::optional<OpaqueTimeTz>>(index).value()};
+					if constexpr (variantContainsV<TimeTz, V>)
+						return V{get<std::optional<TimeTz>>(index).value()};
+					break;
+
+				case DescriptorAdjustedType::TIMESTAMP_TZ:
+					// Prefer opaque (native Firebird) types first
+					if constexpr (variantContainsV<OpaqueTimestampTz, V>)
+						return V{get<std::optional<OpaqueTimestampTz>>(index).value()};
+					if constexpr (variantContainsV<TimestampTz, V>)
+						return V{get<std::optional<TimestampTz>>(index).value()};
+					break;
+
+				case DescriptorAdjustedType::BLOB:
+					if constexpr (variantContainsV<BlobId, V>)
+						return V{get<std::optional<BlobId>>(index).value()};
+					break;
+
+				default:
+					break;
+			}
+
+			// No exact match found, try variant alternatives in declaration order
+			return tryVariantAlternatives<V, 0>(index, descriptor);
+		}
+
+		///
+		/// @brief Recursively tries variant alternatives for type conversion.
+		///
+		template <typename V, std::size_t I = 0>
+		V tryVariantAlternatives(unsigned index, [[maybe_unused]] const Descriptor& descriptor)
+		{
+			using namespace impl::reflection;
+
+			if constexpr (I >= std::variant_size_v<V>)
+			{
+				throw FbCppException(
+					"Cannot convert SQL type to any variant alternative at index " + std::to_string(index));
+			}
+			else
+			{
+				using Alt = std::variant_alternative_t<I, V>;
+
+				if constexpr (std::is_same_v<Alt, std::monostate>)
+				{
+					// Skip monostate in non-null case
+					return tryVariantAlternatives<V, I + 1>(index, descriptor);
+				}
+				else if constexpr (isOpaqueTypeV<Alt>)
+				{
+					// Skip opaque types - they only match exact SQL types, no conversions
+					return tryVariantAlternatives<V, I + 1>(index, descriptor);
+				}
+				else
+				{
+					// Try this alternative - get<T> will throw if conversion fails
+					auto opt = get<std::optional<Alt>>(index);
+					return V{std::move(opt.value())};
+				}
+			}
 		}
 
 		///
