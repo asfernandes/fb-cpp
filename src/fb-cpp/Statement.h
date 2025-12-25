@@ -2362,12 +2362,12 @@ namespace fbcpp
 					// Prefer opaque (native Firebird) types first
 					if constexpr (variantContainsV<ScaledOpaqueInt128, V>)
 						return V{get<std::optional<ScaledOpaqueInt128>>(index).value()};
-					if (descriptor.scale != 0)
+					else if (descriptor.scale != 0)
 					{
 						if constexpr (variantContainsV<ScaledBoostInt128, V>)
 							return V{get<std::optional<ScaledBoostInt128>>(index).value()};
 					}
-					if constexpr (variantContainsV<BoostInt128, V>)
+					else if constexpr (variantContainsV<BoostInt128, V>)
 						return V{get<std::optional<BoostInt128>>(index).value()};
 					break;
 #endif
@@ -2387,7 +2387,7 @@ namespace fbcpp
 					// Prefer opaque (native Firebird) types first
 					if constexpr (variantContainsV<OpaqueDecFloat16, V>)
 						return V{get<std::optional<OpaqueDecFloat16>>(index).value()};
-					if constexpr (variantContainsV<BoostDecFloat16, V>)
+					else if constexpr (variantContainsV<BoostDecFloat16, V>)
 						return V{get<std::optional<BoostDecFloat16>>(index).value()};
 					break;
 
@@ -2395,7 +2395,7 @@ namespace fbcpp
 					// Prefer opaque (native Firebird) types first
 					if constexpr (variantContainsV<OpaqueDecFloat34, V>)
 						return V{get<std::optional<OpaqueDecFloat34>>(index).value()};
-					if constexpr (variantContainsV<BoostDecFloat34, V>)
+					else if constexpr (variantContainsV<BoostDecFloat34, V>)
 						return V{get<std::optional<BoostDecFloat34>>(index).value()};
 					break;
 #endif
@@ -2409,7 +2409,7 @@ namespace fbcpp
 					// Prefer opaque (native Firebird) types first
 					if constexpr (variantContainsV<OpaqueDate, V>)
 						return V{get<std::optional<OpaqueDate>>(index).value()};
-					if constexpr (variantContainsV<Date, V>)
+					else if constexpr (variantContainsV<Date, V>)
 						return V{get<std::optional<Date>>(index).value()};
 					break;
 
@@ -2417,7 +2417,7 @@ namespace fbcpp
 					// Prefer opaque (native Firebird) types first
 					if constexpr (variantContainsV<OpaqueTime, V>)
 						return V{get<std::optional<OpaqueTime>>(index).value()};
-					if constexpr (variantContainsV<Time, V>)
+					else if constexpr (variantContainsV<Time, V>)
 						return V{get<std::optional<Time>>(index).value()};
 					break;
 
@@ -2425,7 +2425,7 @@ namespace fbcpp
 					// Prefer opaque (native Firebird) types first
 					if constexpr (variantContainsV<OpaqueTimestamp, V>)
 						return V{get<std::optional<OpaqueTimestamp>>(index).value()};
-					if constexpr (variantContainsV<Timestamp, V>)
+					else if constexpr (variantContainsV<Timestamp, V>)
 						return V{get<std::optional<Timestamp>>(index).value()};
 					break;
 
@@ -2433,7 +2433,7 @@ namespace fbcpp
 					// Prefer opaque (native Firebird) types first
 					if constexpr (variantContainsV<OpaqueTimeTz, V>)
 						return V{get<std::optional<OpaqueTimeTz>>(index).value()};
-					if constexpr (variantContainsV<TimeTz, V>)
+					else if constexpr (variantContainsV<TimeTz, V>)
 						return V{get<std::optional<TimeTz>>(index).value()};
 					break;
 
@@ -2441,7 +2441,7 @@ namespace fbcpp
 					// Prefer opaque (native Firebird) types first
 					if constexpr (variantContainsV<OpaqueTimestampTz, V>)
 						return V{get<std::optional<OpaqueTimestampTz>>(index).value()};
-					if constexpr (variantContainsV<TimestampTz, V>)
+					else if constexpr (variantContainsV<TimestampTz, V>)
 						return V{get<std::optional<TimestampTz>>(index).value()};
 					break;
 
