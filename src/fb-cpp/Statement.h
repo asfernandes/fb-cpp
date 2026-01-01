@@ -110,9 +110,29 @@ namespace fbcpp
 			return *this;
 		}
 
+		///
+		/// @brief Returns the cursor name to be set for the statement.
+		///
+		const std::optional<std::string>& getCursorName() const
+		{
+			return cursorName;
+		}
+
+		///
+		/// @brief Sets the cursor name for the statement.
+		/// @param value The name of the cursor.
+		/// @return Reference to this instance for fluent configuration.
+		///
+		StatementOptions& setCursorName(const std::string& value)
+		{
+			cursorName = value;
+			return *this;
+		}
+
 	private:
 		bool prefetchLegacyPlan = false;
 		bool prefetchPlan = false;
+		std::optional<std::string> cursorName;
 	};
 
 	///

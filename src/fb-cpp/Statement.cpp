@@ -53,6 +53,9 @@ Statement::Statement(
 	statementHandle.reset(attachment.getHandle()->prepare(&statusWrapper, transaction.getHandle().get(),
 		static_cast<unsigned>(sql.length()), sql.data(), SQL_DIALECT_CURRENT, flags));
 
+	if (options.getCursorName().has_value())
+		statementHandle->setCursorName(&statusWrapper, options.getCursorName()->c_str());
+
 	type = static_cast<StatementType>(statementHandle->getType(&statusWrapper));
 
 	switch (type)
