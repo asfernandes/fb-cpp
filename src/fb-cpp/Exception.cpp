@@ -25,6 +25,7 @@
 #include "Exception.h"
 #include "Client.h"
 #include <string>
+#include <vector>
 #include <cassert>
 
 using namespace fbcpp;
@@ -83,4 +84,73 @@ std::string DatabaseException::buildMessage(Client& client, const std::intptr_t*
 		message = DEFAULT_MESSAGE;
 
 	return message;
+}
+
+
+std::vector<std::intptr_t> DatabaseException::copyErrorVector(const std::intptr_t* statusVector)
+{
+	std::vector<std::intptr_t> result;
+
+	if (!statusVector)
+		return result;
+
+	const auto* p = statusVector;
+
+	while (*p != isc_arg_end)
+	{
+		const auto argType = *p++;
+
+		// clang-format off
+		switch (argType)
+		{
+			case isc_arg_gds:
+			case isc_arg_number:
+				result.push_back(argType);
+				result.push_back(*p++);
+				break;
+
+			case isc_arg_string:
+			case isc_arg_interpreted:
+			case isc_arg_sql_state:
+				p++;  // skip string pointer
+				break;
+
+			case isc_arg_cstring:
+				p += 2;  // skip length + string pointer
+				break;
+
+			default:
+				p++;  // skip unknown arg value
+				break;
+		}
+		// clang-format on
+	}
+
+	result.push_back(isc_arg_end);
+
+	return result;
+}
+
+
+std::string DatabaseException::extractSqlState(const std::intptr_t* statusVector)
+{
+	if (!statusVector)
+		return {};
+
+	const auto* p = statusVector;
+
+	while (*p != isc_arg_end)
+	{
+		const auto argType = *p++;
+
+		if (argType == isc_arg_sql_state)
+			return reinterpret_cast<const char*>(*p);
+
+		if (argType == isc_arg_cstring)
+			p += 2;
+		else
+			p++;
+	}
+
+	return {};
 }
