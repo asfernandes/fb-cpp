@@ -67,6 +67,22 @@ namespace fbcpp
 	class Transaction;
 
 	///
+	/// @brief Selects the cursor type for a SELECT statement.
+	///
+	enum class CursorType
+	{
+		///
+		/// Forward-only traversal (default, more efficient for streaming).
+		///
+		FORWARD_ONLY,
+
+		///
+		/// Allows bidirectional traversal and absolute/relative positioning.
+		///
+		SCROLLABLE,
+	};
+
+	///
 	/// Represents options used when preparing a Statement.
 	///
 	class StatementOptions final
@@ -129,10 +145,30 @@ namespace fbcpp
 			return *this;
 		}
 
+		///
+		/// @brief Returns the cursor type to be used when opening a result set.
+		///
+		CursorType getCursorType() const
+		{
+			return cursorType;
+		}
+
+		///
+		/// @brief Sets the cursor type used when opening a result set.
+		/// @param value `FORWARD_ONLY` for streaming access, `SCROLLABLE` for bidirectional navigation.
+		/// @return Reference to this instance for fluent configuration.
+		///
+		StatementOptions& setCursorType(CursorType value)
+		{
+			cursorType = value;
+			return *this;
+		}
+
 	private:
 		bool prefetchLegacyPlan = false;
 		bool prefetchPlan = false;
 		std::optional<std::string> cursorName;
+		CursorType cursorType = CursorType::FORWARD_ONLY;
 	};
 
 	///
@@ -231,7 +267,8 @@ namespace fbcpp
 			  outMetadata{std::move(o.outMetadata)},
 			  outDescriptors{std::move(o.outDescriptors)},
 			  outMessage{std::move(o.outMessage)},
-			  type{o.type}
+			  type{o.type},
+			  cursorFlags{o.cursorFlags}
 		{
 		}
 
@@ -2736,6 +2773,7 @@ namespace fbcpp
 		std::vector<Descriptor> outDescriptors;
 		std::vector<std::byte> outMessage;
 		StatementType type;
+		unsigned cursorFlags = 0;
 	};
 
 	///

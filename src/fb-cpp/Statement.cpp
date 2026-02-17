@@ -56,6 +56,9 @@ Statement::Statement(
 	if (options.getCursorName().has_value())
 		statementHandle->setCursorName(&statusWrapper, options.getCursorName()->c_str());
 
+	if (options.getCursorType() == CursorType::SCROLLABLE)
+		cursorFlags = fb::IStatement::CURSOR_TYPE_SCROLLABLE;
+
 	type = static_cast<StatementType>(statementHandle->getType(&statusWrapper));
 
 	switch (type)
@@ -223,7 +226,7 @@ bool Statement::execute(Transaction& transaction)
 		case StatementType::SELECT:
 		case StatementType::SELECT_FOR_UPDATE:
 			resultSetHandle.reset(statementHandle->openCursor(&statusWrapper, transaction.getHandle().get(),
-				inMetadata.get(), inMessage.data(), outMetadata.get(), 0));
+				inMetadata.get(), inMessage.data(), outMetadata.get(), cursorFlags));
 			return resultSetHandle->fetchNext(&statusWrapper, outMessageData) == fb::IStatus::RESULT_OK;
 
 		default:
