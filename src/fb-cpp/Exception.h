@@ -28,6 +28,7 @@
 #include "fb-api.h"
 #include <stdexcept>
 #include <string>
+#include <vector>
 #include <cstdint>
 
 
@@ -204,13 +205,49 @@ namespace fbcpp
 		///
 		/// Constructs a DatabaseException from a Firebird status vector.
 		///
-		explicit DatabaseException(Client& client, const std::intptr_t* status)
-			: FbCppException{buildMessage(client, status)}
+		explicit DatabaseException(Client& client, const std::intptr_t* statusVector)
+			: FbCppException{buildMessage(client, statusVector)},
+			  errorVector_{copyErrorVector(statusVector)},
+			  sqlState_{extractSqlState(statusVector)}
 		{
 		}
 
+		///
+		/// Returns the Firebird error vector containing isc_arg_gds and isc_arg_number entries.
+		/// String arguments are excluded to avoid dangling pointers.
+		/// The vector is terminated by isc_arg_end.
+		///
+		const std::vector<std::intptr_t>& getErrors() const noexcept
+		{
+			return errorVector_;
+		}
+
+		///
+		/// Returns the primary ISC error code (first isc_arg_gds value), or 0 if none.
+		///
+		std::intptr_t getErrorCode() const noexcept
+		{
+			if (errorVector_.size() >= 2 && errorVector_[0] == isc_arg_gds)
+				return errorVector_[1];
+			return 0;
+		}
+
+		///
+		/// Returns the SQL state string (e.g. "42000") if present in the original status vector,
+		/// or empty otherwise.
+		///
+		const std::string& getSqlState() const noexcept
+		{
+			return sqlState_;
+		}
+
 	private:
-		static std::string buildMessage(Client& client, const std::intptr_t* status);
+		static std::string buildMessage(Client& client, const std::intptr_t* statusVector);
+		static std::vector<std::intptr_t> copyErrorVector(const std::intptr_t* statusVector);
+		static std::string extractSqlState(const std::intptr_t* statusVector);
+
+		std::vector<std::intptr_t> errorVector_;
+		std::string sqlState_;
 	};
 }  // namespace fbcpp
 
