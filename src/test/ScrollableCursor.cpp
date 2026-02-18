@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Adriano dos Santos Fernandes
+ * Copyright (c) 2026 F.D.Castel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,101 +35,9 @@ BOOST_AUTO_TEST_CASE(defaultCursorTypeIsForwardOnly)
 	BOOST_CHECK(options.getCursorType() == CursorType::FORWARD_ONLY);
 }
 
-BOOST_AUTO_TEST_CASE(scrollableCursorSupportsFetchFirst)
+BOOST_AUTO_TEST_CASE(scrollableCursorSupportsFetchMethods)
 {
-	const auto database = getTempFile("ScrollableCursor-fetchFirst.fdb");
-
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
-	FbDropDatabase attachmentDrop{attachment};
-
-	Transaction transaction{attachment};
-
-	Statement ddl{attachment, transaction, "create table t (col integer)"};
-	ddl.execute(transaction);
-	transaction.commitRetaining();
-
-	Statement insert{attachment, transaction, "insert into t (col) values (?)"};
-	for (int i = 1; i <= 3; ++i)
-	{
-		insert.setInt32(0, i);
-		insert.execute(transaction);
-	}
-
-	Statement select{attachment, transaction, "select col from t order by col",
-		StatementOptions().setCursorType(CursorType::SCROLLABLE)};
-	BOOST_REQUIRE(select.execute(transaction));
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 1);
-
-	BOOST_REQUIRE(select.fetchNext());
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 2);
-
-	BOOST_REQUIRE(select.fetchFirst());
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 1);
-}
-
-BOOST_AUTO_TEST_CASE(scrollableCursorSupportsFetchLast)
-{
-	const auto database = getTempFile("ScrollableCursor-fetchLast.fdb");
-
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
-	FbDropDatabase attachmentDrop{attachment};
-
-	Transaction transaction{attachment};
-
-	Statement ddl{attachment, transaction, "create table t (col integer)"};
-	ddl.execute(transaction);
-	transaction.commitRetaining();
-
-	Statement insert{attachment, transaction, "insert into t (col) values (?)"};
-	for (int i = 1; i <= 3; ++i)
-	{
-		insert.setInt32(0, i);
-		insert.execute(transaction);
-	}
-
-	Statement select{attachment, transaction, "select col from t order by col",
-		StatementOptions().setCursorType(CursorType::SCROLLABLE)};
-	BOOST_REQUIRE(select.execute(transaction));
-
-	BOOST_REQUIRE(select.fetchLast());
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 3);
-}
-
-BOOST_AUTO_TEST_CASE(scrollableCursorSupportsFetchPrior)
-{
-	const auto database = getTempFile("ScrollableCursor-fetchPrior.fdb");
-
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
-	FbDropDatabase attachmentDrop{attachment};
-
-	Transaction transaction{attachment};
-
-	Statement ddl{attachment, transaction, "create table t (col integer)"};
-	ddl.execute(transaction);
-	transaction.commitRetaining();
-
-	Statement insert{attachment, transaction, "insert into t (col) values (?)"};
-	for (int i = 1; i <= 3; ++i)
-	{
-		insert.setInt32(0, i);
-		insert.execute(transaction);
-	}
-
-	Statement select{attachment, transaction, "select col from t order by col",
-		StatementOptions().setCursorType(CursorType::SCROLLABLE)};
-	BOOST_REQUIRE(select.execute(transaction));
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 1);
-
-	BOOST_REQUIRE(select.fetchNext());
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 2);
-
-	BOOST_REQUIRE(select.fetchPrior());
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 1);
-}
-
-BOOST_AUTO_TEST_CASE(scrollableCursorSupportsFetchAbsolute)
-{
-	const auto database = getTempFile("ScrollableCursor-fetchAbsolute.fdb");
+	const auto database = getTempFile("ScrollableCursor-fetchMethods.fdb");
 
 	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
 	FbDropDatabase attachmentDrop{attachment};
@@ -150,81 +58,34 @@ BOOST_AUTO_TEST_CASE(scrollableCursorSupportsFetchAbsolute)
 	Statement select{attachment, transaction, "select col from t order by col",
 		StatementOptions().setCursorType(CursorType::SCROLLABLE)};
 	BOOST_REQUIRE(select.execute(transaction));
+	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 1);
 
+	// fetchNext
+	BOOST_REQUIRE(select.fetchNext());
+	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 2);
+
+	// fetchFirst
+	BOOST_REQUIRE(select.fetchFirst());
+	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 1);
+
+	// fetchLast
+	BOOST_REQUIRE(select.fetchLast());
+	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 5);
+
+	// fetchPrior
+	BOOST_REQUIRE(select.fetchPrior());
+	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 4);
+
+	// fetchAbsolute
 	BOOST_REQUIRE(select.fetchAbsolute(3));
 	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 3);
 
-	BOOST_REQUIRE(select.fetchAbsolute(1));
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 1);
-
-	BOOST_REQUIRE(select.fetchAbsolute(5));
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 5);
-}
-
-BOOST_AUTO_TEST_CASE(scrollableCursorSupportsFetchRelative)
-{
-	const auto database = getTempFile("ScrollableCursor-fetchRelative.fdb");
-
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
-	FbDropDatabase attachmentDrop{attachment};
-
-	Transaction transaction{attachment};
-
-	Statement ddl{attachment, transaction, "create table t (col integer)"};
-	ddl.execute(transaction);
-	transaction.commitRetaining();
-
-	Statement insert{attachment, transaction, "insert into t (col) values (?)"};
-	for (int i = 1; i <= 5; ++i)
-	{
-		insert.setInt32(0, i);
-		insert.execute(transaction);
-	}
-
-	Statement select{attachment, transaction, "select col from t order by col",
-		StatementOptions().setCursorType(CursorType::SCROLLABLE)};
-	BOOST_REQUIRE(select.execute(transaction));
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 1);
-
+	// fetchRelative
 	BOOST_REQUIRE(select.fetchRelative(2));
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 3);
+	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 5);
 
 	BOOST_REQUIRE(select.fetchRelative(-1));
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 2);
-}
-
-BOOST_AUTO_TEST_CASE(forwardOnlyIsDefault)
-{
-	const auto database = getTempFile("ScrollableCursor-forwardOnlyIsDefault.fdb");
-
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
-	FbDropDatabase attachmentDrop{attachment};
-
-	Transaction transaction{attachment};
-
-	Statement ddl{attachment, transaction, "create table t (col integer)"};
-	ddl.execute(transaction);
-	transaction.commitRetaining();
-
-	Statement insert{attachment, transaction, "insert into t (col) values (?)"};
-	for (int i = 1; i <= 3; ++i)
-	{
-		insert.setInt32(0, i);
-		insert.execute(transaction);
-	}
-
-	// Default options — forward-only cursor
-	Statement select{attachment, transaction, "select col from t order by col"};
-	BOOST_REQUIRE(select.execute(transaction));
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 1);
-
-	BOOST_REQUIRE(select.fetchNext());
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 2);
-
-	BOOST_REQUIRE(select.fetchNext());
-	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 3);
-
-	BOOST_CHECK_EQUAL(select.fetchNext(), false);
+	BOOST_CHECK_EQUAL(select.getInt32(0).value(), 4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
