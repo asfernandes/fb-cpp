@@ -39,8 +39,8 @@ jobs:
     env:
       USERNAME: asfernandes
       VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
-      FEED_URL: https://nuget.pkg.github.com/asfernandes/index.json
-      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite"
+      FEED_URL: ${{ github.repository == 'asfernandes/fb-cpp' && 'https://nuget.pkg.github.com/asfernandes/index.json' || '' }}
+      VCPKG_BINARY_SOURCES: ${{ github.repository == 'asfernandes/fb-cpp' && 'clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite' || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -143,8 +143,8 @@ jobs:
     env:
       USERNAME: asfernandes
       VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
-      FEED_URL: https://nuget.pkg.github.com/asfernandes/index.json
-      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite"
+      FEED_URL: ${{ github.repository == 'asfernandes/fb-cpp' && 'https://nuget.pkg.github.com/asfernandes/index.json' || '' }}
+      VCPKG_BINARY_SOURCES: ${{ github.repository == 'asfernandes/fb-cpp' && 'clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite' || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -233,8 +233,8 @@ jobs:
     env:
       USERNAME: asfernandes
       VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
-      FEED_URL: https://nuget.pkg.github.com/asfernandes/index.json
-      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite"
+      FEED_URL: ${{ github.repository == 'asfernandes/fb-cpp' && 'https://nuget.pkg.github.com/asfernandes/index.json' || '' }}
+      VCPKG_BINARY_SOURCES: ${{ github.repository == 'asfernandes/fb-cpp' && 'clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite' || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
