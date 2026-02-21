@@ -316,6 +316,7 @@ jobs:
           ctest --preset default --verbose
 
   deploy-docs:
+    if: github.repository == 'asfernandes/fb-cpp'
     runs-on: ubuntu-latest
     needs:
       - clang-format-check
