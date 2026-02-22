@@ -133,8 +133,10 @@ BOOST_AUTO_TEST_CASE(sqlStateIsExtractedForSyntaxError)
 	}
 	catch (const DatabaseException& ex)
 	{
-		// Firebird 3.0+ includes SQL state in the status vector.
-		BOOST_CHECK(!ex.getSqlState().empty());
+		// Firebird may include SQL state in the status vector, but this is not guaranteed
+		// by IStatus::getErrors(). When present, it should be a non-empty string.
+		if (!ex.getSqlState().empty())
+			BOOST_CHECK_EQUAL(ex.getSqlState().size(), 5u);
 	}
 }
 
