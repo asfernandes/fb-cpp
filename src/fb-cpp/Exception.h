@@ -207,19 +207,32 @@ namespace fbcpp
 		///
 		explicit DatabaseException(Client& client, const std::intptr_t* statusVector)
 			: FbCppException{buildMessage(client, statusVector)},
-			  errorVector_{copyErrorVector(statusVector)},
-			  sqlState_{extractSqlState(statusVector)}
+			  sqlState{extractSqlState(statusVector)}
 		{
+			copyErrorVector(statusVector);
 		}
 
+		DatabaseException(const DatabaseException& other)
+			: FbCppException{static_cast<const FbCppException&>(other)},
+			  errorVector{other.errorVector},
+			  errorStrings{other.errorStrings},
+			  sqlState{other.sqlState}
+		{
+			fixupStringPointers();
+		}
+
+		DatabaseException(DatabaseException&&) = default;
+
+		DatabaseException& operator=(const DatabaseException&) = delete;
+		DatabaseException& operator=(DatabaseException&&) = delete;
+
 		///
-		/// Returns the Firebird error vector containing isc_arg_gds and isc_arg_number entries.
-		/// String arguments are excluded to avoid dangling pointers.
+		/// Returns the Firebird error vector.
 		/// The vector is terminated by isc_arg_end.
 		///
 		const std::vector<std::intptr_t>& getErrors() const noexcept
 		{
-			return errorVector_;
+			return errorVector;
 		}
 
 		///
@@ -227,8 +240,8 @@ namespace fbcpp
 		///
 		std::intptr_t getErrorCode() const noexcept
 		{
-			if (errorVector_.size() >= 2 && errorVector_[0] == isc_arg_gds)
-				return errorVector_[1];
+			if (errorVector.size() >= 2 && errorVector[0] == isc_arg_gds)
+				return errorVector[1];
 			return 0;
 		}
 
@@ -238,16 +251,20 @@ namespace fbcpp
 		///
 		const std::string& getSqlState() const noexcept
 		{
-			return sqlState_;
+			return sqlState;
 		}
 
 	private:
 		static std::string buildMessage(Client& client, const std::intptr_t* statusVector);
-		static std::vector<std::intptr_t> copyErrorVector(const std::intptr_t* statusVector);
 		static std::string extractSqlState(const std::intptr_t* statusVector);
 
-		std::vector<std::intptr_t> errorVector_;
-		std::string sqlState_;
+		void copyErrorVector(const std::intptr_t* statusVector);
+		void fixupStringPointers();
+
+	private:
+		std::vector<std::intptr_t> errorVector;
+		std::vector<std::string> errorStrings;
+		std::string sqlState;
 	};
 }  // namespace fbcpp
 

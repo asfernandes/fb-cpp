@@ -86,13 +86,10 @@ std::string DatabaseException::buildMessage(Client& client, const std::intptr_t*
 	return message;
 }
 
-
-std::vector<std::intptr_t> DatabaseException::copyErrorVector(const std::intptr_t* statusVector)
+void DatabaseException::copyErrorVector(const std::intptr_t* statusVector)
 {
-	std::vector<std::intptr_t> result;
-
 	if (!statusVector)
-		return result;
+		return;
 
 	const auto* p = statusVector;
 
@@ -100,37 +97,59 @@ std::vector<std::intptr_t> DatabaseException::copyErrorVector(const std::intptr_
 	{
 		const auto argType = *p++;
 
-		// clang-format off
 		switch (argType)
 		{
 			case isc_arg_gds:
 			case isc_arg_number:
-				result.push_back(argType);
-				result.push_back(*p++);
+				errorVector.push_back(argType);
+				errorVector.push_back(*p++);
 				break;
 
 			case isc_arg_string:
 			case isc_arg_interpreted:
 			case isc_arg_sql_state:
-				p++;  // skip string pointer
+				errorVector.push_back(argType);
+				errorStrings.emplace_back(reinterpret_cast<const char*>(*p++));
+				errorVector.push_back(0);  // placeholder for string pointer
 				break;
 
 			case isc_arg_cstring:
-				p += 2;  // skip length + string pointer
+			{
+				const auto len = static_cast<size_t>(*p++);
+				const auto str = reinterpret_cast<const char*>(*p++);
+				errorVector.push_back(isc_arg_string);
+				errorStrings.emplace_back(str, len);
+				errorVector.push_back(0);  // placeholder for string pointer
 				break;
+			}
 
 			default:
-				p++;  // skip unknown arg value
+				errorVector.push_back(argType);
+				errorVector.push_back(*p++);
 				break;
 		}
-		// clang-format on
 	}
 
-	result.push_back(isc_arg_end);
+	errorVector.push_back(isc_arg_end);
 
-	return result;
+	fixupStringPointers();
 }
 
+void DatabaseException::fixupStringPointers()
+{
+	size_t strIdx = 0;
+	size_t i = 0;
+
+	while (i < errorVector.size() && errorVector[i] != isc_arg_end)
+	{
+		const auto argType = errorVector[i];
+
+		if (argType == isc_arg_string || argType == isc_arg_interpreted || argType == isc_arg_sql_state)
+			errorVector[i + 1] = reinterpret_cast<std::intptr_t>(errorStrings[strIdx++].c_str());
+
+		i += 2;
+	}
+}
 
 std::string DatabaseException::extractSqlState(const std::intptr_t* statusVector)
 {
