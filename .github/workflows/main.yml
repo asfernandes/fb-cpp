@@ -2,8 +2,6 @@ name: CI and Deploy Docs
 
 on:
   push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
@@ -13,7 +11,7 @@ permissions:
   packages: write
 
 concurrency:
-  group: main
+  group: ${{ github.ref }}
 
 jobs:
   clang-format-check:
@@ -318,6 +316,7 @@ jobs:
   deploy-docs:
     if: github.repository == 'asfernandes/fb-cpp'
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.repository == 'asfernandes/fb-cpp'
     needs:
       - clang-format-check
       - build-linux
