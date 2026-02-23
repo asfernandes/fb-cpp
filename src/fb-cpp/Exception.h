@@ -200,8 +200,6 @@ namespace fbcpp
 	class DatabaseException final : public FbCppException
 	{
 	public:
-		using FbCppException::FbCppException;
-
 		///
 		/// Constructs a DatabaseException from a Firebird status vector.
 		///

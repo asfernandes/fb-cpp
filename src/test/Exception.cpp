@@ -31,9 +31,9 @@
 
 BOOST_AUTO_TEST_SUITE(DatabaseExceptionSuite)
 
-BOOST_AUTO_TEST_CASE(syntaxErrorHasNonZeroErrorCode)
+BOOST_AUTO_TEST_CASE(syntaxErrorExceptionProperties)
 {
-	const auto database = getTempFile("Exception-syntaxErrorHasNonZeroErrorCode.fdb");
+	const auto database = getTempFile("Exception-syntaxErrorExceptionProperties.fdb");
 
 	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
 	FbDropDatabase attachmentDrop{attachment};
@@ -47,125 +47,23 @@ BOOST_AUTO_TEST_CASE(syntaxErrorHasNonZeroErrorCode)
 	}
 	catch (const DatabaseException& ex)
 	{
-		BOOST_CHECK_NE(ex.getErrorCode(), 0);
-	}
-}
-
-BOOST_AUTO_TEST_CASE(errorVectorContainsIscArgGds)
-{
-	const auto database = getTempFile("Exception-errorVectorContainsIscArgGds.fdb");
-
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
-	FbDropDatabase attachmentDrop{attachment};
-
-	Transaction transaction{attachment};
-
-	try
-	{
-		Statement stmt{attachment, transaction, "INVALID SQL"};
-		BOOST_FAIL("Expected DatabaseException was not thrown");
-	}
-	catch (const DatabaseException& ex)
-	{
-		const auto& errors = ex.getErrors();
-		BOOST_REQUIRE(!errors.empty());
-		BOOST_CHECK_EQUAL(errors[0], isc_arg_gds);
-	}
-}
-
-BOOST_AUTO_TEST_CASE(errorVectorIsTerminatedByIscArgEnd)
-{
-	const auto database = getTempFile("Exception-errorVectorIsTerminatedByIscArgEnd.fdb");
-
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
-	FbDropDatabase attachmentDrop{attachment};
-
-	Transaction transaction{attachment};
-
-	try
-	{
-		Statement stmt{attachment, transaction, "INVALID SQL"};
-		BOOST_FAIL("Expected DatabaseException was not thrown");
-	}
-	catch (const DatabaseException& ex)
-	{
-		const auto& errors = ex.getErrors();
-		BOOST_REQUIRE(!errors.empty());
-		BOOST_CHECK_EQUAL(errors.back(), isc_arg_end);
-	}
-}
-
-BOOST_AUTO_TEST_CASE(getErrorCodeReturnsFirstGdsCode)
-{
-	const auto database = getTempFile("Exception-getErrorCodeReturnsFirstGdsCode.fdb");
-
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
-	FbDropDatabase attachmentDrop{attachment};
-
-	Transaction transaction{attachment};
-
-	try
-	{
-		Statement stmt{attachment, transaction, "INVALID SQL"};
-		BOOST_FAIL("Expected DatabaseException was not thrown");
-	}
-	catch (const DatabaseException& ex)
-	{
-		const auto& errors = ex.getErrors();
-		BOOST_REQUIRE(errors.size() >= 2);
-		BOOST_CHECK_EQUAL(ex.getErrorCode(), errors[1]);
-	}
-}
-
-BOOST_AUTO_TEST_CASE(sqlStateIsExtractedForSyntaxError)
-{
-	const auto database = getTempFile("Exception-sqlStateIsExtractedForSyntaxError.fdb");
-
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
-	FbDropDatabase attachmentDrop{attachment};
-
-	Transaction transaction{attachment};
-
-	try
-	{
-		Statement stmt{attachment, transaction, "INVALID SQL"};
-		BOOST_FAIL("Expected DatabaseException was not thrown");
-	}
-	catch (const DatabaseException& ex)
-	{
-		// Firebird may include SQL state in the status vector, but this is not guaranteed
-		// by IStatus::getErrors(). When present, it should be a non-empty string.
-		if (!ex.getSqlState().empty())
-			BOOST_CHECK_EQUAL(ex.getSqlState().size(), 5u);
-	}
-}
-
-BOOST_AUTO_TEST_CASE(defaultConstructedHasEmptyErrorVector)
-{
-	DatabaseException ex{"test error message"};
-	BOOST_CHECK(ex.getErrors().empty());
-	BOOST_CHECK_EQUAL(ex.getErrorCode(), 0);
-	BOOST_CHECK(ex.getSqlState().empty());
-}
-
-BOOST_AUTO_TEST_CASE(whatPreservesFormattedMessage)
-{
-	const auto database = getTempFile("Exception-whatPreservesFormattedMessage.fdb");
-
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
-	FbDropDatabase attachmentDrop{attachment};
-
-	Transaction transaction{attachment};
-
-	try
-	{
-		Statement stmt{attachment, transaction, "INVALID SQL"};
-		BOOST_FAIL("Expected DatabaseException was not thrown");
-	}
-	catch (const DatabaseException& ex)
-	{
+		// what() should contain a formatted error message
 		std::string message = ex.what();
 		BOOST_CHECK(!message.empty());
+
+		// Error vector should start with isc_arg_gds and end with isc_arg_end
+		const auto& errors = ex.getErrors();
+		BOOST_REQUIRE(errors.size() >= 2);
+		BOOST_CHECK_EQUAL(errors[0], isc_arg_gds);
+		BOOST_CHECK_EQUAL(errors.back(), isc_arg_end);
+
+		// getErrorCode() should return the first GDS code
+		BOOST_CHECK_NE(ex.getErrorCode(), 0);
+		BOOST_CHECK_EQUAL(ex.getErrorCode(), errors[1]);
+
+		// SQL state, when present, should be a 5-character string
+		if (!ex.getSqlState().empty())
+			BOOST_CHECK_EQUAL(ex.getSqlState().size(), 5u);
 	}
 }
 
