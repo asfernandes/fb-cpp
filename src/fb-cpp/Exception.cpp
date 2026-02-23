@@ -25,6 +25,7 @@
 #include "Exception.h"
 #include "Client.h"
 #include <string>
+#include <vector>
 #include <cassert>
 
 using namespace fbcpp;
@@ -83,4 +84,92 @@ std::string DatabaseException::buildMessage(Client& client, const std::intptr_t*
 		message = DEFAULT_MESSAGE;
 
 	return message;
+}
+
+void DatabaseException::copyErrorVector(const std::intptr_t* statusVector)
+{
+	if (!statusVector)
+		return;
+
+	const auto* p = statusVector;
+
+	while (*p != isc_arg_end)
+	{
+		const auto argType = *p++;
+
+		switch (argType)
+		{
+			case isc_arg_gds:
+			case isc_arg_number:
+				errorVector.push_back(argType);
+				errorVector.push_back(*p++);
+				break;
+
+			case isc_arg_string:
+			case isc_arg_interpreted:
+			case isc_arg_sql_state:
+				errorVector.push_back(argType);
+				errorStrings.emplace_back(reinterpret_cast<const char*>(*p++));
+				errorVector.push_back(0);  // placeholder for string pointer
+				break;
+
+			case isc_arg_cstring:
+			{
+				const auto len = static_cast<size_t>(*p++);
+				const auto str = reinterpret_cast<const char*>(*p++);
+				errorVector.push_back(isc_arg_string);
+				errorStrings.emplace_back(str, len);
+				errorVector.push_back(0);  // placeholder for string pointer
+				break;
+			}
+
+			default:
+				errorVector.push_back(argType);
+				errorVector.push_back(*p++);
+				break;
+		}
+	}
+
+	errorVector.push_back(isc_arg_end);
+
+	fixupStringPointers();
+}
+
+void DatabaseException::fixupStringPointers()
+{
+	size_t strIdx = 0;
+	size_t i = 0;
+
+	while (i < errorVector.size() && errorVector[i] != isc_arg_end)
+	{
+		const auto argType = errorVector[i];
+
+		if (argType == isc_arg_string || argType == isc_arg_interpreted || argType == isc_arg_sql_state)
+			errorVector[i + 1] = reinterpret_cast<std::intptr_t>(errorStrings[strIdx++].c_str());
+
+		i += 2;
+	}
+}
+
+std::string DatabaseException::extractSqlState(const std::intptr_t* statusVector)
+{
+	if (!statusVector)
+		return {};
+
+	const auto* p = statusVector;
+
+	while (*p != isc_arg_end)
+	{
+		const auto argType = *p++;
+
+		if (argType == isc_arg_sql_state)
+			return reinterpret_cast<const char*>(*p);
+
+		if (argType == isc_arg_cstring)
+			p += 2;
+		else
+			p++;
+	}
+
+	return {};
 }

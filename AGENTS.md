@@ -24,3 +24,6 @@
 ### Tests
 - Run the Boost.Test suite with `ctest --preset default --verbose`.
 - Boost.Test options can be used with environments variables like `BOOST_TEST_LOG_LEVEL=all`.
+- Prefer fewer, comprehensive test cases over many small single-assertion tests. A single test case should verify
+  all related properties together (e.g., check the full error vector structure in one test instead of separate tests
+  for each field).
