@@ -4,6 +4,7 @@
 - Classes names uses PascalCase.
 - Method names uses camelCase.
 - Variable names uses camelCase.
+- Do not use variables names starting or ending with underline.
 - When using statements like `if`, `for`, `while`, etc, if the condition plus the sub-statement takes more than two
   lines, then the sub-statement should use braces. Otherwise, braces should be avoided.
 - A C++ source file should be formatted with `clang-format`.
@@ -14,6 +15,7 @@
   {  // scope
   }
   ```
+- When adding new source files, copy the header from the existing files, but update the Copyright line to reflect the current year and use `$(git config --get user.name)` as the original author.
 
 ### Build
 - If .cpp files are added, it's necessary to run `cmake --preset default` from the repo root.
