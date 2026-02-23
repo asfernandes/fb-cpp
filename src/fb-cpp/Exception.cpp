@@ -34,7 +34,7 @@ using namespace fbcpp::impl;
 void StatusWrapper::checkException(StatusWrapper* status)
 {
 	if (status->dirty && (status->getState() & fb::IStatus::STATE_ERRORS))
-		throw DatabaseException{status->client, status->getErrors()};
+		throw DatabaseException{*status->client, status->getErrors()};
 }
 
 void StatusWrapper::catchException(fb::IStatus* status) noexcept
