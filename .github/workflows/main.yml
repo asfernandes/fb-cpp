@@ -315,6 +315,7 @@ jobs:
 
   deploy-docs:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.repository == 'asfernandes/fb-cpp'
     needs:
       - clang-format-check
       - build-linux
