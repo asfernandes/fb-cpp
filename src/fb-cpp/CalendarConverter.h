@@ -49,7 +49,7 @@ namespace fbcpp::impl
 	{
 	public:
 		explicit CalendarConverter(Client& client, StatusWrapper* statusWrapper)
-			: client{client},
+			: client{&client},
 			  statusWrapper{statusWrapper}
 		{
 		}
@@ -67,7 +67,7 @@ namespace fbcpp::impl
 			if (yearValue <= 0)
 				throwInvalidDateValue();
 
-			return OpaqueDate{client.getUtil()->encodeDate(static_cast<unsigned>(yearValue), monthValue, dayValue)};
+			return OpaqueDate{client->getUtil()->encodeDate(static_cast<unsigned>(yearValue), monthValue, dayValue)};
 		}
 
 		Date opaqueDateToDate(OpaqueDate date)
@@ -76,7 +76,7 @@ namespace fbcpp::impl
 			unsigned month;
 			unsigned day;
 
-			client.getUtil()->decodeDate(date.value, &year, &month, &day);
+			client->getUtil()->decodeDate(date.value, &year, &month, &day);
 
 			return Date{std::chrono::year{static_cast<int>(year)}, std::chrono::month{month}, std::chrono::day{day}};
 		}
@@ -140,7 +140,7 @@ namespace fbcpp::impl
 			const auto subseconds = static_cast<unsigned>(time.subseconds().count() / 100);
 
 			OpaqueTime opaqueTime;
-			opaqueTime.value = client.getUtil()->encodeTime(hours, minutes, seconds, subseconds);
+			opaqueTime.value = client->getUtil()->encodeTime(hours, minutes, seconds, subseconds);
 
 			return opaqueTime;
 		}
@@ -152,7 +152,7 @@ namespace fbcpp::impl
 			unsigned seconds;
 			unsigned subseconds;
 
-			const auto util = client.getUtil();
+			const auto util = client->getUtil();
 			util->decodeTime(time.value, &hours, &minutes, &seconds, &subseconds);
 
 			const auto timeOfDay = std::chrono::hours{hours} + std::chrono::minutes{minutes} +
@@ -252,7 +252,7 @@ namespace fbcpp::impl
 
 			OpaqueTimeTz opaque{};
 
-			client.getUtil()->encodeTimeTz(statusWrapper, &opaque.value, 0u, 0u, 0u, 0u, timeTz.zone.c_str());
+			client->getUtil()->encodeTimeTz(statusWrapper, &opaque.value, 0u, 0u, 0u, 0u, timeTz.zone.c_str());
 
 			opaque.value.utc_time = static_cast<ISC_TIME>(duration.count() / 100);
 
@@ -269,7 +269,7 @@ namespace fbcpp::impl
 			unsigned fractions;
 			std::array<char, 128> timeZoneBuffer;
 
-			client.getUtil()->decodeTimeTz(statusWrapper, &opaqueTime.value, &hours, &minutes, &seconds, &fractions,
+			client->getUtil()->decodeTimeTz(statusWrapper, &opaqueTime.value, &hours, &minutes, &seconds, &fractions,
 				static_cast<unsigned>(timeZoneBuffer.size()), timeZoneBuffer.data());
 
 			TimeTz timeTz;
@@ -295,7 +295,7 @@ namespace fbcpp::impl
 			unsigned fractions;
 			std::array<char, 128> timeZoneBuffer;
 
-			client.getUtil()->decodeTimeTz(statusWrapper, &time.value, &hours, &minutes, &seconds, &fractions,
+			client->getUtil()->decodeTimeTz(statusWrapper, &time.value, &hours, &minutes, &seconds, &fractions,
 				static_cast<unsigned>(timeZoneBuffer.size()), timeZoneBuffer.data());
 
 			return std::format("{:02}:{:02}:{:02}.{:04} {}", hours, minutes, seconds, fractions, timeZoneBuffer.data());
@@ -360,7 +360,7 @@ namespace fbcpp::impl
 
 			OpaqueTimeTz encoded;
 			const std::string timeZoneString{makeComponentView(5)};
-			client.getUtil()->encodeTimeTz(
+			client->getUtil()->encodeTimeTz(
 				statusWrapper, &encoded.value, hours, minutes, seconds, fractions, timeZoneString.c_str());
 
 			return opaqueTimeTzToTimeTz(encoded);
@@ -389,7 +389,7 @@ namespace fbcpp::impl
 			OpaqueTimestamp opaqueTimestamp;
 			opaqueTimestamp.value.timestamp_date = opaqueDate.value;
 			opaqueTimestamp.value.timestamp_time =
-				client.getUtil()->encodeTime(static_cast<unsigned>(timestamp.time.hours().count()),
+				client->getUtil()->encodeTime(static_cast<unsigned>(timestamp.time.hours().count()),
 					static_cast<unsigned>(timestamp.time.minutes().count()),
 					static_cast<unsigned>(timestamp.time.seconds().count()), static_cast<unsigned>(subseconds / 100));
 
@@ -406,7 +406,7 @@ namespace fbcpp::impl
 			unsigned seconds;
 			unsigned subseconds;
 
-			const auto util = client.getUtil();
+			const auto util = client->getUtil();
 			util->decodeDate(timestamp.value.timestamp_date, &year, &month, &day);
 			util->decodeTime(timestamp.value.timestamp_time, &hours, &minutes, &seconds, &subseconds);
 
@@ -513,7 +513,7 @@ namespace fbcpp::impl
 		{
 			OpaqueTimestampTz opaque;
 
-			client.getUtil()->encodeTimeStampTz(
+			client->getUtil()->encodeTimeStampTz(
 				statusWrapper, &opaque.value, 1u, 1u, 1u, 0u, 0u, 0u, 0u, timestampTz.zone.c_str());
 
 			const auto utcOpaque = timestampToOpaqueTimestamp(timestampTz.utcTimestamp);
@@ -539,7 +539,7 @@ namespace fbcpp::impl
 			unsigned subseconds;
 			std::array<char, 128> timeZoneBuffer;
 
-			client.getUtil()->decodeTimeStampTz(statusWrapper, &opaqueTimestamp.value, &year, &month, &day, &hours,
+			client->getUtil()->decodeTimeStampTz(statusWrapper, &opaqueTimestamp.value, &year, &month, &day, &hours,
 				&minutes, &seconds, &subseconds, static_cast<unsigned>(timeZoneBuffer.size()), timeZoneBuffer.data());
 
 			TimestampTz timestampTz;
@@ -569,7 +569,7 @@ namespace fbcpp::impl
 			unsigned subseconds;
 			std::array<char, 128> timeZoneBuffer;
 
-			client.getUtil()->decodeTimeStampTz(statusWrapper, &timestamp.value, &year, &month, &day, &hours, &minutes,
+			client->getUtil()->decodeTimeStampTz(statusWrapper, &timestamp.value, &year, &month, &day, &hours, &minutes,
 				&seconds, &subseconds, static_cast<unsigned>(timeZoneBuffer.size()), timeZoneBuffer.data());
 
 			return std::format("{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:04} {}", year, month, day, hours, minutes,
@@ -648,7 +648,7 @@ namespace fbcpp::impl
 
 			OpaqueTimestampTz encoded;
 			const std::string timeZoneString{makeComponentView(8)};
-			client.getUtil()->encodeTimeStampTz(statusWrapper, &encoded.value,
+			client->getUtil()->encodeTimeStampTz(statusWrapper, &encoded.value,
 				static_cast<unsigned>(static_cast<int>(date.year())), monthValue, dayValue, hours, minutes, seconds,
 				fractions, timeZoneString.c_str());
 
@@ -674,7 +674,7 @@ namespace fbcpp::impl
 				isc_arg_end,
 			};
 
-			throw DatabaseException(client, STATUS_CONVERSION_ERROR_FROM_STRING);
+			throw DatabaseException(*client, STATUS_CONVERSION_ERROR_FROM_STRING);
 		}
 
 		[[noreturn]] void throwInvalidDateValue()
@@ -684,7 +684,7 @@ namespace fbcpp::impl
 				isc_arg_end,
 			};
 
-			throw DatabaseException(client, STATUS_INVALID_DATE_VALUE);
+			throw DatabaseException(*client, STATUS_INVALID_DATE_VALUE);
 		}
 
 		[[noreturn]] void throwInvalidTimeValue()
@@ -694,7 +694,7 @@ namespace fbcpp::impl
 				isc_arg_end,
 			};
 
-			throw DatabaseException(client, STATUS_INVALID_TIME_VALUE);
+			throw DatabaseException(*client, STATUS_INVALID_TIME_VALUE);
 		}
 
 		[[noreturn]] void throwInvalidTimestampValue()
@@ -704,7 +704,7 @@ namespace fbcpp::impl
 				isc_arg_end,
 			};
 
-			throw DatabaseException(client, STATUS_INVALID_TIMESTAMP_VALUE);
+			throw DatabaseException(*client, STATUS_INVALID_TIMESTAMP_VALUE);
 		}
 
 	private:
@@ -712,7 +712,7 @@ namespace fbcpp::impl
 		static constexpr auto BASE_EPOCH = std::chrono::local_days{
 			std::chrono::year{1858} / std::chrono::November / 17,
 		};
-		Client& client;
+		Client* client;
 		StatusWrapper* statusWrapper;
 	};
 }  // namespace fbcpp::impl

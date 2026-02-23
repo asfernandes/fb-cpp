@@ -148,7 +148,7 @@ namespace fbcpp::impl
 	{
 	public:
 		explicit NumericConverter(Client& client, StatusWrapper* statusWrapper)
-			: client{client},
+			: client{&client},
 			  statusWrapper{statusWrapper}
 		{
 		}
@@ -161,7 +161,7 @@ namespace fbcpp::impl
 				isc_arg_end,
 			};
 
-			throw DatabaseException(client, STATUS_NUMERIC_OUT_OF_RANGE);
+			throw DatabaseException(*client, STATUS_NUMERIC_OUT_OF_RANGE);
 		}
 
 		[[noreturn]] void throwConversionErrorFromString(const std::string& str)
@@ -172,7 +172,7 @@ namespace fbcpp::impl
 				isc_arg_end,
 			};
 
-			throw DatabaseException(client, STATUS_CONVERSION_ERROR_FROM_STRING);
+			throw DatabaseException(*client, STATUS_CONVERSION_ERROR_FROM_STRING);
 		}
 
 	public:
@@ -356,7 +356,7 @@ namespace fbcpp::impl
 
 		std::string opaqueInt128ToString(const OpaqueInt128& opaqueInt128, int scale)
 		{
-			const auto int128Util = client.getUtil()->getInt128(statusWrapper);
+			const auto int128Util = client->getUtil()->getInt128(statusWrapper);
 			char buffer[fb::IInt128::STRING_SIZE + 1];
 			int128Util->toString(statusWrapper, &opaqueInt128, scale, static_cast<unsigned>(sizeof(buffer)), buffer);
 			return buffer;
@@ -364,7 +364,7 @@ namespace fbcpp::impl
 
 		std::string opaqueDecFloat16ToString(const OpaqueDecFloat16& opaqueDecFloat16)
 		{
-			const auto decFloat16Util = client.getDecFloat16Util(statusWrapper);
+			const auto decFloat16Util = client->getDecFloat16Util(statusWrapper);
 			char buffer[fb::IDecFloat16::STRING_SIZE + 1];
 			decFloat16Util->toString(statusWrapper, &opaqueDecFloat16, static_cast<unsigned>(sizeof(buffer)), buffer);
 			return buffer;
@@ -372,7 +372,7 @@ namespace fbcpp::impl
 
 		std::string opaqueDecFloat34ToString(const OpaqueDecFloat34& opaqueDecFloat34)
 		{
-			const auto decFloat34Util = client.getDecFloat34Util(statusWrapper);
+			const auto decFloat34Util = client->getDecFloat34Util(statusWrapper);
 			char buffer[fb::IDecFloat34::STRING_SIZE + 1];
 			decFloat34Util->toString(statusWrapper, &opaqueDecFloat34, static_cast<unsigned>(sizeof(buffer)), buffer);
 			return buffer;
@@ -401,7 +401,7 @@ namespace fbcpp::impl
 
 		OpaqueDecFloat16 boostDecFloat16ToOpaqueDecFloat16(const BoostDecFloat16& boostDecFloat16)
 		{
-			const auto decFloat16Util = client.getDecFloat16Util(statusWrapper);
+			const auto decFloat16Util = client->getDecFloat16Util(statusWrapper);
 			OpaqueDecFloat16 opaqueDecFloat16;
 			decFloat16Util->fromString(statusWrapper, boostDecFloat16.str().c_str(), &opaqueDecFloat16);
 			return opaqueDecFloat16;
@@ -414,7 +414,7 @@ namespace fbcpp::impl
 
 		OpaqueDecFloat34 boostDecFloat34ToOpaqueDecFloat34(const BoostDecFloat34& boostDecFloat34)
 		{
-			const auto decFloat34Util = client.getDecFloat34Util(statusWrapper);
+			const auto decFloat34Util = client->getDecFloat34Util(statusWrapper);
 			OpaqueDecFloat34 opaqueDecFloat34;
 			decFloat34Util->fromString(statusWrapper, boostDecFloat34.str().c_str(), &opaqueDecFloat34);
 			return opaqueDecFloat34;
@@ -573,7 +573,7 @@ namespace fbcpp::impl
 		}
 
 	private:
-		Client& client;
+		Client* client;
 		StatusWrapper* statusWrapper;
 	};
 }  // namespace fbcpp::impl

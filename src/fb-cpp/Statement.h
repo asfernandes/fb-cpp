@@ -272,7 +272,36 @@ namespace fbcpp
 		{
 		}
 
-		Statement& operator=(Statement&&) = delete;
+		///
+		/// @brief Transfers ownership of another prepared statement into this one.
+		///
+		/// The old handles are released via `FbRef::operator=(FbRef&&)`.
+		/// After the assignment, `this` is valid (with `o`'s state) and `o` is invalid.
+		///
+		Statement& operator=(Statement&& o) noexcept
+		{
+			if (this != &o)
+			{
+				attachment = o.attachment;
+				status = std::move(o.status);
+				statusWrapper = std::move(o.statusWrapper);
+				calendarConverter = std::move(o.calendarConverter);
+				numericConverter = std::move(o.numericConverter);
+				statementHandle = std::move(o.statementHandle);
+				resultSetHandle = std::move(o.resultSetHandle);
+				inMetadata = std::move(o.inMetadata);
+				inDescriptors = std::move(o.inDescriptors);
+				inMessage = std::move(o.inMessage);
+				outMetadata = std::move(o.outMetadata);
+				outDescriptors = std::move(o.outDescriptors);
+				outMessage = std::move(o.outMessage);
+				type = o.type;
+				cursorFlags = o.cursorFlags;
+			}
+
+			return *this;
+		}
+
 		Statement(const Statement&) = delete;
 		Statement& operator=(const Statement&) = delete;
 
@@ -1090,7 +1119,7 @@ namespace fbcpp
 
 			assert(isValid());
 
-			auto& client = attachment.getClient();
+			auto& client = attachment->getClient();
 			const auto value = optValue.value();
 			const auto& descriptor = getInDescriptor(index);
 			const auto message = inMessage.data();
@@ -2759,7 +2788,7 @@ namespace fbcpp
 		}
 
 	private:
-		Attachment& attachment;
+		Attachment* attachment;
 		FbUniquePtr<Firebird::IStatus> status;
 		impl::StatusWrapper statusWrapper;
 		impl::CalendarConverter calendarConverter;

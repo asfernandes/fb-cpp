@@ -192,7 +192,22 @@ namespace fbcpp
 		{
 		}
 
-		Attachment& operator=(Attachment&&) = delete;
+		///
+		/// @brief Transfers ownership of another Attachment into this one.
+		///
+		/// The old handle is released via `FbRef::operator=(FbRef&&)`.
+		/// After the assignment, `this` is valid (with `o`'s handle) and `o` is invalid.
+		///
+		Attachment& operator=(Attachment&& o) noexcept
+		{
+			if (this != &o)
+			{
+				client = o.client;
+				handle = std::move(o.handle);
+			}
+
+			return *this;
+		}
 
 		Attachment(const Attachment&) = delete;
 		Attachment& operator=(const Attachment&) = delete;
@@ -229,7 +244,7 @@ namespace fbcpp
 		///
 		Client& getClient() noexcept
 		{
-			return client;
+			return *client;
 		}
 
 		///
@@ -254,7 +269,7 @@ namespace fbcpp
 		void disconnectOrDrop(bool drop);
 
 	private:
-		Client& client;
+		Client* client;
 		FbRef<fb::IAttachment> handle;
 	};
 }  // namespace fbcpp

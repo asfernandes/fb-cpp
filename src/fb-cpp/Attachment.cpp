@@ -31,7 +31,7 @@ using namespace fbcpp::impl;
 
 
 Attachment::Attachment(Client& client, const std::string& uri, const AttachmentOptions& options)
-	: client{client}
+	: client{&client}
 {
 	const auto master = client.getMaster();
 
@@ -68,8 +68,8 @@ void Attachment::disconnectOrDrop(bool drop)
 {
 	assert(isValid());
 
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
+	const auto status = client->newStatus();
+	StatusWrapper statusWrapper{*client, status.get()};
 
 	if (drop)
 		handle->dropDatabase(&statusWrapper);

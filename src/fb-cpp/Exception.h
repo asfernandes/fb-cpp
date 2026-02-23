@@ -46,7 +46,7 @@ namespace fbcpp::impl
 	{
 	public:
 		explicit StatusWrapper(Client& client, IStatus* status)
-			: client{client},
+			: client{&client},
 			  status{status}
 		{
 		}
@@ -159,7 +159,7 @@ namespace fbcpp::impl
 		}
 
 	protected:
-		Client& client;
+		Client* client;
 		IStatus* status;
 		bool dirty = false;
 

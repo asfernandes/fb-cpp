@@ -78,6 +78,54 @@ BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 	BOOST_CHECK_EQUAL(stmt2.isValid(), true);
 }
 
+BOOST_AUTO_TEST_CASE(moveAssignmentTransfersOwnership)
+{
+	const auto database = getTempFile("Statement-moveAssignmentTransfersOwnership.fdb");
+
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt1{attachment, transaction, "select 1 from rdb$database"};
+	Statement stmt2{attachment, transaction, "select 2 from rdb$database"};
+	BOOST_CHECK(stmt1.isValid());
+	BOOST_CHECK(stmt2.isValid());
+
+	// Move-assign stmt2 into stmt1.
+	// stmt1's old handle is freed; stmt2 becomes invalid.
+	stmt1 = std::move(stmt2);
+	BOOST_CHECK(stmt1.isValid());
+	BOOST_CHECK(!stmt2.isValid());
+
+	// The moved-to statement can still execute.
+	BOOST_CHECK(stmt1.execute(transaction));
+	BOOST_CHECK_EQUAL(stmt1.getInt32(0).value(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(moveAssignmentToMovedFromStatement)
+{
+	const auto database = getTempFile("Statement-moveAssignmentToMovedFrom.fdb");
+
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt1{attachment, transaction, "select 1 from rdb$database"};
+	Statement stmt2{attachment, transaction, "select 2 from rdb$database"};
+
+	// Move-construct stmt3 from stmt1 (leaves stmt1 invalid).
+	Statement stmt3{std::move(stmt1)};
+	BOOST_CHECK(!stmt1.isValid());
+
+	// Move-assign into the moved-from stmt1.
+	stmt1 = std::move(stmt2);
+	BOOST_CHECK(stmt1.isValid());
+	BOOST_CHECK(!stmt2.isValid());
+
+	BOOST_CHECK(stmt1.execute(transaction));
+	BOOST_CHECK_EQUAL(stmt1.getInt32(0).value(), 2);
+}
+
 BOOST_AUTO_TEST_CASE(freeReleasesHandle)
 {
 	const auto database = getTempFile("Statement-freeReleasesHandle.fdb");

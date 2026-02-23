@@ -71,6 +71,31 @@ BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 	BOOST_CHECK_EQUAL(attachment1.isValid(), false);
 }
 
+BOOST_AUTO_TEST_CASE(moveAssignmentTransfersOwnership)
+{
+	const auto database1 = getTempFile("Attachment-moveAssign-1.fdb");
+	const auto database2 = getTempFile("Attachment-moveAssign-2.fdb");
+
+	Attachment attachment1{CLIENT, database1, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment2{CLIENT, database2, AttachmentOptions().setCreateDatabase(true)};
+	BOOST_CHECK(attachment1.isValid());
+	BOOST_CHECK(attachment2.isValid());
+
+	// Move-assign attachment2 into attachment1.
+	// attachment1's old connection is disconnected; attachment2 becomes invalid.
+	attachment1 = std::move(attachment2);
+	BOOST_CHECK(attachment1.isValid());
+	BOOST_CHECK(!attachment2.isValid());
+
+	// The moved-to attachment can still operate on the database.
+	attachment1.dropDatabase();
+	BOOST_CHECK(!attachment1.isValid());
+
+	// Clean up the first database (its connection was disconnected by the move).
+	Attachment cleanup{CLIENT, database1};
+	cleanup.dropDatabase();
+}
+
 BOOST_AUTO_TEST_CASE(isNotValidAfterDisconnect)
 {
 	const auto database = getTempFile("Attachment-isNotValidAfterDisconnect.fdb");
