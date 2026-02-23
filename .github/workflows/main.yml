@@ -314,9 +314,8 @@ jobs:
           ctest --preset default --verbose
 
   deploy-docs:
-    if: github.repository == 'asfernandes/fb-cpp'
+    if: github.repository == 'asfernandes/fb-cpp' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.repository == 'asfernandes/fb-cpp'
     needs:
       - clang-format-check
       - build-linux
