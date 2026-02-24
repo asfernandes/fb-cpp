@@ -74,19 +74,23 @@ jobs:
               libtomcrypt1 \
               mono-complete
 
-      - name: Install Firebird
-        run: |
-          wget -nv -O Firebird-5.0.3.1683-0-linux-x64.tar.gz \
-              "https://github.com/FirebirdSQL/firebird/releases/download/v5.0.3/Firebird-5.0.3.1683-0-linux-x64.tar.gz"
-          tar xzf Firebird-5.0.3.1683-0-linux-x64.tar.gz
-          (cd Firebird-5.0.3.1683-0-linux-x64 && sudo ./install.sh -silent)
+      - name: Cache Firebird environment
+        id: cache-firebird
+        uses: actions/cache@v4
+        with:
+          path: /tmp/firebird
+          key: firebird-embedded-linux-x64-5.0.3
 
-      - name: Configure Firebird
+      - name: Download Firebird (embedded)
+        if: steps.cache-firebird.outputs.cache-hit != 'true'
         run: |
-          sudo systemctl stop firebird
-          echo "alter user SYSDBA password 'masterkey';" | \
-              sudo /opt/firebird/bin/isql employee -user SYSDBA -q
-          sudo systemctl start firebird
+          wget -nv -O /tmp/Firebird.tar.gz \
+              "https://github.com/FirebirdSQL/firebird/releases/download/v5.0.3/Firebird-5.0.3.1683-0-linux-x64.tar.gz"
+          mkdir -p /tmp/firebird-extract
+          tar xzf /tmp/Firebird.tar.gz -C /tmp/firebird-extract
+          tar xzf /tmp/firebird-extract/Firebird-5.0.3.1683-0-linux-x64/buildroot.tar.gz -C /tmp/firebird-extract
+          mv /tmp/firebird-extract/opt/firebird /tmp/firebird
+          rm -rf /tmp/firebird-extract /tmp/Firebird.tar.gz
 
       - name: Bootstrap vcpkg
         run: |
@@ -108,7 +112,7 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cp CMakeUserPresets.json.posix.template CMakeUserPresets.json
+          cp CMakeUserPresets.json.embedded-posix.template CMakeUserPresets.json
           cmake --preset default
 
       - name: Upload vcpkg failure logs
@@ -124,6 +128,9 @@ jobs:
           cmake --build --preset default
 
       - name: Run tests
+        env:
+          FIREBIRD: /tmp/firebird
+          LD_LIBRARY_PATH: /tmp/firebird/lib
         run: |
           ctest --preset default --verbose
 
@@ -162,25 +169,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vcpkg-
 
-      - name: Install Firebird
-        shell: cmd
-        run: |
-          set FB_ZIP=Firebird-5.0.3.1683-0-windows-x64.zip
-          powershell Invoke-WebRequest ^
-              "https://github.com/FirebirdSQL/firebird/releases/download/v5.0.3/$env:FB_ZIP" -OutFile "$env:FB_ZIP"
-          7z x -oC:\Firebird %FB_ZIP%
+      - name: Cache Firebird environment
+        id: cache-firebird
+        uses: actions/cache@v4
+        with:
+          path: C:\Firebird
+          key: firebird-windows-x64-5.0.3
 
-      - name: Configure Firebird
-        shell: cmd
+      - name: Download Firebird (embedded)
+        if: steps.cache-firebird.outputs.cache-hit != 'true'
+        shell: pwsh
         run: |
-          echo create user SYSDBA password 'masterkey'; ^
-              | "C:\Firebird\isql.exe" employee -user SYSDBA -q
-
-      - name: Start Firebird Server
-        shell: cmd
-        working-directory: C:\Firebird
-        run: |
-          call install_service.bat
+          $url = 'https://github.com/FirebirdSQL/firebird/releases/download/v5.0.3/Firebird-5.0.3.1683-0-windows-x64.zip'
+          Invoke-WebRequest $url -OutFile Firebird.zip
+          Expand-Archive Firebird.zip -DestinationPath 'C:\Firebird'
+          Remove-Item Firebird.zip
 
       - name: Bootstrap vcpkg
         shell: cmd
@@ -205,7 +208,7 @@ jobs:
       - name: Configure CMake
         shell: cmd
         run: |
-          copy CMakeUserPresets.json.windows.template CMakeUserPresets.json
+          copy CMakeUserPresets.json.embedded-windows.template CMakeUserPresets.json
           cmake --preset default
 
       - name: Upload vcpkg failure logs
@@ -221,9 +224,26 @@ jobs:
         run: |
           cmake --build --preset default
 
+      - name: Prepare Firebird embedded for tests
+        shell: pwsh
+        run: |
+          # Configure Firebird for embedded-only operation
+          $confPath = 'C:\Firebird\firebird.conf'
+          Add-Content -Path $confPath -Value "`nProviders = Engine13"
+          Add-Content -Path $confPath -Value "DatabaseAccess = Full"
+
+          # Remove ALL vcpkg fbclient.dll copies from the build tree so the
+          # DLL search falls through to PATH -> C:\Firebird\fbclient.dll
+          Get-ChildItem -Path build -Recurse -Filter 'fbclient.dll' | ForEach-Object {
+              Write-Host "Removing: $($_.FullName)"
+              Remove-Item $_.FullName -Force
+          }
+
       - name: Run tests
         shell: cmd
         run: |
+          set FIREBIRD=C:\Firebird
+          set PATH=C:\Firebird;%PATH%
           ctest --preset default --verbose
 
   build-macos:
@@ -261,18 +281,24 @@ jobs:
               libtool \
               mono
 
-      - name: Install Firebird
-        run: |
-          wget -nv -O Firebird-5.0.3.1683-0-macos-arm64.pkg \
-              "https://github.com/FirebirdSQL/firebird/releases/download/v5.0.3/Firebird-5.0.3.1683-0-macos-arm64.pkg"
-          sudo installer -verbose -pkg Firebird-5.0.3.1683-0-macos-arm64.pkg -target /
+      - name: Cache Firebird environment
+        id: cache-firebird
+        uses: actions/cache@v4
+        with:
+          path: /tmp/firebird
+          key: firebird-embedded-macos-arm64-5.0.3
 
-      - name: Configure Firebird
+      - name: Download Firebird (embedded)
+        if: steps.cache-firebird.outputs.cache-hit != 'true'
         run: |
-          sudo launchctl unload /Library/LaunchDaemons/org.firebird.gds.plist
-          echo "alter user SYSDBA password 'masterkey';" | \
-              sudo /Library/Frameworks/Firebird.framework/Versions/A/Resources/bin/isql employee -user SYSDBA -q
-          sudo launchctl load /Library/LaunchDaemons/org.firebird.gds.plist
+          wget -nv -O /tmp/Firebird.pkg \
+              "https://github.com/FirebirdSQL/firebird/releases/download/v5.0.3/Firebird-5.0.3.1683-0-macos-arm64.pkg"
+          pkgutil --expand /tmp/Firebird.pkg /tmp/firebird-pkg
+          mkdir -p /tmp/firebird-extract
+          PAYLOAD=$(find /tmp/firebird-pkg -name 'Payload' -type f | head -1)
+          tar xzf "$PAYLOAD" -C /tmp/firebird-extract
+          mv /tmp/firebird-extract/Versions/A /tmp/firebird
+          rm -rf /tmp/firebird-pkg /tmp/firebird-extract /tmp/Firebird.pkg
 
       - name: Bootstrap vcpkg
         run: |
@@ -294,7 +320,7 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cp CMakeUserPresets.json.posix.template CMakeUserPresets.json
+          cp CMakeUserPresets.json.embedded-posix.template CMakeUserPresets.json
           cmake --preset default
 
       - name: Upload vcpkg failure logs
@@ -309,7 +335,24 @@ jobs:
         run: |
           cmake --build --preset default
 
+      - name: Prepare Firebird embedded for tests
+        run: |
+          # Replace vcpkg's client-only libfbclient with the full distribution
+          # version that includes the embedded engine provider.
+          VCPKG_LIB=$(find build/vcpkg_installed -path '*/debug/lib' -type d | head -1)
+          # Remove vcpkg's client-only copies
+          find "$VCPKG_LIB" -name 'libfbclient.dylib*' -exec rm -f {} \;
+          # Copy full distribution library and create versioned symlinks
+          cp /tmp/firebird/Libraries/libfbclient.dylib "$VCPKG_LIB/libfbclient.dylib.5.0.3"
+          ln -sf libfbclient.dylib.5.0.3 "$VCPKG_LIB/libfbclient.dylib.2"
+          ln -sf libfbclient.dylib.5.0.3 "$VCPKG_LIB/libfbclient.dylib"
+          # Add RPATH so the library can find its dependencies (libtommath, etc.)
+          install_name_tool -add_rpath /tmp/firebird/Resources "$VCPKG_LIB/libfbclient.dylib.5.0.3"
+
       - name: Run tests
+        env:
+          FIREBIRD: /tmp/firebird/Resources
+          DYLD_LIBRARY_PATH: /tmp/firebird/Libraries:/tmp/firebird/Resources/lib
         run: |
           ctest --preset default --verbose
 
