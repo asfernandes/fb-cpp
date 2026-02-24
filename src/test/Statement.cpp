@@ -187,6 +187,67 @@ BOOST_AUTO_TEST_CASE(constructorProvidesMetadataHandles)
 	BOOST_CHECK(outputDescriptor.adjustedType == DescriptorAdjustedType::STRING);
 }
 
+BOOST_AUTO_TEST_CASE(descriptorMetadataFields)
+{
+	const auto database = getTempFile("Statement-descriptorMetadataFields.fdb");
+
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+
+	Statement createTable{attachment, transaction,
+		"create table test_meta ("
+		"  id integer not null,"
+		"  name varchar(100),"
+		"  amount numeric(18, 2),"
+		"  data blob sub_type text"
+		")"};
+	createTable.execute(transaction);
+	transaction.commit();
+
+	Transaction transaction2{attachment};
+
+	Statement select{attachment, transaction2, "select t.id as pk, t.name as label, t.amount, t.data from test_meta t"};
+
+	const auto& descriptors = select.getOutputDescriptors();
+	BOOST_REQUIRE_EQUAL(descriptors.size(), 4U);
+
+	// Column 0: t.id as pk
+	BOOST_CHECK_EQUAL(descriptors[0].name, "ID");
+	BOOST_CHECK_EQUAL(descriptors[0].alias, "PK");
+	BOOST_CHECK_EQUAL(descriptors[0].relation, "TEST_META");
+	BOOST_CHECK(descriptors[0].subType == 0);
+
+	// Column 1: t.name as label
+	BOOST_CHECK_EQUAL(descriptors[1].name, "NAME");
+	BOOST_CHECK_EQUAL(descriptors[1].alias, "LABEL");
+	BOOST_CHECK_EQUAL(descriptors[1].relation, "TEST_META");
+	BOOST_CHECK(descriptors[1].adjustedType == DescriptorAdjustedType::STRING);
+
+	// Column 2: t.amount (no alias, numeric)
+	BOOST_CHECK_EQUAL(descriptors[2].name, "AMOUNT");
+	BOOST_CHECK_EQUAL(descriptors[2].alias, "AMOUNT");
+	BOOST_CHECK_EQUAL(descriptors[2].relation, "TEST_META");
+
+	// Column 3: t.data (blob sub_type text)
+	BOOST_CHECK_EQUAL(descriptors[3].name, "DATA");
+	BOOST_CHECK_EQUAL(descriptors[3].alias, "DATA");
+	BOOST_CHECK_EQUAL(descriptors[3].relation, "TEST_META");
+	BOOST_CHECK_EQUAL(descriptors[3].subType, 1);
+
+	// Input descriptors for a parameterized query
+	Statement paramSelect{attachment, transaction2, "select t.id from test_meta t where t.id = ?"};
+
+	const auto& inDescriptors = paramSelect.getInputDescriptors();
+	BOOST_REQUIRE_EQUAL(inDescriptors.size(), 1U);
+
+	// Input parameters have empty name/relation/alias
+	BOOST_CHECK(inDescriptors[0].name.empty());
+	BOOST_CHECK(inDescriptors[0].relation.empty());
+	BOOST_CHECK(inDescriptors[0].alias.empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

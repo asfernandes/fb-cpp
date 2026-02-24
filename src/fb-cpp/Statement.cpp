@@ -108,6 +108,12 @@ Statement::Statement(
 				.offset = 0,
 				.nullOffset = 0,
 				.isNullable = static_cast<bool>(metadata->isNullable(&statusWrapper, index)),
+				.name = metadata->getField(&statusWrapper, index),
+				.relation = metadata->getRelation(&statusWrapper, index),
+				.alias = metadata->getAlias(&statusWrapper, index),
+				.owner = metadata->getOwner(&statusWrapper, index),
+				.charSetId = metadata->getCharSet(&statusWrapper, index),
+				.subType = metadata->getSubType(&statusWrapper, index),
 			};
 
 			switch (descriptor.originalType)
