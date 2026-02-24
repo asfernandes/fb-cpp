@@ -1,0 +1,31 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "default",
+      "inherits": [
+        "posix-ninja-debug"
+      ]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "inherits": [
+        "posix-ninja-debug"
+      ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "inherits": [
+        "posix-ninja-debug"
+      ],
+      "environment": {
+		"ISC_USER": "sysdba",
+		"ISC_PASSWORD": "masterkey"
+      }
+    }
+  ]
+}

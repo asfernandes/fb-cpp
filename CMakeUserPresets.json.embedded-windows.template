@@ -1,0 +1,31 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "default",
+      "inherits": [
+        "windows-vs2022"
+      ]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "inherits": [
+        "windows-vs2022-debug"
+      ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "inherits": [
+        "windows-vs2022-debug"
+      ],
+      "environment": {
+		"ISC_USER": "sysdba",
+		"ISC_PASSWORD": "masterkey"
+      }
+    }
+  ]
+}
