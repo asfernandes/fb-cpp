@@ -331,6 +331,14 @@ namespace fbcpp
 		///
 
 		///
+		/// Returns the Attachment object reference used to create this Statement.
+		///
+		Attachment& getAttachment() noexcept
+		{
+			return *attachment;
+		}
+
+		///
 		/// Returns whether the Statement object is valid.
 		///
 		bool isValid() noexcept
@@ -362,6 +370,14 @@ namespace fbcpp
 		FbRef<fb::IMessageMetadata> getInputMetadata() noexcept
 		{
 			return inMetadata;
+		}
+
+		///
+		/// @brief Provides direct access to the raw input message buffer.
+		///
+		std::vector<std::byte>& getInputMessage() noexcept
+		{
+			return inMessage;
 		}
 
 		///
