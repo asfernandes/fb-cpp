@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(constructorFromStatementAndExecute)
 
 		auto completionState = batch.execute();
 
-		BOOST_CHECK_EQUAL(completionState.getSize(), 3U);
+		BOOST_CHECK_EQUAL(completionState.getSize(), 3u);
 		BOOST_CHECK_EQUAL(completionState.getState(0), 1);
 		BOOST_CHECK_EQUAL(completionState.getState(1), 1);
 		BOOST_CHECK_EQUAL(completionState.getState(2), 1);
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(constructorFromAttachmentAndExecute)
 			BatchOptions().setRecordCounts(true)};
 
 		// Get metadata to build raw messages.
-		auto metadata = batch.getMetadata();
+		auto metadata = batch.getInputMetadata();
 
 		FbUniquePtr<fb::IStatus> tempStatus{CLIENT.newStatus()};
 		impl::StatusWrapper tempWrapper{CLIENT, tempStatus.get()};
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(constructorFromAttachmentAndExecute)
 
 		auto completionState = batch.execute();
 
-		BOOST_CHECK_EQUAL(completionState.getSize(), 3U);
+		BOOST_CHECK_EQUAL(completionState.getSize(), 3u);
 		BOOST_CHECK_EQUAL(completionState.getState(0), 1);
 		BOOST_CHECK_EQUAL(completionState.getState(1), 1);
 		BOOST_CHECK_EQUAL(completionState.getState(2), 1);
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(moveConstructorTransfersOwnership)
 		moved.addMessage();
 
 		auto completionState = moved.execute();
-		BOOST_CHECK_EQUAL(completionState.getSize(), 1U);
+		BOOST_CHECK_EQUAL(completionState.getSize(), 1u);
 
 		transaction.commit();
 	}
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(executeReportsNoInfoWhenRecordCountsDisabled)
 
 		auto completionState = batch.execute();
 
-		BOOST_CHECK_EQUAL(completionState.getSize(), 1U);
+		BOOST_CHECK_EQUAL(completionState.getSize(), 1u);
 		BOOST_CHECK_EQUAL(completionState.getState(0), BatchCompletionState::SUCCESS_NO_INFO);
 
 		transaction.commit();
@@ -272,14 +272,14 @@ BOOST_AUTO_TEST_CASE(executeWithBadDataReportsExecuteFailed)
 
 		auto completionState = batch.execute();
 
-		BOOST_CHECK_EQUAL(completionState.getSize(), 3U);
+		BOOST_CHECK_EQUAL(completionState.getSize(), 3u);
 		BOOST_CHECK_EQUAL(completionState.getState(0), 1);
 		BOOST_CHECK_EQUAL(completionState.getState(1), BatchCompletionState::EXECUTE_FAILED);
 		BOOST_CHECK_EQUAL(completionState.getState(2), 1);
 
 		auto errorPos = completionState.findError(0);
 		BOOST_REQUIRE(errorPos.has_value());
-		BOOST_CHECK_EQUAL(errorPos.value(), 1U);
+		BOOST_CHECK_EQUAL(errorPos.value(), 1u);
 
 		// No more errors after position 1.
 		BOOST_CHECK(!completionState.findError(errorPos.value() + 1).has_value());
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(blobWithIdEngine)
 
 		auto completionState = batch.execute();
 
-		BOOST_CHECK_EQUAL(completionState.getSize(), 1U);
+		BOOST_CHECK_EQUAL(completionState.getSize(), 1u);
 		BOOST_CHECK_EQUAL(completionState.getState(0), 1);
 
 		transaction.commit();
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(registerExistingBlob)
 
 		auto completionState = batch.execute();
 
-		BOOST_CHECK_EQUAL(completionState.getSize(), 1U);
+		BOOST_CHECK_EQUAL(completionState.getSize(), 1u);
 		BOOST_CHECK_EQUAL(completionState.getState(0), 1);
 
 		transaction.commit();

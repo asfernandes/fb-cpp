@@ -27,6 +27,7 @@
 
 #include "fb-api.h"
 #include "Blob.h"
+#include "Descriptor.h"
 #include "SmartPtrs.h"
 #include "Exception.h"
 #include <cassert>
@@ -218,11 +219,6 @@ namespace fbcpp
 		/// Copy assignment is not supported.
 		///
 		BatchCompletionState& operator=(const BatchCompletionState&) = delete;
-
-		///
-		/// Disposes the underlying completion state handle.
-		///
-		~BatchCompletionState() noexcept = default;
 
 	public:
 		///
@@ -430,7 +426,12 @@ namespace fbcpp
 		///
 		/// Returns the input metadata for this batch.
 		///
-		FbRef<fb::IMessageMetadata> getMetadata();
+		FbRef<fb::IMessageMetadata> getInputMetadata();
+
+		///
+		/// Returns cached input parameter descriptors for this batch.
+		///
+		const std::vector<Descriptor>& getInputDescriptors();
 
 		///
 		/// @}
@@ -439,6 +440,7 @@ namespace fbcpp
 	private:
 		std::vector<std::uint8_t> buildParametersBlock(Client& client, const BatchOptions& options);
 		std::vector<std::uint8_t> prepareBpb(Client& client, const BlobOptions& bpb);
+		void buildInputDescriptors();
 
 	private:
 		Client* client;
@@ -447,6 +449,7 @@ namespace fbcpp
 		FbUniquePtr<fb::IStatus> status;
 		impl::StatusWrapper statusWrapper;
 		FbRef<fb::IBatch> handle;
+		std::vector<Descriptor> inputDescriptors;
 	};
 }  // namespace fbcpp
 

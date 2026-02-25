@@ -27,7 +27,6 @@
 #include "Client.h"
 #include "Statement.h"
 #include "Transaction.h"
-#include <cstring>
 
 using namespace fbcpp;
 using namespace fbcpp::impl;
@@ -154,7 +153,7 @@ void Batch::add(unsigned count, const void* inBuffer)
 void Batch::addMessage()
 {
 	assert(isValid());
-	assert(statement && "addMessage() requires the Statement-based constructor");
+	assert(statement);
 	handle->add(&statusWrapper, 1, statement->getInputMessage().data());
 }
 
@@ -236,7 +235,7 @@ void Batch::close()
 	handle.reset();
 }
 
-FbRef<fb::IMessageMetadata> Batch::getMetadata()
+FbRef<fb::IMessageMetadata> Batch::getInputMetadata()
 {
 	assert(isValid());
 
@@ -244,6 +243,16 @@ FbRef<fb::IMessageMetadata> Batch::getMetadata()
 	metadata.reset(handle->getMetadata(&statusWrapper));
 
 	return metadata;
+}
+
+const std::vector<Descriptor>& Batch::getInputDescriptors()
+{
+	assert(isValid());
+
+	if (inputDescriptors.empty())
+		buildInputDescriptors();
+
+	return inputDescriptors;
 }
 
 
@@ -263,23 +272,18 @@ std::vector<std::uint8_t> Batch::buildParametersBlock(Client& client, const Batc
 		builder->insertInt(&statusWrapper, fb::IBatch::TAG_BUFFER_BYTES_SIZE, static_cast<int>(bufferSize.value()));
 
 	if (options.getBlobPolicy() != BlobPolicy::NONE)
-	{
 		builder->insertInt(&statusWrapper, fb::IBatch::TAG_BLOB_POLICY, static_cast<int>(options.getBlobPolicy()));
-	}
 
 	if (options.getDetailedErrors() != 64)
+	{
 		builder->insertInt(
 			&statusWrapper, fb::IBatch::TAG_DETAILED_ERRORS, static_cast<int>(options.getDetailedErrors()));
+	}
 
 	const auto buffer = builder->getBuffer(&statusWrapper);
 	const auto length = builder->getBufferLength(&statusWrapper);
 
-	std::vector<std::uint8_t> result(length);
-
-	if (length != 0)
-		std::memcpy(result.data(), buffer, length);
-
-	return result;
+	return {buffer, buffer + length};
 }
 
 std::vector<std::uint8_t> Batch::prepareBpb(Client& client, const BlobOptions& bpb)
@@ -296,10 +300,32 @@ std::vector<std::uint8_t> Batch::prepareBpb(Client& client, const BlobOptions& b
 	const auto buffer = builder->getBuffer(&statusWrapper);
 	const auto length = builder->getBufferLength(&statusWrapper);
 
-	std::vector<std::uint8_t> result(length);
+	return {buffer, buffer + length};
+}
 
-	if (length != 0)
-		std::memcpy(result.data(), buffer, length);
+void Batch::buildInputDescriptors()
+{
+	auto metadata = getInputMetadata();
+	const auto count = metadata->getCount(&statusWrapper);
 
-	return result;
+	inputDescriptors.reserve(count);
+
+	for (unsigned index = 0u; index < count; ++index)
+	{
+		inputDescriptors.push_back(Descriptor{
+			.originalType = static_cast<DescriptorOriginalType>(metadata->getType(&statusWrapper, index)),
+			.adjustedType = static_cast<DescriptorAdjustedType>(metadata->getType(&statusWrapper, index)),
+			.scale = metadata->getScale(&statusWrapper, index),
+			.length = metadata->getLength(&statusWrapper, index),
+			.offset = metadata->getOffset(&statusWrapper, index),
+			.nullOffset = metadata->getNullOffset(&statusWrapper, index),
+			.isNullable = static_cast<bool>(metadata->isNullable(&statusWrapper, index)),
+			.name = metadata->getField(&statusWrapper, index),
+			.relation = metadata->getRelation(&statusWrapper, index),
+			.alias = metadata->getAlias(&statusWrapper, index),
+			.owner = metadata->getOwner(&statusWrapper, index),
+			.charSetId = metadata->getCharSet(&statusWrapper, index),
+			.subType = metadata->getSubType(&statusWrapper, index),
+		});
+	}
 }
