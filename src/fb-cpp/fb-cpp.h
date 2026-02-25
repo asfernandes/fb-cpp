@@ -30,6 +30,7 @@
 #include "Transaction.h"
 #include "Descriptor.h"
 #include "Statement.h"
+#include "Batch.h"
 #include "Blob.h"
 #include "EventListener.h"
 
