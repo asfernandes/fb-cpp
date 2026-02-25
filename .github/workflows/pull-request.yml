@@ -42,6 +42,18 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Cache vcpkg artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            vcpkg/downloads
+            vcpkg/buildtrees
+            vcpkg/packages
+            build/vcpkg_installed
+          key: ${{ runner.os }}-vcpkg-v3-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-v3-
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -136,6 +148,18 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Cache vcpkg artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            vcpkg/downloads
+            vcpkg/buildtrees
+            vcpkg/packages
+            build/vcpkg_installed
+          key: ${{ runner.os }}-vcpkg-v3-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-v3-
+
       - name: Cache Firebird environment
         id: cache-firebird
         uses: actions/cache@v4
@@ -226,6 +250,18 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+
+      - name: Cache vcpkg artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            vcpkg/downloads
+            vcpkg/buildtrees
+            vcpkg/packages
+            build/vcpkg_installed
+          key: ${{ runner.os }}-vcpkg-v3-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-v3-
 
       - name: Install system dependencies
         run: |
