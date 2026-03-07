@@ -195,6 +195,7 @@ namespace fbcpp
 		///
 		static constexpr int SUCCESS_NO_INFO = fb::IBatchCompletionState::SUCCESS_NO_INFO;
 
+	public:
 		///
 		/// Constructs a BatchCompletionState from a Firebird completion state handle.
 		///
