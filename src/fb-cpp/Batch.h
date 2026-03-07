@@ -52,7 +52,7 @@ namespace fbcpp
 	///
 	/// Selects the blob handling policy for a Batch.
 	///
-	enum class BlobPolicy : unsigned char
+	enum class BlobPolicy : std::uint8_t
 	{
 		///
 		/// Blobs are not allowed in the batch.
