@@ -16,6 +16,12 @@
   }
   ```
 - When adding new source files, copy the header from the existing files, but update the Copyright line to reflect the current year and use `$(git config --get user.name)` as the original author.
+- Use lowercase suffixes for numeric literals (e.g. `1u`, `3u`, not `1U`, `3U`).
+- Do not use string literals in `assert()` expressions (e.g. `assert(ptr && "msg")` is not idiomatic C++).
+- Do not explicitly define a destructor as `= default` unless it is necessary (e.g. to make it virtual or to
+  control the definition translation unit).
+- Prefer constructing `std::vector` directly from iterator ranges (constructor 5) instead of allocating and copying
+  with `std::memcpy`.
 
 ### Build
 - If .cpp files are added, it's necessary to run `cmake --preset default` from the repo root.
