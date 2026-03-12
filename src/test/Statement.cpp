@@ -336,6 +336,27 @@ BOOST_AUTO_TEST_CASE(descriptorMetadataFields)
 	BOOST_CHECK(inDescriptors[0].alias.empty());
 }
 
+BOOST_AUTO_TEST_CASE(getOutputMessageMatchesMetadataLength)
+{
+	const auto database = getTempFile("Statement-getOutputMessageMatchesMetadataLength.fdb");
+
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 42 from rdb$database"};
+
+	auto& outMsg = stmt.getOutputMessage();
+	BOOST_CHECK(!outMsg.empty());
+
+	// After fetch, the output message buffer contains the fetched data.
+	BOOST_REQUIRE(stmt.execute(transaction));
+	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 42);
+
+	// The buffer reference should remain the same object.
+	BOOST_CHECK_EQUAL(&outMsg, &stmt.getOutputMessage());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
