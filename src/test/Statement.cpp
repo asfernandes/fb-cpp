@@ -175,16 +175,38 @@ BOOST_AUTO_TEST_CASE(constructorWithExplicitDialect)
 {
 	const auto database = getTempFile("Statement-constructorWithExplicitDialect.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	// Firebird 5 requires that statement dialect matches the database dialect, so
+	// the test database must be created with dialect 1.
+	const std::vector<std::uint8_t> dialect1Dpb = {
+		isc_dpb_version1,
+		isc_dpb_sql_dialect,
+		4,
+		1,
+		0,
+		0,
+		0,
+	};
+
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setDpb(dialect1Dpb)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
-	Statement stmt{
-		attachment, transaction, "select 1 from rdb$database", StatementOptions().setDialect(SQL_DIALECT_CURRENT)};
 
+	// SQL_DIALECT_CURRENT (3) does not match database dialect 1 and is rejected,
+	// proving statement dialect controls the behavior.
+	BOOST_CHECK_THROW(
+		Statement(attachment, transaction, "select cast(1234.56 as numeric(18, 2)) from rdb$database"), FbCppException);
+
+	// With dialect 1 explicitly set, NUMERIC(18,2) is described as DOUBLE
+	// PRECISION and the value is retrieved via getDouble().
+	Statement stmt{attachment, transaction, "select cast(1234.56 as numeric(18, 2)) from rdb$database",
+		StatementOptions().setDialect(1u)};
 	BOOST_CHECK(stmt.isValid());
-	BOOST_CHECK(stmt.execute(transaction));
-	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 1);
+	BOOST_CHECK(stmt.getOutputDescriptors()[0].adjustedType == DescriptorAdjustedType::DOUBLE);
+	BOOST_REQUIRE(stmt.execute(transaction));
+	auto value = stmt.getDouble(0);
+	BOOST_REQUIRE(value.has_value());
+	BOOST_CHECK_CLOSE(*value, 1234.56, 0.001);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
