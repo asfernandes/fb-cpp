@@ -51,7 +51,7 @@ Statement::Statement(
 		flags |= fb::IStatement::PREPARE_PREFETCH_DETAILED_PLAN;
 
 	statementHandle.reset(attachment.getHandle()->prepare(&statusWrapper, transaction.getHandle().get(),
-		static_cast<unsigned>(sql.length()), sql.data(), SQL_DIALECT_CURRENT, flags));
+		static_cast<unsigned>(sql.length()), sql.data(), options.getDialect(), flags));
 
 	if (options.getCursorName().has_value())
 		statementHandle->setCursorName(&statusWrapper, options.getCursorName()->c_str());

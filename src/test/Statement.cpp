@@ -158,6 +158,35 @@ BOOST_AUTO_TEST_CASE(unsupportedStatementsThrow)
 	BOOST_CHECK_THROW(Statement(attachment, transaction, "rollback"), FbCppException);
 }
 
+BOOST_AUTO_TEST_CASE(dialectDefaultIsCurrent)
+{
+	StatementOptions options;
+	BOOST_CHECK_EQUAL(options.getDialect(), SQL_DIALECT_CURRENT);
+}
+
+BOOST_AUTO_TEST_CASE(dialectSetterGetter)
+{
+	StatementOptions options;
+	options.setDialect(1u);
+	BOOST_CHECK_EQUAL(options.getDialect(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(constructorWithExplicitDialect)
+{
+	const auto database = getTempFile("Statement-constructorWithExplicitDialect.fdb");
+
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{
+		attachment, transaction, "select 1 from rdb$database", StatementOptions().setDialect(SQL_DIALECT_CURRENT)};
+
+	BOOST_CHECK(stmt.isValid());
+	BOOST_CHECK(stmt.execute(transaction));
+	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
