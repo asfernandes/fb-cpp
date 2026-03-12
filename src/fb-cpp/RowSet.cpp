@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Adriano dos Santos Fernandes
+ * Copyright (c) 2026 F.D.Castel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,17 +22,41 @@
  * SOFTWARE.
  */
 
-#ifndef FBCPP_H
-#define FBCPP_H
-
-#include "Client.h"
-#include "Attachment.h"
-#include "Transaction.h"
-#include "Descriptor.h"
-#include "Statement.h"
 #include "RowSet.h"
-#include "Batch.h"
-#include "Blob.h"
-#include "EventListener.h"
+#include "Client.h"
+#include "Statement.h"
 
-#endif  // FBCPP_H
+using namespace fbcpp;
+using namespace fbcpp::impl;
+
+
+RowSet::RowSet(Statement& statement, unsigned maxRows)
+	: status{statement.getAttachment().getClient().newStatus()},
+	  statusWrapper{statement.getAttachment().getClient(), status.get()},
+	  numericConverter{statement.getAttachment().getClient(), &statusWrapper},
+	  calendarConverter{statement.getAttachment().getClient(), &statusWrapper}
+{
+	assert(statement.isValid());
+	assert(statement.getResultSetHandle());
+
+	descriptors = statement.getOutputDescriptors();
+
+	auto outMetadata = statement.getOutputMetadata();
+	messageLength = outMetadata->getMessageLength(&statusWrapper);
+
+	buffer.resize(static_cast<std::size_t>(maxRows) * messageLength);
+
+	auto resultSet = statement.getResultSetHandle();
+	auto* dest = buffer.data();
+
+	for (unsigned i = 0; i < maxRows; ++i)
+	{
+		if (resultSet->fetchNext(&statusWrapper, dest) != fb::IStatus::RESULT_OK)
+			break;
+
+		dest += messageLength;
+		++count;
+	}
+
+	buffer.resize(static_cast<std::size_t>(dest - buffer.data()));
+}

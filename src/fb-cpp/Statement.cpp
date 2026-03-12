@@ -178,6 +178,8 @@ Statement::Statement(
 
 	outMetadata.reset(statementHandle->getOutputMetadata(&statusWrapper));
 	processMetadata(outMetadata, outDescriptors, outMessage);
+
+	outRow = Row(outMessage.data(), outDescriptors, numericConverter, calendarConverter);
 }
 
 void Statement::free()
