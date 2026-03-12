@@ -336,9 +336,9 @@ BOOST_AUTO_TEST_CASE(descriptorMetadataFields)
 	BOOST_CHECK(inDescriptors[0].alias.empty());
 }
 
-BOOST_AUTO_TEST_CASE(getOutputMessageMatchesMetadataLength)
+BOOST_AUTO_TEST_CASE(getOutputMessageContainsFetchedValueAtMetadataOffset)
 {
-	const auto database = getTempFile("Statement-getOutputMessageMatchesMetadataLength.fdb");
+	const auto database = getTempFile("Statement-getOutputMessageContainsFetchedValueAtMetadataOffset.fdb");
 
 	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
 	FbDropDatabase attachmentDrop{attachment};
@@ -349,12 +349,17 @@ BOOST_AUTO_TEST_CASE(getOutputMessageMatchesMetadataLength)
 	auto& outMsg = stmt.getOutputMessage();
 	BOOST_CHECK(!outMsg.empty());
 
-	// After fetch, the output message buffer contains the fetched data.
+	auto outMetadata = stmt.getOutputMetadata();
+	FbUniquePtr<fb::IStatus> tempStatus{CLIENT.newStatus()};
+	impl::StatusWrapper tempWrapper{CLIENT, tempStatus.get()};
+	const auto valueOffset = outMetadata->getOffset(&tempWrapper, 0u);
+
 	BOOST_REQUIRE(stmt.execute(transaction));
 	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 42);
 
-	// The buffer reference should remain the same object.
-	BOOST_CHECK_EQUAL(&outMsg, &stmt.getOutputMessage());
+	BOOST_REQUIRE_GE(outMsg.size(), valueOffset + sizeof(std::int32_t));
+	const auto* data = &outMsg[valueOffset];
+	BOOST_CHECK_EQUAL(*reinterpret_cast<const std::int32_t*>(data), 42);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
