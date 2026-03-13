@@ -59,6 +59,16 @@ BOOST_AUTO_TEST_CASE(dropDatabase)
 	BOOST_CHECK_THROW(Attachment(CLIENT, database), DatabaseException);
 }
 
+BOOST_AUTO_TEST_CASE(sqlDialectSetterGetter)
+{
+	AttachmentOptions options;
+	BOOST_CHECK(!options.getSqlDialect().has_value());
+
+	options.setSqlDialect(1u);
+	BOOST_REQUIRE(options.getSqlDialect().has_value());
+	BOOST_CHECK_EQUAL(*options.getSqlDialect(), 1u);
+}
+
 BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 {
 	const auto database = getTempFile("Attachment-isNotValidAfterMove.fdb");

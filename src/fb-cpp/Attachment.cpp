@@ -54,6 +54,9 @@ Attachment::Attachment(Client& client, const std::string& uri, const AttachmentO
 	if (const auto role = options.getRole())
 		dpbBuilder->insertString(&statusWrapper, isc_dpb_sql_role_name, role->c_str());
 
+	if (const auto sqlDialect = options.getSqlDialect())
+		dpbBuilder->insertInt(&statusWrapper, isc_dpb_sql_dialect, static_cast<int>(*sqlDialect));
+
 	auto dispatcher = fbRef(master->getDispatcher());
 	const auto dpbBuffer = dpbBuilder->getBuffer(&statusWrapper);
 	const auto dpbBufferLen = dpbBuilder->getBufferLength(&statusWrapper);

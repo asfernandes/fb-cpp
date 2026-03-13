@@ -175,19 +175,8 @@ BOOST_AUTO_TEST_CASE(constructorWithExplicitDialect)
 {
 	const auto database = getTempFile("Statement-constructorWithExplicitDialect.fdb");
 
-	// Firebird 5 requires that statement dialect matches the database dialect, so
-	// the test database must be created with dialect 1.
-	const std::vector<std::uint8_t> dialect1Dpb = {
-		isc_dpb_version1,
-		isc_dpb_sql_dialect,
-		4,
-		1,
-		0,
-		0,
-		0,
-	};
-
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setDpb(dialect1Dpb)};
+	// Connect using dialect 1.
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setSqlDialect(1u)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};

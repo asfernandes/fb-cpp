@@ -117,6 +117,23 @@ namespace fbcpp
 		}
 
 		///
+		/// Returns the SQL dialect which will be used to connect to the database.
+		///
+		const std::optional<std::uint32_t>& getSqlDialect() const
+		{
+			return sqlDialect;
+		}
+
+		///
+		/// Sets the SQL dialect which will be used to connect to the database.
+		///
+		AttachmentOptions& setSqlDialect(std::uint32_t value)
+		{
+			sqlDialect = value;
+			return *this;
+		}
+
+		///
 		/// Returns the DPB (Database Parameter Block) which will be used to connect to the database.
 		///
 		const std::vector<std::uint8_t>& getDpb() const
@@ -164,6 +181,7 @@ namespace fbcpp
 		std::optional<std::string> userName;
 		std::optional<std::string> password;
 		std::optional<std::string> role;
+		std::optional<std::uint32_t> sqlDialect;
 		std::vector<std::uint8_t> dpb;
 		bool createDatabase = false;
 	};
