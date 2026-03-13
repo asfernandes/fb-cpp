@@ -164,11 +164,31 @@ namespace fbcpp
 			return *this;
 		}
 
+		///
+		/// @brief Returns the SQL dialect used when preparing the statement.
+		///
+		unsigned getDialect() const
+		{
+			return dialect;
+		}
+
+		///
+		/// @brief Sets the SQL dialect used when preparing the statement.
+		/// @param value SQL dialect number (1 for InterBase compatibility, 3 for current).
+		/// @return Reference to this instance for fluent configuration.
+		///
+		StatementOptions& setDialect(unsigned value)
+		{
+			dialect = value;
+			return *this;
+		}
+
 	private:
 		bool prefetchLegacyPlan = false;
 		bool prefetchPlan = false;
 		std::optional<std::string> cursorName;
 		CursorType cursorType = CursorType::FORWARD_ONLY;
+		unsigned dialect = SQL_DIALECT_CURRENT;
 	};
 
 	///
