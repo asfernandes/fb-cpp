@@ -247,8 +247,9 @@ DOT_CLEANUP            = YES
 
 GENERATE_TREEVIEW      = YES
 FULL_SIDEBAR = NO
-HTML_EXTRA_STYLESHEET  = @CMAKE_CURRENT_BINARY_DIR@/doxygen-awesome-css/doxygen-awesome.css \
-						 @CMAKE_CURRENT_BINARY_DIR@/doxygen-awesome-css/doxygen-awesome-sidebar-only-darkmode-toggle.css
+HTML_EXTRA_STYLESHEET  = @PROJECT_SOURCE_DIR@/doc/custom.css \
+                         @CMAKE_CURRENT_BINARY_DIR@/doxygen-awesome-css/doxygen-awesome.css \
+					 @CMAKE_CURRENT_BINARY_DIR@/doxygen-awesome-css/doxygen-awesome-sidebar-only-darkmode-toggle.css
 HTML_EXTRA_FILES       = @CMAKE_CURRENT_BINARY_DIR@/doxygen-awesome-css/doxygen-awesome-darkmode-toggle.js \
                          @CMAKE_CURRENT_BINARY_DIR@/doxygen-awesome-css/doxygen-awesome-fragment-copy-button.js \
                          @CMAKE_CURRENT_BINARY_DIR@/doxygen-awesome-css/doxygen-awesome-interactive-toc.js \
