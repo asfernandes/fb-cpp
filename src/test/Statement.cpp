@@ -349,10 +349,7 @@ BOOST_AUTO_TEST_CASE(getOutputMessageContainsFetchedValueAtMetadataOffset)
 	auto& outMsg = stmt.getOutputMessage();
 	BOOST_CHECK(!outMsg.empty());
 
-	auto outMetadata = stmt.getOutputMetadata();
-	FbUniquePtr<fb::IStatus> tempStatus{CLIENT.newStatus()};
-	impl::StatusWrapper tempWrapper{CLIENT, tempStatus.get()};
-	const auto valueOffset = outMetadata->getOffset(&tempWrapper, 0u);
+	const auto valueOffset = stmt.getOutputDescriptors()[0].offset;
 
 	BOOST_REQUIRE(stmt.execute(transaction));
 	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 42);
