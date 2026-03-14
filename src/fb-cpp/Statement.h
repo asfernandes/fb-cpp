@@ -409,6 +409,14 @@ namespace fbcpp
 		}
 
 		///
+		/// @brief Provides direct access to the raw output message buffer.
+		///
+		std::vector<std::byte>& getOutputMessage() noexcept
+		{
+			return outMessage;
+		}
+
+		///
 		/// @brief Returns the type classification reported by the server.
 		///
 		StatementType getType() noexcept

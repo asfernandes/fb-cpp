@@ -336,6 +336,29 @@ BOOST_AUTO_TEST_CASE(descriptorMetadataFields)
 	BOOST_CHECK(inDescriptors[0].alias.empty());
 }
 
+BOOST_AUTO_TEST_CASE(getOutputMessageContainsFetchedValueAtMetadataOffset)
+{
+	const auto database = getTempFile("Statement-getOutputMessageContainsFetchedValueAtMetadataOffset.fdb");
+
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select 42 from rdb$database"};
+
+	auto& outMsg = stmt.getOutputMessage();
+	BOOST_CHECK(!outMsg.empty());
+
+	const auto valueOffset = stmt.getOutputDescriptors()[0].offset;
+
+	BOOST_REQUIRE(stmt.execute(transaction));
+	BOOST_CHECK_EQUAL(stmt.getInt32(0).value(), 42);
+
+	BOOST_REQUIRE_GE(outMsg.size(), valueOffset + sizeof(std::int32_t));
+	const auto* data = &outMsg[valueOffset];
+	BOOST_CHECK_EQUAL(*reinterpret_cast<const std::int32_t*>(data), 42);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
