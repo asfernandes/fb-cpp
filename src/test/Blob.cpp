@@ -40,7 +40,8 @@ BOOST_AUTO_TEST_CASE(readWriteMultiSegment)
 {
 	const auto database = getTempFile("Blob-readWriteMultiSegment.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	// DDL
@@ -121,7 +122,8 @@ BOOST_AUTO_TEST_CASE(createWriteRead)
 {
 	const auto database = getTempFile("Blob-createWriteRead.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	// DDL
@@ -213,7 +215,8 @@ BOOST_AUTO_TEST_CASE(cancelDiscardsHandle)
 {
 	const auto database = getTempFile("Blob-cancelDiscardsHandle.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};

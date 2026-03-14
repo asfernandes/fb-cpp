@@ -35,7 +35,8 @@ BOOST_AUTO_TEST_SUITE(AttachmentSuite)
 BOOST_AUTO_TEST_CASE(constructor)
 {
 	const auto database = getTempFile("Attachment-constructor.fdb");
-	Attachment attachment1{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment1{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	attachment1.disconnect();
 
 	Attachment attachment2{CLIENT, database};
@@ -45,7 +46,7 @@ BOOST_AUTO_TEST_CASE(constructor)
 BOOST_AUTO_TEST_CASE(disconnect)
 {
 	const auto database = getTempFile("Attachment-disconnect.fdb");
-	Attachment attachment1{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment1{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	attachment1.disconnect();
 
 	Attachment attachment2{CLIENT, database, AttachmentOptions().setConnectionCharSet("UTF8")};
@@ -55,7 +56,7 @@ BOOST_AUTO_TEST_CASE(disconnect)
 BOOST_AUTO_TEST_CASE(dropDatabase)
 {
 	const auto database = getTempFile("Attachment-dropDatabase.fdb");
-	Attachment attachment1{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment1{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	attachment1.dropDatabase();
 
 	BOOST_CHECK_THROW(Attachment(CLIENT, database), DatabaseException);
@@ -94,7 +95,7 @@ BOOST_AUTO_TEST_CASE(createDatabaseWithForcedWritesOff)
 BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 {
 	const auto database = getTempFile("Attachment-isNotValidAfterMove.fdb");
-	Attachment attachment1{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment1{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	BOOST_CHECK_EQUAL(attachment1.isValid(), true);
 
 	auto attachment2 = std::move(attachment1);
@@ -108,8 +109,8 @@ BOOST_AUTO_TEST_CASE(moveAssignmentTransfersOwnership)
 	const auto database1 = getTempFile("Attachment-moveAssign-1.fdb");
 	const auto database2 = getTempFile("Attachment-moveAssign-2.fdb");
 
-	Attachment attachment1{CLIENT, database1, AttachmentOptions().setCreateDatabase(true)};
-	Attachment attachment2{CLIENT, database2, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment1{CLIENT, database1, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment2{CLIENT, database2, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	BOOST_CHECK(attachment1.isValid());
 	BOOST_CHECK(attachment2.isValid());
 
@@ -131,7 +132,7 @@ BOOST_AUTO_TEST_CASE(moveAssignmentTransfersOwnership)
 BOOST_AUTO_TEST_CASE(isNotValidAfterDisconnect)
 {
 	const auto database = getTempFile("Attachment-isNotValidAfterDisconnect.fdb");
-	Attachment attachment1{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment1{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	BOOST_CHECK_EQUAL(attachment1.isValid(), true);
 
 	attachment1.disconnect();
@@ -143,8 +144,8 @@ BOOST_AUTO_TEST_CASE(isNotValidAfterDisconnect)
 
 BOOST_AUTO_TEST_CASE(isNotValidAfterDropDatabase)
 {
-	Attachment attachment1{
-		CLIENT, getTempFile("Attachment-isNotValidAfterDropDatabase.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment1{CLIENT, getTempFile("Attachment-isNotValidAfterDropDatabase.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	BOOST_CHECK_EQUAL(attachment1.isValid(), true);
 
 	attachment1.dropDatabase();

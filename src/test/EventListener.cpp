@@ -40,7 +40,8 @@ BOOST_AUTO_TEST_SUITE(EventListenerSuite)
 BOOST_AUTO_TEST_CASE(receivesSingleEvent)
 {
 	const auto database = getTempFile("EventListener-receivesSingleEvent.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	std::mutex mutex;
@@ -78,7 +79,8 @@ BOOST_AUTO_TEST_CASE(receivesSingleEvent)
 BOOST_AUTO_TEST_CASE(aggregatesMultipleEvents)
 {
 	const auto database = getTempFile("EventListener-aggregatesMultipleEvents.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	{  // scope
@@ -143,7 +145,8 @@ BOOST_AUTO_TEST_CASE(aggregatesMultipleEvents)
 BOOST_AUTO_TEST_CASE(stopsReceivingEventsAfterStop)
 {
 	const auto database = getTempFile("EventListener-stopsReceivingEventsAfterStop.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	std::mutex mutex;

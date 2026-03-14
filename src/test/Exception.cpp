@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(syntaxErrorExceptionProperties)
 {
 	const auto database = getTempFile("Exception-syntaxErrorExceptionProperties.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};

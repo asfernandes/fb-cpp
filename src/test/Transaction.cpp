@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_SUITE(TransactionSuite)
 
 BOOST_AUTO_TEST_CASE(constructorWithOptions)
 {
-	Attachment attachment{
-		CLIENT, getTempFile("Transaction-constructorWithOptions.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{CLIENT, getTempFile("Transaction-constructorWithOptions.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction1{
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(constructorWithOptions)
 BOOST_AUTO_TEST_CASE(constructorWithSetTransactionCmd)
 {
 	Attachment attachment{CLIENT, getTempFile("Transaction-constructorWithSetTransactionCmd.fdb"),
-		AttachmentOptions().setCreateDatabase(true)};
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction1{attachment, "set transaction isolation level read committed"};
@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(constructorWithSetTransactionCmd)
 
 BOOST_AUTO_TEST_CASE(destructor)
 {
-	Attachment attachment{
-		CLIENT, getTempFile("Transaction-destructor.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{CLIENT, getTempFile("Transaction-destructor.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -75,7 +75,8 @@ BOOST_AUTO_TEST_CASE(destructor)
 
 BOOST_AUTO_TEST_CASE(commit)
 {
-	Attachment attachment{CLIENT, getTempFile("Transaction-commit.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{CLIENT, getTempFile("Transaction-commit.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -86,8 +87,8 @@ BOOST_AUTO_TEST_CASE(commit)
 
 BOOST_AUTO_TEST_CASE(commitRetaining)
 {
-	Attachment attachment{
-		CLIENT, getTempFile("Transaction-commitRetaining.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{CLIENT, getTempFile("Transaction-commitRetaining.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -100,7 +101,8 @@ BOOST_AUTO_TEST_CASE(commitRetaining)
 
 BOOST_AUTO_TEST_CASE(rollback)
 {
-	Attachment attachment{CLIENT, getTempFile("Transaction-rollback.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{CLIENT, getTempFile("Transaction-rollback.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -111,8 +113,8 @@ BOOST_AUTO_TEST_CASE(rollback)
 
 BOOST_AUTO_TEST_CASE(rollbackRetaining)
 {
-	Attachment attachment{
-		CLIENT, getTempFile("Transaction-rollbackRetaining.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{CLIENT, getTempFile("Transaction-rollbackRetaining.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -125,8 +127,8 @@ BOOST_AUTO_TEST_CASE(rollbackRetaining)
 
 BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 {
-	Attachment attachment{
-		CLIENT, getTempFile("Transaction-isNotValidAfterMove.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{CLIENT, getTempFile("Transaction-isNotValidAfterMove.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};

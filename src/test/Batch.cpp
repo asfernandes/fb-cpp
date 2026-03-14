@@ -38,7 +38,8 @@ BOOST_AUTO_TEST_CASE(constructorFromStatementAndExecute)
 {
 	const auto database = getTempFile("Batch-constructorFromStatementAndExecute.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	{  // scope
@@ -103,7 +104,8 @@ BOOST_AUTO_TEST_CASE(constructorFromAttachmentAndExecute)
 {
 	const auto database = getTempFile("Batch-constructorFromAttachmentAndExecute.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	{  // scope
@@ -176,7 +178,8 @@ BOOST_AUTO_TEST_CASE(moveConstructorTransfersOwnership)
 {
 	const auto database = getTempFile("Batch-moveConstructorTransfersOwnership.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	{  // scope
@@ -211,7 +214,8 @@ BOOST_AUTO_TEST_CASE(executeReportsNoInfoWhenRecordCountsDisabled)
 {
 	const auto database = getTempFile("Batch-noInfo.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	{  // scope
@@ -243,7 +247,8 @@ BOOST_AUTO_TEST_CASE(executeWithBadDataReportsExecuteFailed)
 {
 	const auto database = getTempFile("Batch-badData.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	{  // scope
@@ -301,7 +306,8 @@ BOOST_AUTO_TEST_CASE(cancelDiscardsMessages)
 {
 	const auto database = getTempFile("Batch-cancelDiscardsMessages.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	{  // scope
@@ -340,7 +346,8 @@ BOOST_AUTO_TEST_CASE(blobWithIdEngine)
 {
 	const auto database = getTempFile("Batch-blobWithIdEngine.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	{  // scope
@@ -397,7 +404,8 @@ BOOST_AUTO_TEST_CASE(registerExistingBlob)
 {
 	const auto database = getTempFile("Batch-registerExistingBlob.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	{  // scope
@@ -459,7 +467,8 @@ BOOST_AUTO_TEST_CASE(closeReleasesHandle)
 {
 	const auto database = getTempFile("Batch-closeReleasesHandle.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	Attachment attachment{CLIENT, database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
 	{  // scope

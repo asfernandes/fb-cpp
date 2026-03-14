@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(scrollableCursorSupportsFetchMethods)
 {
 	const auto database = getTempFile("ScrollableCursor-fetchMethods.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};

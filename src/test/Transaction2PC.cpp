@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(singleDatabasePrepareBasic)
 {
 	// Test prepare() on a regular single-database transaction
 	// This bypasses the multi-database constructor
-	Attachment attachment{
-		CLIENT, getTempFile("Transaction2PC-singlePrepareBasic.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{CLIENT, getTempFile("Transaction2PC-singlePrepareBasic.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(singleDatabasePrepareBasic)
 BOOST_AUTO_TEST_CASE(singleDatabasePrepareWithMessage)
 {
 	// Test prepare() with message on a regular single-database transaction
-	Attachment attachment{
-		CLIENT, getTempFile("Transaction2PC-singlePrepareMsg.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{CLIENT, getTempFile("Transaction2PC-singlePrepareMsg.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -97,11 +97,11 @@ BOOST_AUTO_TEST_CASE(singleDatabasePrepareWithMessage)
 BOOST_AUTO_TEST_CASE(multiDatabase2Attachments)
 {
 	Attachment attachment1{CLIENT, getTempFile("Transaction2PC-multiDatabase2Attachments-db1.fdb"),
-		AttachmentOptions().setCreateDatabase(true)};
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment1Drop{attachment1};
 
 	Attachment attachment2{CLIENT, getTempFile("Transaction2PC-multiDatabase2Attachments-db2.fdb"),
-		AttachmentOptions().setCreateDatabase(true)};
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment2Drop{attachment2};
 
 	std::vector<std::reference_wrapper<Attachment>> attachments{attachment1, attachment2};
@@ -118,15 +118,15 @@ BOOST_AUTO_TEST_CASE(multiDatabase2Attachments)
 BOOST_AUTO_TEST_CASE(multiDatabase3Attachments)
 {
 	Attachment attachment1{CLIENT, getTempFile("Transaction2PC-multiDatabase3Attachments-db1.fdb"),
-		AttachmentOptions().setCreateDatabase(true)};
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment1Drop{attachment1};
 
 	Attachment attachment2{CLIENT, getTempFile("Transaction2PC-multiDatabase3Attachments-db2.fdb"),
-		AttachmentOptions().setCreateDatabase(true)};
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment2Drop{attachment2};
 
 	Attachment attachment3{CLIENT, getTempFile("Transaction2PC-multiDatabase3Attachments-db3.fdb"),
-		AttachmentOptions().setCreateDatabase(true)};
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment3Drop{attachment3};
 
 	std::vector<std::reference_wrapper<Attachment>> attachments{attachment1, attachment2, attachment3};
@@ -142,12 +142,12 @@ BOOST_AUTO_TEST_CASE(multiDatabase3Attachments)
 
 BOOST_AUTO_TEST_CASE(prepareCommit)
 {
-	Attachment attachment1{
-		CLIENT, getTempFile("Transaction2PC-prepareCommit-db1.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment1{CLIENT, getTempFile("Transaction2PC-prepareCommit-db1.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment1Drop{attachment1};
 
-	Attachment attachment2{
-		CLIENT, getTempFile("Transaction2PC-prepareCommit-db2.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment2{CLIENT, getTempFile("Transaction2PC-prepareCommit-db2.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment2Drop{attachment2};
 
 	std::vector<std::reference_wrapper<Attachment>> attachments{attachment1, attachment2};
@@ -166,12 +166,12 @@ BOOST_AUTO_TEST_CASE(prepareCommit)
 
 BOOST_AUTO_TEST_CASE(prepareRollback)
 {
-	Attachment attachment1{
-		CLIENT, getTempFile("Transaction2PC-prepareRollback-db1.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment1{CLIENT, getTempFile("Transaction2PC-prepareRollback-db1.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment1Drop{attachment1};
 
-	Attachment attachment2{
-		CLIENT, getTempFile("Transaction2PC-prepareRollback-db2.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment2{CLIENT, getTempFile("Transaction2PC-prepareRollback-db2.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment2Drop{attachment2};
 
 	std::vector<std::reference_wrapper<Attachment>> attachments{attachment1, attachment2};
@@ -190,12 +190,12 @@ BOOST_AUTO_TEST_CASE(prepareRollback)
 
 BOOST_AUTO_TEST_CASE(prepareWithMessage)
 {
-	Attachment attachment1{
-		CLIENT, getTempFile("Transaction2PC-prepareWithMessage-db1.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment1{CLIENT, getTempFile("Transaction2PC-prepareWithMessage-db1.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment1Drop{attachment1};
 
-	Attachment attachment2{
-		CLIENT, getTempFile("Transaction2PC-prepareWithMessage-db2.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment2{CLIENT, getTempFile("Transaction2PC-prepareWithMessage-db2.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment2Drop{attachment2};
 
 	std::vector<std::reference_wrapper<Attachment>> attachments{attachment1, attachment2};
@@ -211,11 +211,11 @@ BOOST_AUTO_TEST_CASE(prepareWithMessage)
 BOOST_AUTO_TEST_CASE(prepareWithBinaryMessage)
 {
 	Attachment attachment1{CLIENT, getTempFile("Transaction2PC-prepareWithBinaryMessage-db1.fdb"),
-		AttachmentOptions().setCreateDatabase(true)};
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment1Drop{attachment1};
 
 	Attachment attachment2{CLIENT, getTempFile("Transaction2PC-prepareWithBinaryMessage-db2.fdb"),
-		AttachmentOptions().setCreateDatabase(true)};
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment2Drop{attachment2};
 
 	std::vector<std::reference_wrapper<Attachment>> attachments{attachment1, attachment2};
@@ -232,11 +232,11 @@ BOOST_AUTO_TEST_CASE(prepareWithBinaryMessage)
 BOOST_AUTO_TEST_CASE(commitWithoutPrepare)
 {
 	Attachment attachment1{CLIENT, getTempFile("Transaction2PC-commitWithoutPrepare-db1.fdb"),
-		AttachmentOptions().setCreateDatabase(true)};
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment1Drop{attachment1};
 
 	Attachment attachment2{CLIENT, getTempFile("Transaction2PC-commitWithoutPrepare-db2.fdb"),
-		AttachmentOptions().setCreateDatabase(true)};
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment2Drop{attachment2};
 
 	std::vector<std::reference_wrapper<Attachment>> attachments{attachment1, attachment2};
@@ -253,11 +253,11 @@ BOOST_AUTO_TEST_CASE(commitWithoutPrepare)
 BOOST_AUTO_TEST_CASE(statementAcrossMultipleDatabases)
 {
 	Attachment attachment1{CLIENT, getTempFile("Transaction2PC-statementAcrossMultipleDatabases-db1.fdb"),
-		AttachmentOptions().setCreateDatabase(true)};
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment1Drop{attachment1};
 
 	Attachment attachment2{CLIENT, getTempFile("Transaction2PC-statementAcrossMultipleDatabases-db2.fdb"),
-		AttachmentOptions().setCreateDatabase(true)};
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment2Drop{attachment2};
 
 	std::vector<std::reference_wrapper<Attachment>> attachments{attachment1, attachment2};
@@ -315,8 +315,8 @@ BOOST_AUTO_TEST_CASE(statementAcrossMultipleDatabases)
 BOOST_AUTO_TEST_CASE(singleDatabasePrepare)
 {
 	// Prepare() should also work on single-database transactions
-	Attachment attachment{
-		CLIENT, getTempFile("Transaction2PC-singleDatabasePrepare.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{CLIENT, getTempFile("Transaction2PC-singleDatabasePrepare.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	std::vector<std::reference_wrapper<Attachment>> attachments{attachment};
@@ -332,12 +332,12 @@ BOOST_AUTO_TEST_CASE(singleDatabasePrepare)
 BOOST_AUTO_TEST_CASE(prepareRollbackData)
 {
 	// Verify that rollback after prepare actually rolls back the data
-	Attachment attachment1{
-		CLIENT, getTempFile("Transaction2PC-prepareRollbackData-db1.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment1{CLIENT, getTempFile("Transaction2PC-prepareRollbackData-db1.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment1Drop{attachment1};
 
-	Attachment attachment2{
-		CLIENT, getTempFile("Transaction2PC-prepareRollbackData-db2.fdb"), AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment2{CLIENT, getTempFile("Transaction2PC-prepareRollbackData-db2.fdb"),
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachment2Drop{attachment2};
 
 	// Create tables
