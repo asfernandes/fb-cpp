@@ -1,5 +1,7 @@
 # fb-cpp
 
+<div style="text-align: center;"><img src="fb-cpp-logo.png" alt="" width="25%" /></div>
+
 A modern C++ wrapper for the Firebird database API.
 
 [Documentation](https://asfernandes.github.io/fb-cpp) | [Repository](https://github.com/asfernandes/fb-cpp) |
