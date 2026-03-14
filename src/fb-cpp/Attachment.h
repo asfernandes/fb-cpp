@@ -176,12 +176,30 @@ namespace fbcpp
 			return *this;
 		}
 
+		///
+		/// Returns whether forced writes should be enabled when creating the database.
+		///
+		const std::optional<bool>& getForcedWrites() const
+		{
+			return forcedWrites;
+		}
+
+		///
+		/// Sets whether forced writes should be enabled when creating the database.
+		///
+		AttachmentOptions& setForcedWrites(bool value)
+		{
+			forcedWrites = value;
+			return *this;
+		}
+
 	private:
 		std::optional<std::string> connectionCharSet;
 		std::optional<std::string> userName;
 		std::optional<std::string> password;
 		std::optional<std::string> role;
 		std::optional<std::uint32_t> sqlDialect;
+		std::optional<bool> forcedWrites;
 		std::vector<std::uint8_t> dpb;
 		bool createDatabase = false;
 	};

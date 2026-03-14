@@ -25,6 +25,8 @@
 #include "TestUtil.h"
 #include "fb-cpp/Attachment.h"
 #include "fb-cpp/Exception.h"
+#include "fb-cpp/Statement.h"
+#include "fb-cpp/Transaction.h"
 #include <exception>
 
 
@@ -67,6 +69,26 @@ BOOST_AUTO_TEST_CASE(sqlDialectSetterGetter)
 	options.setSqlDialect(1u);
 	BOOST_REQUIRE(options.getSqlDialect().has_value());
 	BOOST_CHECK_EQUAL(*options.getSqlDialect(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(forcedWritesDefault)
+{
+	AttachmentOptions options;
+	BOOST_CHECK(!options.getForcedWrites().has_value());
+}
+
+BOOST_AUTO_TEST_CASE(createDatabaseWithForcedWritesOff)
+{
+	const auto database = getTempFile("Attachment-createDatabaseWithForcedWritesOff.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select mon$forced_writes from mon$database"};
+	BOOST_REQUIRE(stmt.execute(transaction));
+	BOOST_REQUIRE(stmt.getInt32(0).has_value());
+	BOOST_CHECK_EQUAL(*stmt.getInt32(0), 0);
+	transaction.commit();
 }
 
 BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
