@@ -76,7 +76,7 @@ namespace fbcpp::test
 				const fs::path prefix = fs::temp_directory_path();
 
 				auto now = std::chrono::system_clock::now();
-				auto time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+				auto time = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
 
 				std::ostringstream oss;
 				oss << "fbcpp-test-" << time;
