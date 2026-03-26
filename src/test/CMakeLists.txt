@@ -3,6 +3,8 @@ set(Boost_NO_WARN_NEW_VERSIONS 1)
 
 project(fb-cpp-test CXX)
 
+include(BoostTestDiscoverTests)
+
 file(GLOB_RECURSE SRC
 	"*.h"
 	"*.cpp"
@@ -32,13 +34,9 @@ target_link_libraries(${PROJECT_NAME}
 	PRIVATE Boost::unit_test_framework
 )
 
-add_test(
-	NAME ${PROJECT_NAME}
-	COMMAND $<TARGET_FILE:${PROJECT_NAME}>
-)
-
-set_tests_properties(${PROJECT_NAME}
+boost_test_discover_tests(${PROJECT_NAME}
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+	DISCOVERY_MODE PRE_TEST
 	PROPERTIES
-		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		ENVIRONMENT "FB_CPP_BUILD_DIR=${CMAKE_BINARY_DIR};FB_CPP_BUILD_CONFIG=$<CONFIG>"
 )
