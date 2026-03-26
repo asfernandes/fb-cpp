@@ -121,7 +121,7 @@ jobs:
 
       - name: Run tests
         run: |
-          ctest --preset default --verbose
+          ctest --preset default --output-on-failure -j8
 
       - name: Build documentation
         run: |
@@ -217,7 +217,7 @@ jobs:
         run: |
           set ISC_USER=sysdba
           set ISC_PASSWORD=masterkey
-          ctest --preset default --verbose
+          ctest --preset default --output-on-failure -j8
 
   build-macos:
     runs-on: macos-latest
@@ -304,4 +304,5 @@ jobs:
 
       - name: Run tests
         run: |
-          ctest --preset default --verbose
+          # Parallel test execution on macOS often causes failures in EventListener tests
+          ctest --preset default --output-on-failure
