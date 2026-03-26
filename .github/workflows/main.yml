@@ -125,7 +125,7 @@ jobs:
 
       - name: Run tests
         run: |
-          ctest --preset default --verbose
+          ctest --preset default --output-on-failure -j8
 
       - name: Build documentation
         run: |
@@ -224,7 +224,7 @@ jobs:
       - name: Run tests
         shell: cmd
         run: |
-          ctest --preset default --verbose
+          ctest --preset default --output-on-failure -j8
 
   build-macos:
     runs-on: macos-latest
@@ -311,7 +311,8 @@ jobs:
 
       - name: Run tests
         run: |
-          ctest --preset default --verbose
+          # Parallel test execution on macOS often causes failures in EventListener tests
+          ctest --preset default --output-on-failure
 
   deploy-docs:
     if: github.repository == 'asfernandes/fb-cpp' && github.ref == 'refs/heads/main'
