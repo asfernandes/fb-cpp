@@ -439,8 +439,8 @@ namespace fbcpp
 		///
 
 	private:
-		std::vector<std::uint8_t> buildParametersBlock(Client& client, const BatchOptions& options);
-		std::vector<std::uint8_t> prepareBpb(Client& client, const BlobOptions& bpb);
+		std::vector<std::uint8_t> buildParametersBlock(const BatchOptions& options);
+		std::vector<std::uint8_t> prepareBpb(const BlobOptions& bpb);
 		void buildInputDescriptors();
 
 	private:

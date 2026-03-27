@@ -108,7 +108,7 @@ Batch::Batch(Statement& statement, Transaction& transaction, const BatchOptions&
 	assert(statement.isValid());
 	assert(transaction.isValid());
 
-	const auto parBlock = buildParametersBlock(*client, options);
+	const auto parBlock = buildParametersBlock(options);
 
 	handle.reset(statement.getStatementHandle()->createBatch(
 		&statusWrapper, statement.getInputMetadata().get(), static_cast<unsigned>(parBlock.size()), parBlock.data()));
@@ -124,7 +124,7 @@ Batch::Batch(Attachment& attachment, Transaction& transaction, std::string_view 
 	assert(attachment.isValid());
 	assert(transaction.isValid());
 
-	const auto parBlock = buildParametersBlock(*client, options);
+	const auto parBlock = buildParametersBlock(options);
 
 	handle.reset(attachment.getHandle()->createBatch(&statusWrapper, transaction.getHandle().get(),
 		static_cast<unsigned>(sql.length()), sql.data(), dialect, nullptr, static_cast<unsigned>(parBlock.size()),
@@ -164,7 +164,7 @@ BlobId Batch::addBlob(std::span<const std::byte> data, const BlobOptions& bpb)
 {
 	assert(isValid());
 
-	const auto preparedBpb = prepareBpb(*client, bpb);
+	const auto preparedBpb = prepareBpb(bpb);
 
 	BlobId blobId;
 	handle->addBlob(&statusWrapper, static_cast<unsigned>(data.size()), data.data(), &blobId.id,
@@ -199,7 +199,7 @@ void Batch::setDefaultBpb(const BlobOptions& bpb)
 {
 	assert(isValid());
 
-	const auto preparedBpb = prepareBpb(*client, bpb);
+	const auto preparedBpb = prepareBpb(bpb);
 	handle->setDefaultBpb(&statusWrapper, static_cast<unsigned>(preparedBpb.size()), preparedBpb.data());
 }
 
@@ -258,9 +258,9 @@ const std::vector<Descriptor>& Batch::getInputDescriptors()
 
 // --- Internal helpers ---
 
-std::vector<std::uint8_t> Batch::buildParametersBlock(Client& client, const BatchOptions& options)
+std::vector<std::uint8_t> Batch::buildParametersBlock(const BatchOptions& options)
 {
-	auto builder = fbUnique(client.getUtil()->getXpbBuilder(&statusWrapper, fb::IXpbBuilder::BATCH, nullptr, 0));
+	auto builder = fbUnique(client->getUtil()->getXpbBuilder(&statusWrapper, fb::IXpbBuilder::BATCH, nullptr, 0));
 
 	if (options.getMultiError())
 		builder->insertInt(&statusWrapper, fb::IBatch::TAG_MULTIERROR, 1);
@@ -286,9 +286,9 @@ std::vector<std::uint8_t> Batch::buildParametersBlock(Client& client, const Batc
 	return {buffer, buffer + length};
 }
 
-std::vector<std::uint8_t> Batch::prepareBpb(Client& client, const BlobOptions& bpb)
+std::vector<std::uint8_t> Batch::prepareBpb(const BlobOptions& bpb)
 {
-	auto builder = fbUnique(client.getUtil()->getXpbBuilder(&statusWrapper, fb::IXpbBuilder::BPB,
+	auto builder = fbUnique(client->getUtil()->getXpbBuilder(&statusWrapper, fb::IXpbBuilder::BPB,
 		reinterpret_cast<const std::uint8_t*>(bpb.getBpb().data()), static_cast<unsigned>(bpb.getBpb().size())));
 
 	if (const auto type = bpb.getType(); type.has_value())
