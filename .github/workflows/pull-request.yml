@@ -109,7 +109,7 @@ jobs:
 
       - name: Upload vcpkg failure logs
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: vcpkg-logs-${{ github.job }}
           path: vcpkg/buildtrees/**/*.log
@@ -201,7 +201,7 @@ jobs:
 
       - name: Upload vcpkg failure logs
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: vcpkg-logs-${{ github.job }}
           path: vcpkg/buildtrees/**/*.log
@@ -292,7 +292,7 @@ jobs:
 
       - name: Upload vcpkg failure logs
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: vcpkg-logs-${{ github.job }}
           path: vcpkg/buildtrees/**/*.log
