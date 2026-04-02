@@ -801,8 +801,6 @@ BOOST_AUTO_TEST_CASE(convertDecFloat34)
 
 BOOST_AUTO_TEST_CASE(decFloat16NumberLimits)
 {
-	impl::StatusWrapper statusWrapper{CLIENT};
-
 	impl::NumericConverter converter{CLIENT};
 
 	const auto maxValue = std::numeric_limits<BoostDecFloat16>::max();
@@ -828,8 +826,6 @@ BOOST_AUTO_TEST_CASE(decFloat16NumberLimits)
 
 BOOST_AUTO_TEST_CASE(decFloat34NumberLimits)
 {
-	impl::StatusWrapper statusWrapper{CLIENT};
-
 	impl::NumericConverter converter{CLIENT};
 
 	const auto maxValue = std::numeric_limits<BoostDecFloat34>::max();
