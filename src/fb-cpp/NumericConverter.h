@@ -356,7 +356,7 @@ namespace fbcpp::impl
 
 		std::string opaqueInt128ToString(const OpaqueInt128& opaqueInt128, int scale)
 		{
-			const auto int128Util = client->getUtil()->getInt128(statusWrapper);
+			const auto int128Util = client->getInt128Util(statusWrapper);
 			char buffer[fb::IInt128::STRING_SIZE + 1];
 			int128Util->toString(statusWrapper, &opaqueInt128, scale, static_cast<unsigned>(sizeof(buffer)), buffer);
 			return buffer;
