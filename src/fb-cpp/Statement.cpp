@@ -178,7 +178,7 @@ Statement::Statement(
 	outMetadata.reset(statementHandle->getOutputMetadata(&statusWrapper));
 	processMetadata(outMetadata, outDescriptors, outMessage);
 
-	outRow = Row(outMessage.data(), outDescriptors, statusWrapper, numericConverter, calendarConverter);
+	outRow = std::make_unique<Row>(attachment.getClient(), outDescriptors, outMessage.data());
 }
 
 void Statement::free()

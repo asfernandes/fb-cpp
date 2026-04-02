@@ -31,7 +31,8 @@ using namespace fbcpp::impl;
 
 
 RowSet::RowSet(Statement& statement, unsigned maxRows)
-	: statusWrapper{statement.getAttachment().getClient()},
+	: client{&statement.getAttachment().getClient()},
+	  statusWrapper{statement.getAttachment().getClient()},
 	  numericConverter{statement.getAttachment().getClient()},
 	  calendarConverter{statement.getAttachment().getClient()}
 {

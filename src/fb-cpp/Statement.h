@@ -287,10 +287,11 @@ namespace fbcpp
 			  outMetadata{std::move(o.outMetadata)},
 			  outDescriptors{std::move(o.outDescriptors)},
 			  outMessage{std::move(o.outMessage)},
-			  outRow{outMessage.data(), outDescriptors, statusWrapper, numericConverter, calendarConverter},
+			  outRow{std::make_unique<Row>(attachment->getClient(), outDescriptors, outMessage.data())},
 			  type{o.type},
 			  cursorFlags{o.cursorFlags}
 		{
+			o.outRow.reset();
 		}
 
 		///
@@ -315,9 +316,11 @@ namespace fbcpp
 				outMetadata = std::move(o.outMetadata);
 				outDescriptors = std::move(o.outDescriptors);
 				outMessage = std::move(o.outMessage);
-				outRow = Row(outMessage.data(), outDescriptors, statusWrapper, numericConverter, calendarConverter);
+				outRow = std::make_unique<Row>(attachment->getClient(), outDescriptors, outMessage.data());
 				type = o.type;
 				cursorFlags = o.cursorFlags;
+
+				o.outRow.reset();
 			}
 
 			return *this;
@@ -1611,7 +1614,7 @@ namespace fbcpp
 		bool isNull(unsigned index)
 		{
 			assert(isValid());
-			return outRow.isNull(index);
+			return outRow->isNull(index);
 		}
 
 		///
@@ -1620,7 +1623,7 @@ namespace fbcpp
 		std::optional<bool> getBool(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getBool(index);
+			return outRow->getBool(index);
 		}
 
 		///
@@ -1629,7 +1632,7 @@ namespace fbcpp
 		std::optional<std::int16_t> getInt16(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getInt16(index);
+			return outRow->getInt16(index);
 		}
 
 		///
@@ -1638,7 +1641,7 @@ namespace fbcpp
 		std::optional<ScaledInt16> getScaledInt16(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getScaledInt16(index);
+			return outRow->getScaledInt16(index);
 		}
 
 		///
@@ -1647,7 +1650,7 @@ namespace fbcpp
 		std::optional<std::int32_t> getInt32(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getInt32(index);
+			return outRow->getInt32(index);
 		}
 
 		///
@@ -1656,7 +1659,7 @@ namespace fbcpp
 		std::optional<ScaledInt32> getScaledInt32(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getScaledInt32(index);
+			return outRow->getScaledInt32(index);
 		}
 
 		///
@@ -1665,7 +1668,7 @@ namespace fbcpp
 		std::optional<std::int64_t> getInt64(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getInt64(index);
+			return outRow->getInt64(index);
 		}
 
 		///
@@ -1674,7 +1677,7 @@ namespace fbcpp
 		std::optional<ScaledInt64> getScaledInt64(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getScaledInt64(index);
+			return outRow->getScaledInt64(index);
 		}
 
 		///
@@ -1683,7 +1686,7 @@ namespace fbcpp
 		std::optional<ScaledOpaqueInt128> getScaledOpaqueInt128(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getScaledOpaqueInt128(index);
+			return outRow->getScaledOpaqueInt128(index);
 		}
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
@@ -1693,7 +1696,7 @@ namespace fbcpp
 		std::optional<BoostInt128> getBoostInt128(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getBoostInt128(index);
+			return outRow->getBoostInt128(index);
 		}
 
 		///
@@ -1702,7 +1705,7 @@ namespace fbcpp
 		std::optional<ScaledBoostInt128> getScaledBoostInt128(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getScaledBoostInt128(index);
+			return outRow->getScaledBoostInt128(index);
 		}
 #endif
 
@@ -1712,7 +1715,7 @@ namespace fbcpp
 		std::optional<float> getFloat(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getFloat(index);
+			return outRow->getFloat(index);
 		}
 
 		///
@@ -1721,7 +1724,7 @@ namespace fbcpp
 		std::optional<double> getDouble(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getDouble(index);
+			return outRow->getDouble(index);
 		}
 
 		///
@@ -1730,7 +1733,7 @@ namespace fbcpp
 		std::optional<OpaqueDecFloat16> getOpaqueDecFloat16(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getOpaqueDecFloat16(index);
+			return outRow->getOpaqueDecFloat16(index);
 		}
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
@@ -1740,7 +1743,7 @@ namespace fbcpp
 		std::optional<BoostDecFloat16> getBoostDecFloat16(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getBoostDecFloat16(index);
+			return outRow->getBoostDecFloat16(index);
 		}
 #endif
 
@@ -1750,7 +1753,7 @@ namespace fbcpp
 		std::optional<OpaqueDecFloat34> getOpaqueDecFloat34(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getOpaqueDecFloat34(index);
+			return outRow->getOpaqueDecFloat34(index);
 		}
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
@@ -1760,7 +1763,7 @@ namespace fbcpp
 		std::optional<BoostDecFloat34> getBoostDecFloat34(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getBoostDecFloat34(index);
+			return outRow->getBoostDecFloat34(index);
 		}
 #endif
 
@@ -1770,7 +1773,7 @@ namespace fbcpp
 		std::optional<Date> getDate(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getDate(index);
+			return outRow->getDate(index);
 		}
 
 		///
@@ -1779,7 +1782,7 @@ namespace fbcpp
 		std::optional<OpaqueDate> getOpaqueDate(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getOpaqueDate(index);
+			return outRow->getOpaqueDate(index);
 		}
 
 		///
@@ -1788,7 +1791,7 @@ namespace fbcpp
 		std::optional<Time> getTime(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getTime(index);
+			return outRow->getTime(index);
 		}
 
 		///
@@ -1797,7 +1800,7 @@ namespace fbcpp
 		std::optional<OpaqueTime> getOpaqueTime(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getOpaqueTime(index);
+			return outRow->getOpaqueTime(index);
 		}
 
 		///
@@ -1806,7 +1809,7 @@ namespace fbcpp
 		std::optional<Timestamp> getTimestamp(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getTimestamp(index);
+			return outRow->getTimestamp(index);
 		}
 
 		///
@@ -1815,7 +1818,7 @@ namespace fbcpp
 		std::optional<OpaqueTimestamp> getOpaqueTimestamp(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getOpaqueTimestamp(index);
+			return outRow->getOpaqueTimestamp(index);
 		}
 
 		///
@@ -1824,7 +1827,7 @@ namespace fbcpp
 		std::optional<TimeTz> getTimeTz(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getTimeTz(index);
+			return outRow->getTimeTz(index);
 		}
 
 		///
@@ -1833,7 +1836,7 @@ namespace fbcpp
 		std::optional<OpaqueTimeTz> getOpaqueTimeTz(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getOpaqueTimeTz(index);
+			return outRow->getOpaqueTimeTz(index);
 		}
 
 		///
@@ -1842,7 +1845,7 @@ namespace fbcpp
 		std::optional<TimestampTz> getTimestampTz(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getTimestampTz(index);
+			return outRow->getTimestampTz(index);
 		}
 
 		///
@@ -1851,7 +1854,7 @@ namespace fbcpp
 		std::optional<OpaqueTimestampTz> getOpaqueTimestampTz(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getOpaqueTimestampTz(index);
+			return outRow->getOpaqueTimestampTz(index);
 		}
 
 		///
@@ -1860,7 +1863,7 @@ namespace fbcpp
 		std::optional<BlobId> getBlobId(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getBlobId(index);
+			return outRow->getBlobId(index);
 		}
 
 		///
@@ -1869,7 +1872,7 @@ namespace fbcpp
 		std::optional<std::string> getString(unsigned index)
 		{
 			assert(isValid());
-			return outRow.getString(index);
+			return outRow->getString(index);
 		}
 
 		///
@@ -1883,7 +1886,7 @@ namespace fbcpp
 		T get(unsigned index)
 		{
 			assert(isValid());
-			return outRow.get<T>(index);
+			return outRow->get<T>(index);
 		}
 
 		///
@@ -1897,7 +1900,7 @@ namespace fbcpp
 		T get()
 		{
 			assert(isValid());
-			return outRow.get<T>();
+			return outRow->get<T>();
 		}
 
 		///
@@ -1933,7 +1936,7 @@ namespace fbcpp
 		T get()
 		{
 			assert(isValid());
-			return outRow.get<T>();
+			return outRow->get<T>();
 		}
 
 		///
@@ -1968,7 +1971,7 @@ namespace fbcpp
 		V get(unsigned index)
 		{
 			assert(isValid());
-			return outRow.get<V>(index);
+			return outRow->get<V>(index);
 		}
 
 		///
@@ -2201,7 +2204,7 @@ namespace fbcpp
 		FbRef<fb::IMessageMetadata> outMetadata;
 		std::vector<Descriptor> outDescriptors;
 		std::vector<std::byte> outMessage;
-		Row outRow;
+		std::unique_ptr<Row> outRow;
 		StatementType type;
 		unsigned cursorFlags = 0;
 	};

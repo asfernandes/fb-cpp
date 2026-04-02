@@ -70,7 +70,8 @@ namespace fbcpp
 		explicit RowSet(Statement& statement, unsigned maxRows);
 
 		RowSet(RowSet&& o) noexcept
-			: count{o.count},
+			: client{o.client},
+			  count{o.count},
 			  messageLength{o.messageLength},
 			  buffer{std::move(o.buffer)},
 			  descriptors{std::move(o.descriptors)},
@@ -86,6 +87,7 @@ namespace fbcpp
 		{
 			if (this != &o)
 			{
+				client = o.client;
 				count = o.count;
 				messageLength = o.messageLength;
 				buffer = std::move(o.buffer);
@@ -128,7 +130,7 @@ namespace fbcpp
 		{
 			assert(index < count);
 			const auto* data = buffer.data() + static_cast<std::size_t>(index) * messageLength;
-			return Row{data, descriptors, statusWrapper, numericConverter, calendarConverter};
+			return Row{*client, descriptors, data};
 		}
 
 		///
@@ -151,6 +153,7 @@ namespace fbcpp
 		}
 
 	private:
+		Client* client = nullptr;
 		unsigned count = 0;
 		unsigned messageLength = 0;
 		std::vector<std::byte> buffer;
