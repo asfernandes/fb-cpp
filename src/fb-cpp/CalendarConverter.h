@@ -48,9 +48,8 @@ namespace fbcpp::impl
 	class CalendarConverter final
 	{
 	public:
-		explicit CalendarConverter(Client& client, StatusWrapper* statusWrapper)
-			: client{&client},
-			  statusWrapper{statusWrapper}
+		explicit CalendarConverter(Client& client)
+			: client{&client}
 		{
 		}
 
@@ -236,7 +235,7 @@ namespace fbcpp::impl
 				subseconds);
 		}
 
-		OpaqueTimeTz timeTzToOpaqueTimeTz(const TimeTz& timeTz)
+		OpaqueTimeTz timeTzToOpaqueTimeTz(StatusWrapper* statusWrapper, const TimeTz& timeTz)
 		{
 			const auto duration = timeTz.utcTime.to_duration();
 
@@ -259,7 +258,8 @@ namespace fbcpp::impl
 			return opaque;
 		}
 
-		TimeTz opaqueTimeTzToTimeTz(const OpaqueTimeTz& opaqueTime, std::string* decodedTimeZoneName = nullptr)
+		TimeTz opaqueTimeTzToTimeTz(
+			StatusWrapper* statusWrapper, const OpaqueTimeTz& opaqueTime, std::string* decodedTimeZoneName = nullptr)
 		{
 			const auto ticks = static_cast<std::int64_t>(opaqueTime.value.utc_time) * 100;
 
@@ -282,12 +282,12 @@ namespace fbcpp::impl
 			return timeTz;
 		}
 
-		OpaqueTimeTz stringToOpaqueTimeTz(std::string_view value)
+		OpaqueTimeTz stringToOpaqueTimeTz(StatusWrapper* statusWrapper, std::string_view value)
 		{
-			return timeTzToOpaqueTimeTz(stringToTimeTz(value));
+			return timeTzToOpaqueTimeTz(statusWrapper, stringToTimeTz(statusWrapper, value));
 		}
 
-		std::string opaqueTimeTzToString(const OpaqueTimeTz& time)
+		std::string opaqueTimeTzToString(StatusWrapper* statusWrapper, const OpaqueTimeTz& time)
 		{
 			unsigned hours;
 			unsigned minutes;
@@ -301,7 +301,7 @@ namespace fbcpp::impl
 			return std::format("{:02}:{:02}:{:02}.{:04} {}", hours, minutes, seconds, fractions, timeZoneBuffer.data());
 		}
 
-		TimeTz stringToTimeTz(std::string_view value)
+		TimeTz stringToTimeTz(StatusWrapper* statusWrapper, std::string_view value)
 		{
 			static const std::regex pattern(
 				R"(^\s*([0-9]{2})\s*:\s*([0-9]{2})\s*:\s*([0-9]{2})(?:\s*\.\s*([0-9]{1,4}))?\s+([^\s]+)\s*$)");
@@ -363,7 +363,7 @@ namespace fbcpp::impl
 			client->getUtil()->encodeTimeTz(
 				statusWrapper, &encoded.value, hours, minutes, seconds, fractions, timeZoneString.c_str());
 
-			return opaqueTimeTzToTimeTz(encoded);
+			return opaqueTimeTzToTimeTz(statusWrapper, encoded);
 		}
 
 		// FIXME: review
@@ -509,7 +509,7 @@ namespace fbcpp::impl
 			return std::format("{} {}", dateString, timeString);
 		}
 
-		OpaqueTimestampTz timestampTzToOpaqueTimestampTz(const TimestampTz& timestampTz)
+		OpaqueTimestampTz timestampTzToOpaqueTimestampTz(StatusWrapper* statusWrapper, const TimestampTz& timestampTz)
 		{
 			OpaqueTimestampTz opaque;
 
@@ -522,7 +522,7 @@ namespace fbcpp::impl
 			return opaque;
 		}
 
-		TimestampTz opaqueTimestampTzToTimestampTz(
+		TimestampTz opaqueTimestampTzToTimestampTz(StatusWrapper* statusWrapper,
 			const OpaqueTimestampTz& opaqueTimestamp, std::string* decodedTimeZoneName = nullptr)
 		{
 			const auto ticks =
@@ -553,12 +553,12 @@ namespace fbcpp::impl
 			return timestampTz;
 		}
 
-		OpaqueTimestampTz stringToOpaqueTimestampTz(std::string_view value)
+		OpaqueTimestampTz stringToOpaqueTimestampTz(StatusWrapper* statusWrapper, std::string_view value)
 		{
-			return timestampTzToOpaqueTimestampTz(stringToTimestampTz(value));
+			return timestampTzToOpaqueTimestampTz(statusWrapper, stringToTimestampTz(statusWrapper, value));
 		}
 
-		std::string opaqueTimestampTzToString(const OpaqueTimestampTz& timestamp)
+		std::string opaqueTimestampTzToString(StatusWrapper* statusWrapper, const OpaqueTimestampTz& timestamp)
 		{
 			unsigned year;
 			unsigned month;
@@ -576,7 +576,7 @@ namespace fbcpp::impl
 				seconds, subseconds, timeZoneBuffer.data());
 		}
 
-		TimestampTz stringToTimestampTz(std::string_view value)
+		TimestampTz stringToTimestampTz(StatusWrapper* statusWrapper, std::string_view value)
 		{
 			static const std::regex pattern(
 				R"(^\s*([0-9]{4})\s*-\s*([0-9]{2})\s*-\s*([0-9]{2})\s+([0-9]{2})\s*:\s*([0-9]{2})\s*:\s*([0-9]{2})(?:\s*\.\s*([0-9]{1,4}))?\s+([^\s]+)\s*$)");
@@ -660,7 +660,7 @@ namespace fbcpp::impl
 				throwInvalidTimestampValue();
 
 			std::string resolvedTimeZoneName;
-			opaqueTimestampTzToTimestampTz(encoded, &resolvedTimeZoneName);
+			opaqueTimestampTzToTimestampTz(statusWrapper, encoded, &resolvedTimeZoneName);
 
 			return TimestampTz{utcTimestamp, resolvedTimeZoneName};
 		}
@@ -713,7 +713,6 @@ namespace fbcpp::impl
 			std::chrono::year{1858} / std::chrono::November / 17,
 		};
 		Client* client;
-		StatusWrapper* statusWrapper;
 	};
 }  // namespace fbcpp::impl
 

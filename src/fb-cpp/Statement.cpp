@@ -35,8 +35,8 @@ Statement::Statement(
 	Attachment& attachment, Transaction& transaction, std::string_view sql, const StatementOptions& options)
 	: attachment{&attachment},
 	  statusWrapper{attachment.getClient()},
-	  calendarConverter{attachment.getClient(), &statusWrapper},
-	  numericConverter{attachment.getClient(), &statusWrapper}
+	  calendarConverter{attachment.getClient()},
+	  numericConverter{attachment.getClient()}
 {
 	assert(attachment.isValid());
 	assert(transaction.isValid());
@@ -178,7 +178,7 @@ Statement::Statement(
 	outMetadata.reset(statementHandle->getOutputMetadata(&statusWrapper));
 	processMetadata(outMetadata, outDescriptors, outMessage);
 
-	outRow = Row(outMessage.data(), outDescriptors, numericConverter, calendarConverter);
+	outRow = Row(outMessage.data(), outDescriptors, statusWrapper, numericConverter, calendarConverter);
 }
 
 void Statement::free()

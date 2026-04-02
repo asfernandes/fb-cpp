@@ -71,13 +71,15 @@ namespace fbcpp
 		///
 		/// @param message Pointer to the raw row data.
 		/// @param descriptors Column descriptors.
+		/// @param statusWrapper Status wrapper used for Firebird conversions.
 		/// @param numericConverter Numeric converter.
 		/// @param calendarConverter Calendar converter.
 		///
-		Row(const std::byte* message, const std::vector<Descriptor>& descriptors,
+		Row(const std::byte* message, const std::vector<Descriptor>& descriptors, impl::StatusWrapper& statusWrapper,
 			impl::NumericConverter& numericConverter, impl::CalendarConverter& calendarConverter)
 			: message{message},
 			  descriptors{&descriptors},
+			  statusWrapper{&statusWrapper},
 			  numericConverter{&numericConverter},
 			  calendarConverter{&calendarConverter}
 		{
@@ -435,7 +437,7 @@ namespace fbcpp
 			{
 				case DescriptorAdjustedType::TIME_TZ:
 					return getCalendarConverter().opaqueTimeTzToTimeTz(
-						*reinterpret_cast<const OpaqueTimeTz*>(&message[descriptor.offset]));
+						getStatusWrapper(), *reinterpret_cast<const OpaqueTimeTz*>(&message[descriptor.offset]));
 
 				default:
 					throwInvalidType("TimeTz", descriptor.adjustedType);
@@ -476,7 +478,7 @@ namespace fbcpp
 			{
 				case DescriptorAdjustedType::TIMESTAMP_TZ:
 					return getCalendarConverter().opaqueTimestampTzToTimestampTz(
-						*reinterpret_cast<const OpaqueTimestampTz*>(&message[descriptor.offset]));
+						getStatusWrapper(), *reinterpret_cast<const OpaqueTimestampTz*>(&message[descriptor.offset]));
 
 				default:
 					throwInvalidType("TimestampTz", descriptor.adjustedType);
@@ -558,7 +560,7 @@ namespace fbcpp
 
 				case DescriptorAdjustedType::INT128:
 					return getNumericConverter().opaqueInt128ToString(
-						*reinterpret_cast<const OpaqueInt128*>(data), descriptor.scale);
+						getStatusWrapper(), *reinterpret_cast<const OpaqueInt128*>(data), descriptor.scale);
 
 				case DescriptorAdjustedType::FLOAT:
 					return getNumericConverter().numberToString(*reinterpret_cast<const float*>(data));
@@ -577,19 +579,20 @@ namespace fbcpp
 						*reinterpret_cast<const OpaqueTimestamp*>(data));
 
 				case DescriptorAdjustedType::TIME_TZ:
-					return getCalendarConverter().opaqueTimeTzToString(*reinterpret_cast<const OpaqueTimeTz*>(data));
+					return getCalendarConverter().opaqueTimeTzToString(
+						getStatusWrapper(), *reinterpret_cast<const OpaqueTimeTz*>(data));
 
 				case DescriptorAdjustedType::TIMESTAMP_TZ:
 					return getCalendarConverter().opaqueTimestampTzToString(
-						*reinterpret_cast<const OpaqueTimestampTz*>(data));
+						getStatusWrapper(), *reinterpret_cast<const OpaqueTimestampTz*>(data));
 
 				case DescriptorAdjustedType::DECFLOAT16:
 					return getNumericConverter().opaqueDecFloat16ToString(
-						*reinterpret_cast<const OpaqueDecFloat16*>(data));
+						getStatusWrapper(), *reinterpret_cast<const OpaqueDecFloat16*>(data));
 
 				case DescriptorAdjustedType::DECFLOAT34:
 					return getNumericConverter().opaqueDecFloat34ToString(
-						*reinterpret_cast<const OpaqueDecFloat34*>(data));
+						getStatusWrapper(), *reinterpret_cast<const OpaqueDecFloat34*>(data));
 
 				case DescriptorAdjustedType::STRING:
 					return std::string{reinterpret_cast<const char*>(data + sizeof(std::uint16_t)),
@@ -934,13 +937,13 @@ namespace fbcpp
 
 				case DescriptorAdjustedType::DECFLOAT16:
 					boostDecFloat16.emplace(getNumericConverter().opaqueDecFloat16ToBoostDecFloat16(
-						*reinterpret_cast<const OpaqueDecFloat16*>(data)));
+						getStatusWrapper(), *reinterpret_cast<const OpaqueDecFloat16*>(data)));
 					data = reinterpret_cast<const std::byte*>(&boostDecFloat16.value());
 					break;
 
 				case DescriptorAdjustedType::DECFLOAT34:
 					boostDecFloat34.emplace(getNumericConverter().opaqueDecFloat34ToBoostDecFloat34(
-						*reinterpret_cast<const OpaqueDecFloat34*>(data)));
+						getStatusWrapper(), *reinterpret_cast<const OpaqueDecFloat34*>(data)));
 					data = reinterpret_cast<const std::byte*>(&boostDecFloat34.value());
 					break;
 #endif
@@ -1024,8 +1027,14 @@ namespace fbcpp
 	private:
 		const std::byte* message = nullptr;
 		const std::vector<Descriptor>* descriptors = nullptr;
+		impl::StatusWrapper* statusWrapper = nullptr;
 		impl::NumericConverter* numericConverter = nullptr;
 		impl::CalendarConverter* calendarConverter = nullptr;
+
+		impl::StatusWrapper* getStatusWrapper() const
+		{
+			return statusWrapper;
+		}
 
 		const std::vector<Descriptor>& getDescriptors() const
 		{

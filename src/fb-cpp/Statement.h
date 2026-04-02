@@ -287,7 +287,7 @@ namespace fbcpp
 			  outMetadata{std::move(o.outMetadata)},
 			  outDescriptors{std::move(o.outDescriptors)},
 			  outMessage{std::move(o.outMessage)},
-			  outRow{outMessage.data(), outDescriptors, numericConverter, calendarConverter},
+			  outRow{outMessage.data(), outDescriptors, statusWrapper, numericConverter, calendarConverter},
 			  type{o.type},
 			  cursorFlags{o.cursorFlags}
 		{
@@ -315,7 +315,7 @@ namespace fbcpp
 				outMetadata = std::move(o.outMetadata);
 				outDescriptors = std::move(o.outDescriptors);
 				outMessage = std::move(o.outMessage);
-				outRow = Row(outMessage.data(), outDescriptors, numericConverter, calendarConverter);
+				outRow = Row(outMessage.data(), outDescriptors, statusWrapper, numericConverter, calendarConverter);
 				type = o.type;
 				cursorFlags = o.cursorFlags;
 			}
@@ -1050,7 +1050,7 @@ namespace fbcpp
 			{
 				case DescriptorAdjustedType::TIME_TZ:
 					*reinterpret_cast<OpaqueTimeTz*>(&message[descriptor.offset]) =
-						calendarConverter.timeTzToOpaqueTimeTz(value);
+						calendarConverter.timeTzToOpaqueTimeTz(&statusWrapper, value);
 					break;
 
 				default:
@@ -1111,7 +1111,7 @@ namespace fbcpp
 			{
 				case DescriptorAdjustedType::TIMESTAMP_TZ:
 					*reinterpret_cast<OpaqueTimestampTz*>(&message[descriptor.offset]) =
-						calendarConverter.timestampTzToOpaqueTimestampTz(value);
+						calendarConverter.timestampTzToOpaqueTimestampTz(&statusWrapper, value);
 					break;
 
 				default:
@@ -1259,11 +1259,13 @@ namespace fbcpp
 					break;
 
 				case DescriptorAdjustedType::TIME_TZ:
-					*reinterpret_cast<OpaqueTimeTz*>(data) = calendarConverter.stringToOpaqueTimeTz(value);
+					*reinterpret_cast<OpaqueTimeTz*>(data) =
+						calendarConverter.stringToOpaqueTimeTz(&statusWrapper, value);
 					break;
 
 				case DescriptorAdjustedType::TIMESTAMP_TZ:
-					*reinterpret_cast<OpaqueTimestampTz*>(data) = calendarConverter.stringToOpaqueTimestampTz(value);
+					*reinterpret_cast<OpaqueTimestampTz*>(data) =
+						calendarConverter.stringToOpaqueTimestampTz(&statusWrapper, value);
 					break;
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
@@ -2095,7 +2097,7 @@ namespace fbcpp
 					const auto boostDecFloat16 = convertNumber<BoostDecFloat16>(
 						valueDescriptor, valueAddress, descriptorScale, "BoostDecFloat16");
 					*reinterpret_cast<OpaqueDecFloat16*>(descriptorData) =
-						numericConverter.boostDecFloat16ToOpaqueDecFloat16(boostDecFloat16);
+						numericConverter.boostDecFloat16ToOpaqueDecFloat16(&statusWrapper, boostDecFloat16);
 					break;
 				}
 
@@ -2104,7 +2106,7 @@ namespace fbcpp
 					const auto boostDecFloat34 = convertNumber<BoostDecFloat34>(
 						valueDescriptor, valueAddress, descriptorScale, "BoostDecFloat34");
 					*reinterpret_cast<OpaqueDecFloat34*>(descriptorData) =
-						numericConverter.boostDecFloat34ToOpaqueDecFloat34(boostDecFloat34);
+						numericConverter.boostDecFloat34ToOpaqueDecFloat34(&statusWrapper, boostDecFloat34);
 					break;
 				}
 #endif

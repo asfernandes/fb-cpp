@@ -128,7 +128,7 @@ namespace fbcpp
 		{
 			assert(index < count);
 			const auto* data = buffer.data() + static_cast<std::size_t>(index) * messageLength;
-			return Row{data, descriptors, numericConverter, calendarConverter};
+			return Row{data, descriptors, statusWrapper, numericConverter, calendarConverter};
 		}
 
 		///
