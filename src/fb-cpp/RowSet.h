@@ -152,7 +152,7 @@ namespace fbcpp
 		}
 
 	private:
-		Client* client = nullptr;
+		Client* client;
 		unsigned count = 0;
 		unsigned messageLength = 0;
 		std::vector<std::byte> buffer;

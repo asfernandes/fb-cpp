@@ -37,7 +37,7 @@ Attachment::Attachment(Client& client, const std::string& uri, const AttachmentO
 
 	StatusWrapper statusWrapper{client};
 
-	auto dpbBuilder = fbUnique(master->getUtilInterface()->getXpbBuilder(&statusWrapper, fb::IXpbBuilder::DPB,
+	auto dpbBuilder = fbUnique(client.getUtil()->getXpbBuilder(&statusWrapper, fb::IXpbBuilder::DPB,
 		reinterpret_cast<const std::uint8_t*>(options.getDpb().data()),
 		static_cast<unsigned>(options.getDpb().size())));
 

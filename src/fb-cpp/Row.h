@@ -73,9 +73,9 @@ namespace fbcpp
 		/// @param message Span over the raw row data.
 		///
 		Row(Client& client, const std::vector<Descriptor>& descriptors, std::span<const std::byte> message)
-			: message{message},
+			: client{&client},
 			  descriptors{&descriptors},
-			  client{&client},
+			  message{message},
 			  statusWrapper{client},
 			  numericConverter{client},
 			  calendarConverter{client}
@@ -1017,9 +1017,9 @@ namespace fbcpp
 		}
 
 	private:
+		Client* client;
+		const std::vector<Descriptor>* descriptors;
 		std::span<const std::byte> message;
-		const std::vector<Descriptor>* descriptors = nullptr;
-		Client* client = nullptr;
 		impl::StatusWrapper statusWrapper;
 		impl::NumericConverter numericConverter;
 		impl::CalendarConverter calendarConverter;
