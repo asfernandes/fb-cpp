@@ -34,8 +34,7 @@ using namespace fbcpp::impl;
 Statement::Statement(
 	Attachment& attachment, Transaction& transaction, std::string_view sql, const StatementOptions& options)
 	: attachment{&attachment},
-	  status{attachment.getClient().newStatus()},
-	  statusWrapper{attachment.getClient(), status.get()},
+	  statusWrapper{attachment.getClient()},
 	  calendarConverter{attachment.getClient(), &statusWrapper},
 	  numericConverter{attachment.getClient(), &statusWrapper}
 {

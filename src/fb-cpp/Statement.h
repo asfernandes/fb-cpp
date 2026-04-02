@@ -276,7 +276,6 @@ namespace fbcpp
 		///
 		Statement(Statement&& o) noexcept
 			: attachment{o.attachment},
-			  status{std::move(o.status)},
 			  statusWrapper{std::move(o.statusWrapper)},
 			  calendarConverter{std::move(o.calendarConverter)},
 			  numericConverter{std::move(o.numericConverter)},
@@ -305,7 +304,6 @@ namespace fbcpp
 			if (this != &o)
 			{
 				attachment = o.attachment;
-				status = std::move(o.status);
 				statusWrapper = std::move(o.statusWrapper);
 				calendarConverter = std::move(o.calendarConverter);
 				numericConverter = std::move(o.numericConverter);
@@ -2190,7 +2188,6 @@ namespace fbcpp
 
 	private:
 		Attachment* attachment;
-		FbUniquePtr<Firebird::IStatus> status;
 		impl::StatusWrapper statusWrapper;
 		impl::CalendarConverter calendarConverter;
 		impl::NumericConverter numericConverter;

@@ -38,8 +38,7 @@ using namespace fbcpp::impl;
 Blob::Blob(Attachment& attachment, Transaction& transaction, const BlobOptions& options)
 	: attachment{attachment},
 	  transaction{transaction},
-	  status{attachment.getClient().newStatus()},
-	  statusWrapper{attachment.getClient(), status.get()}
+	  statusWrapper{attachment.getClient()}
 {
 	assert(attachment.isValid());
 	assert(transaction.isValid());
@@ -54,8 +53,7 @@ Blob::Blob(Attachment& attachment, Transaction& transaction, const BlobId& blobI
 	: attachment{attachment},
 	  transaction{transaction},
 	  id{blobId},
-	  status{attachment.getClient().newStatus()},
-	  statusWrapper{attachment.getClient(), status.get()}
+	  statusWrapper{attachment.getClient()}
 {
 	assert(attachment.isValid());
 	assert(transaction.isValid());

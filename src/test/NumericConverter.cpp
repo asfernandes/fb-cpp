@@ -42,8 +42,7 @@ BOOST_AUTO_TEST_SUITE(NumericConverterSuite)
 
 BOOST_AUTO_TEST_CASE(convertScaledInt16)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::NumericConverter converter{CLIENT, &statusWrapper};
 
@@ -145,8 +144,7 @@ BOOST_AUTO_TEST_CASE(convertScaledInt16)
 
 BOOST_AUTO_TEST_CASE(convertScaledInt32)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::NumericConverter converter{CLIENT, &statusWrapper};
 
@@ -245,8 +243,7 @@ BOOST_AUTO_TEST_CASE(convertScaledInt32)
 
 BOOST_AUTO_TEST_CASE(convertScaledInt64)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::NumericConverter converter{CLIENT, &statusWrapper};
 
@@ -355,8 +352,7 @@ BOOST_AUTO_TEST_CASE(convertScaledInt64)
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 BOOST_AUTO_TEST_CASE(convertScaledBoostInt128)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::NumericConverter converter{CLIENT, &statusWrapper};
 
@@ -483,8 +479,7 @@ BOOST_AUTO_TEST_CASE(convertScaledBoostInt128)
 
 BOOST_AUTO_TEST_CASE(convertFloat)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::NumericConverter converter{CLIENT, &statusWrapper};
 
@@ -567,8 +562,7 @@ BOOST_AUTO_TEST_CASE(convertFloat)
 
 BOOST_AUTO_TEST_CASE(convertDouble)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::NumericConverter converter{CLIENT, &statusWrapper};
 
@@ -653,8 +647,7 @@ BOOST_AUTO_TEST_CASE(convertDouble)
 
 BOOST_AUTO_TEST_CASE(convertDecFloat16)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::NumericConverter converter{CLIENT, &statusWrapper};
 
@@ -739,8 +732,7 @@ BOOST_AUTO_TEST_CASE(convertDecFloat16)
 
 BOOST_AUTO_TEST_CASE(convertDecFloat34)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::NumericConverter converter{CLIENT, &statusWrapper};
 
@@ -825,8 +817,7 @@ BOOST_AUTO_TEST_CASE(convertDecFloat34)
 
 BOOST_AUTO_TEST_CASE(decFloat16NumberLimits)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::NumericConverter converter{CLIENT, &statusWrapper};
 
@@ -853,8 +844,7 @@ BOOST_AUTO_TEST_CASE(decFloat16NumberLimits)
 
 BOOST_AUTO_TEST_CASE(decFloat34NumberLimits)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::NumericConverter converter{CLIENT, &statusWrapper};
 

@@ -35,8 +35,7 @@ Attachment::Attachment(Client& client, const std::string& uri, const AttachmentO
 {
 	const auto master = client.getMaster();
 
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
+	StatusWrapper statusWrapper{client};
 
 	auto dpbBuilder = fbUnique(master->getUtilInterface()->getXpbBuilder(&statusWrapper, fb::IXpbBuilder::DPB,
 		reinterpret_cast<const std::uint8_t*>(options.getDpb().data()),
@@ -74,8 +73,7 @@ void Attachment::disconnectOrDrop(bool drop)
 {
 	assert(isValid());
 
-	const auto status = client->newStatus();
-	StatusWrapper statusWrapper{*client, status.get()};
+	StatusWrapper statusWrapper{*client};
 
 	if (drop)
 		handle->dropDatabase(&statusWrapper);

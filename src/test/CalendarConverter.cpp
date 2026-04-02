@@ -109,8 +109,7 @@ static const std::initializer_list<DateCase> DATE_CASES{
 
 BOOST_DATA_TEST_CASE(dateConversion, data::make(DATE_CASES), dateCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::CalendarConverter converter{CLIENT, &statusWrapper};
 
@@ -138,8 +137,7 @@ static const std::initializer_list<TimeCase> TIME_CASES{
 
 BOOST_DATA_TEST_CASE(timeConversion, data::make(TIME_CASES), timeCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::CalendarConverter converter{CLIENT, &statusWrapper};
 
@@ -168,8 +166,7 @@ static const std::initializer_list<TimestampCase> TIMESTAMP_CASES{
 
 BOOST_DATA_TEST_CASE(timestampConversion, data::make(TIMESTAMP_CASES), timestampCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::CalendarConverter converter{CLIENT, &statusWrapper};
 
@@ -198,8 +195,7 @@ static const std::initializer_list<TimeTzCase> TIME_TZ_CASES{
 
 BOOST_DATA_TEST_CASE(timeTzConversion, data::make(TIME_TZ_CASES), timeTzCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::CalendarConverter converter{CLIENT, &statusWrapper};
 
@@ -227,8 +223,7 @@ static const std::initializer_list<TimeTzOffsetCase> TIME_TZ_OFFSET_CASES{
 
 BOOST_DATA_TEST_CASE(timeTzOffsetConversion, data::make(TIME_TZ_OFFSET_CASES), timeTzOffsetCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::CalendarConverter converter{CLIENT, &statusWrapper};
 
@@ -252,8 +247,7 @@ static const std::initializer_list<TimestampTzCase> TIMESTAMP_TZ_CASES{
 
 BOOST_DATA_TEST_CASE(timestampTzConversion, data::make(TIMESTAMP_TZ_CASES), timestampTzCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::CalendarConverter converter{CLIENT, &statusWrapper};
 
@@ -281,8 +275,7 @@ static const std::initializer_list<TimestampTzOffsetCase> TIMESTAMP_TZ_OFFSET_CA
 
 BOOST_DATA_TEST_CASE(timestampTzOffsetConversion, data::make(TIMESTAMP_TZ_OFFSET_CASES), timestampTzOffsetCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
 	impl::CalendarConverter converter{CLIENT, &statusWrapper};
 

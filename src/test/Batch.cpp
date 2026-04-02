@@ -124,8 +124,7 @@ BOOST_AUTO_TEST_CASE(constructorFromAttachmentAndExecute)
 		// Get metadata to build raw messages.
 		auto metadata = batch.getInputMetadata();
 
-		FbUniquePtr<fb::IStatus> tempStatus{CLIENT.newStatus()};
-		impl::StatusWrapper tempWrapper{CLIENT, tempStatus.get()};
+		impl::StatusWrapper tempWrapper{CLIENT};
 		const auto msgLength = metadata->getMessageLength(&tempWrapper);
 		const auto idOffset = metadata->getOffset(&tempWrapper, 0);
 		const auto idNullOffset = metadata->getNullOffset(&tempWrapper, 0);

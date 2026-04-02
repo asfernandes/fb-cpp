@@ -74,7 +74,6 @@ namespace fbcpp
 			  messageLength{o.messageLength},
 			  buffer{std::move(o.buffer)},
 			  descriptors{std::move(o.descriptors)},
-			  status{std::move(o.status)},
 			  statusWrapper{std::move(o.statusWrapper)},
 			  numericConverter{std::move(o.numericConverter)},
 			  calendarConverter{std::move(o.calendarConverter)}
@@ -91,7 +90,6 @@ namespace fbcpp
 				messageLength = o.messageLength;
 				buffer = std::move(o.buffer);
 				descriptors = std::move(o.descriptors);
-				status = std::move(o.status);
 				statusWrapper = std::move(o.statusWrapper);
 				numericConverter = std::move(o.numericConverter);
 				calendarConverter = std::move(o.calendarConverter);
@@ -157,7 +155,6 @@ namespace fbcpp
 		unsigned messageLength = 0;
 		std::vector<std::byte> buffer;
 		std::vector<Descriptor> descriptors;
-		FbUniquePtr<Firebird::IStatus> status;
 		impl::StatusWrapper statusWrapper;
 		impl::NumericConverter numericConverter;
 		impl::CalendarConverter calendarConverter;

@@ -35,8 +35,7 @@ void Client::shutdown()
 	assert(isValid());
 
 	auto dispatcher = fbRef(master->getDispatcher());
-	const auto status = newStatus();
-	StatusWrapper statusWrapper{*this, status.get()};
+	StatusWrapper statusWrapper{*this};
 
 	dispatcher->shutdown(&statusWrapper, 0, fb_shutrsn_app_stopped);
 
