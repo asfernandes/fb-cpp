@@ -39,6 +39,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -69,9 +70,9 @@ namespace fbcpp
 		///
 		/// @param client Client used to build conversion helpers.
 		/// @param descriptors Column descriptors.
-		/// @param message Pointer to the raw row data.
+		/// @param message Span over the raw row data.
 		///
-		Row(Client& client, const std::vector<Descriptor>& descriptors, const std::byte* message)
+		Row(Client& client, const std::vector<Descriptor>& descriptors, std::span<const std::byte> message)
 			: message{message},
 			  descriptors{&descriptors},
 			  client{&client},
@@ -1016,7 +1017,7 @@ namespace fbcpp
 		}
 
 	private:
-		const std::byte* message = nullptr;
+		std::span<const std::byte> message;
 		const std::vector<Descriptor>* descriptors = nullptr;
 		Client* client = nullptr;
 		impl::StatusWrapper statusWrapper;

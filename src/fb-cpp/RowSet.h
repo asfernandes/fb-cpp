@@ -129,8 +129,7 @@ namespace fbcpp
 		Row getRow(unsigned index)
 		{
 			assert(index < count);
-			const auto* data = buffer.data() + static_cast<std::size_t>(index) * messageLength;
-			return Row{*client, descriptors, data};
+			return Row{*client, descriptors, getRawRow(index)};
 		}
 
 		///

@@ -287,7 +287,7 @@ namespace fbcpp
 			  outMetadata{std::move(o.outMetadata)},
 			  outDescriptors{std::move(o.outDescriptors)},
 			  outMessage{std::move(o.outMessage)},
-			  outRow{std::make_unique<Row>(attachment->getClient(), outDescriptors, outMessage.data())},
+			  outRow{std::make_unique<Row>(attachment->getClient(), outDescriptors, std::span{outMessage})},
 			  type{o.type},
 			  cursorFlags{o.cursorFlags}
 		{
@@ -316,7 +316,7 @@ namespace fbcpp
 				outMetadata = std::move(o.outMetadata);
 				outDescriptors = std::move(o.outDescriptors);
 				outMessage = std::move(o.outMessage);
-				outRow = std::make_unique<Row>(attachment->getClient(), outDescriptors, outMessage.data());
+				outRow = std::make_unique<Row>(attachment->getClient(), outDescriptors, std::span{outMessage});
 				type = o.type;
 				cursorFlags = o.cursorFlags;
 

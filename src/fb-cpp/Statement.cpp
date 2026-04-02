@@ -178,7 +178,7 @@ Statement::Statement(
 	outMetadata.reset(statementHandle->getOutputMetadata(&statusWrapper));
 	processMetadata(outMetadata, outDescriptors, outMessage);
 
-	outRow = std::make_unique<Row>(attachment.getClient(), outDescriptors, outMessage.data());
+	outRow = std::make_unique<Row>(attachment.getClient(), outDescriptors, std::span{outMessage});
 }
 
 void Statement::free()
