@@ -166,6 +166,51 @@ BOOST_AUTO_TEST_CASE(moveConstructor)
 	RowSet rowSet2{std::move(rowSet1)};
 	BOOST_CHECK_EQUAL(rowSet2.getCount(), count);
 	BOOST_CHECK_EQUAL(rowSet1.getCount(), 0u);
+
+	// Typed access works on the moved-to RowSet.
+	BOOST_CHECK_EQUAL(rowSet2.getRow(0).getInt32(0).value(), 2);
+	BOOST_CHECK_EQUAL(rowSet2.getRow(1).getInt32(0).value(), 3);
+}
+
+BOOST_AUTO_TEST_CASE(moveAssignment)
+{
+	const auto database = getTempFile("RowSet-moveAssignment.fdb");
+
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+
+	Statement ddl{attachment, transaction, "create table t (col integer)"};
+	ddl.execute(transaction);
+	transaction.commitRetaining();
+
+	Statement insert{attachment, transaction, "insert into t (col) values (?)"};
+	for (int i = 1; i <= 5; ++i)
+	{
+		insert.setInt32(0, i);
+		insert.execute(transaction);
+	}
+
+	Statement select{attachment, transaction, "select col from t order by col"};
+	BOOST_REQUIRE(select.execute(transaction));
+
+	// Fetch rows 2-3 into first batch, rows 4-5 into second.
+	RowSet rowSet1{select, 2};
+	RowSet rowSet2{select, 2};
+
+	BOOST_CHECK_EQUAL(rowSet1.getCount(), 2u);
+	BOOST_CHECK_EQUAL(rowSet1.getRow(0).getInt32(0).value(), 2);
+	BOOST_CHECK_EQUAL(rowSet2.getCount(), 2u);
+	BOOST_CHECK_EQUAL(rowSet2.getRow(0).getInt32(0).value(), 4);
+
+	// Move-assign rowSet2 into rowSet1 (overwrites old data).
+	rowSet1 = std::move(rowSet2);
+
+	BOOST_CHECK_EQUAL(rowSet1.getCount(), 2u);
+	BOOST_CHECK_EQUAL(rowSet1.getRow(0).getInt32(0).value(), 4);
+	BOOST_CHECK_EQUAL(rowSet1.getRow(1).getInt32(0).value(), 5);
+	BOOST_CHECK_EQUAL(rowSet2.getCount(), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(fetchMultipleBatchesFromSameStatement)
