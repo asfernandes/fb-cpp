@@ -250,7 +250,6 @@ namespace fbcpp
 
 	private:
 		Client* client;
-		FbUniquePtr<fb::IStatus> status;
 		impl::StatusWrapper statusWrapper;
 		FbUniquePtr<fb::IBatchCompletionState> handle;
 	};
@@ -447,7 +446,6 @@ namespace fbcpp
 		Client* client;
 		Transaction* transaction;
 		Statement* statement = nullptr;
-		FbUniquePtr<fb::IStatus> status;
 		impl::StatusWrapper statusWrapper;
 		FbRef<fb::IBatch> handle;
 		std::vector<Descriptor> inputDescriptors;

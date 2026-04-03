@@ -32,6 +32,17 @@ using namespace fbcpp;
 using namespace fbcpp::impl;
 
 
+fb::IStatus* StatusWrapper::getStatus() const
+{
+	if (!status)
+	{
+		status = client->newStatus().release();
+		statusOwner = true;
+	}
+
+	return status;
+}
+
 void StatusWrapper::checkException(StatusWrapper* status)
 {
 	if (status->dirty && (status->getState() & fb::IStatus::STATE_ERRORS))

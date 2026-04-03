@@ -31,6 +31,7 @@
 #include "Blob.h"
 #include "Attachment.h"
 #include "Client.h"
+#include "Row.h"
 #include "NumericConverter.h"
 #include "CalendarConverter.h"
 #include "Descriptor.h"
@@ -275,7 +276,6 @@ namespace fbcpp
 		///
 		Statement(Statement&& o) noexcept
 			: attachment{o.attachment},
-			  status{std::move(o.status)},
 			  statusWrapper{std::move(o.statusWrapper)},
 			  calendarConverter{std::move(o.calendarConverter)},
 			  numericConverter{std::move(o.numericConverter)},
@@ -287,9 +287,11 @@ namespace fbcpp
 			  outMetadata{std::move(o.outMetadata)},
 			  outDescriptors{std::move(o.outDescriptors)},
 			  outMessage{std::move(o.outMessage)},
+			  outRow{std::make_unique<Row>(attachment->getClient(), outDescriptors, std::span{outMessage})},
 			  type{o.type},
 			  cursorFlags{o.cursorFlags}
 		{
+			o.outRow.reset();
 		}
 
 		///
@@ -303,7 +305,6 @@ namespace fbcpp
 			if (this != &o)
 			{
 				attachment = o.attachment;
-				status = std::move(o.status);
 				statusWrapper = std::move(o.statusWrapper);
 				calendarConverter = std::move(o.calendarConverter);
 				numericConverter = std::move(o.numericConverter);
@@ -315,8 +316,11 @@ namespace fbcpp
 				outMetadata = std::move(o.outMetadata);
 				outDescriptors = std::move(o.outDescriptors);
 				outMessage = std::move(o.outMessage);
+				outRow = std::make_unique<Row>(attachment->getClient(), outDescriptors, std::span{outMessage});
 				type = o.type;
 				cursorFlags = o.cursorFlags;
+
+				o.outRow.reset();
 			}
 
 			return *this;
@@ -1049,7 +1053,7 @@ namespace fbcpp
 			{
 				case DescriptorAdjustedType::TIME_TZ:
 					*reinterpret_cast<OpaqueTimeTz*>(&message[descriptor.offset]) =
-						calendarConverter.timeTzToOpaqueTimeTz(value);
+						calendarConverter.timeTzToOpaqueTimeTz(&statusWrapper, value);
 					break;
 
 				default:
@@ -1110,7 +1114,7 @@ namespace fbcpp
 			{
 				case DescriptorAdjustedType::TIMESTAMP_TZ:
 					*reinterpret_cast<OpaqueTimestampTz*>(&message[descriptor.offset]) =
-						calendarConverter.timestampTzToOpaqueTimestampTz(value);
+						calendarConverter.timestampTzToOpaqueTimestampTz(&statusWrapper, value);
 					break;
 
 				default:
@@ -1258,11 +1262,13 @@ namespace fbcpp
 					break;
 
 				case DescriptorAdjustedType::TIME_TZ:
-					*reinterpret_cast<OpaqueTimeTz*>(data) = calendarConverter.stringToOpaqueTimeTz(value);
+					*reinterpret_cast<OpaqueTimeTz*>(data) =
+						calendarConverter.stringToOpaqueTimeTz(&statusWrapper, value);
 					break;
 
 				case DescriptorAdjustedType::TIMESTAMP_TZ:
-					*reinterpret_cast<OpaqueTimestampTz*>(data) = calendarConverter.stringToOpaqueTimestampTz(value);
+					*reinterpret_cast<OpaqueTimestampTz*>(data) =
+						calendarConverter.stringToOpaqueTimestampTz(&statusWrapper, value);
 					break;
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
@@ -1608,11 +1614,7 @@ namespace fbcpp
 		bool isNull(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			return *reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE;
+			return outRow->isNull(index);
 		}
 
 		///
@@ -1621,21 +1623,7 @@ namespace fbcpp
 		std::optional<bool> getBool(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::BOOLEAN:
-					return message[descriptor.offset] != std::byte{0};
-
-				default:
-					throwInvalidType("bool", descriptor.adjustedType);
-			}
+			return outRow->getBool(index);
 		}
 
 		///
@@ -1643,8 +1631,8 @@ namespace fbcpp
 		///
 		std::optional<std::int16_t> getInt16(unsigned index)
 		{
-			std::optional<int> scale{0};
-			return getNumber<std::int16_t>(index, scale, "std::int16_t");
+			assert(isValid());
+			return outRow->getInt16(index);
 		}
 
 		///
@@ -1652,9 +1640,8 @@ namespace fbcpp
 		///
 		std::optional<ScaledInt16> getScaledInt16(unsigned index)
 		{
-			std::optional<int> scale;
-			const auto value = getNumber<std::int16_t>(index, scale, "ScaledInt16");
-			return value.has_value() ? std::optional{ScaledInt16{value.value(), scale.value()}} : std::nullopt;
+			assert(isValid());
+			return outRow->getScaledInt16(index);
 		}
 
 		///
@@ -1662,8 +1649,8 @@ namespace fbcpp
 		///
 		std::optional<std::int32_t> getInt32(unsigned index)
 		{
-			std::optional<int> scale{0};
-			return getNumber<std::int32_t>(index, scale, "std::int32_t");
+			assert(isValid());
+			return outRow->getInt32(index);
 		}
 
 		///
@@ -1671,9 +1658,8 @@ namespace fbcpp
 		///
 		std::optional<ScaledInt32> getScaledInt32(unsigned index)
 		{
-			std::optional<int> scale;
-			const auto value = getNumber<std::int32_t>(index, scale, "ScaledInt32");
-			return value.has_value() ? std::optional{ScaledInt32{value.value(), scale.value()}} : std::nullopt;
+			assert(isValid());
+			return outRow->getScaledInt32(index);
 		}
 
 		///
@@ -1681,8 +1667,8 @@ namespace fbcpp
 		///
 		std::optional<std::int64_t> getInt64(unsigned index)
 		{
-			std::optional<int> scale{0};
-			return getNumber<std::int64_t>(index, scale, "std::int64_t");
+			assert(isValid());
+			return outRow->getInt64(index);
 		}
 
 		///
@@ -1690,9 +1676,8 @@ namespace fbcpp
 		///
 		std::optional<ScaledInt64> getScaledInt64(unsigned index)
 		{
-			std::optional<int> scale;
-			const auto value = getNumber<std::int64_t>(index, scale, "ScaledInt64");
-			return value.has_value() ? std::optional{ScaledInt64{value.value(), scale.value()}} : std::nullopt;
+			assert(isValid());
+			return outRow->getScaledInt64(index);
 		}
 
 		///
@@ -1701,23 +1686,7 @@ namespace fbcpp
 		std::optional<ScaledOpaqueInt128> getScaledOpaqueInt128(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::INT128:
-					return ScaledOpaqueInt128{
-						OpaqueInt128{*reinterpret_cast<const OpaqueInt128*>(&message[descriptor.offset])},
-						descriptor.scale};
-
-				default:
-					throwInvalidType("ScaledOpaqueInt128", descriptor.adjustedType);
-			}
+			return outRow->getScaledOpaqueInt128(index);
 		}
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
@@ -1726,9 +1695,8 @@ namespace fbcpp
 		///
 		std::optional<BoostInt128> getBoostInt128(unsigned index)
 		{
-			std::optional<int> scale{0};
-			const auto value = getNumber<BoostInt128>(index, scale, "BoostInt128");
-			return value.has_value() ? std::optional{value.value()} : std::nullopt;
+			assert(isValid());
+			return outRow->getBoostInt128(index);
 		}
 
 		///
@@ -1736,9 +1704,8 @@ namespace fbcpp
 		///
 		std::optional<ScaledBoostInt128> getScaledBoostInt128(unsigned index)
 		{
-			std::optional<int> scale;
-			const auto value = getNumber<BoostInt128>(index, scale, "ScaledBoostInt128");
-			return value.has_value() ? std::optional{ScaledBoostInt128{value.value(), scale.value()}} : std::nullopt;
+			assert(isValid());
+			return outRow->getScaledBoostInt128(index);
 		}
 #endif
 
@@ -1747,8 +1714,8 @@ namespace fbcpp
 		///
 		std::optional<float> getFloat(unsigned index)
 		{
-			std::optional<int> scale{0};
-			return getNumber<float>(index, scale, "float");
+			assert(isValid());
+			return outRow->getFloat(index);
 		}
 
 		///
@@ -1756,8 +1723,8 @@ namespace fbcpp
 		///
 		std::optional<double> getDouble(unsigned index)
 		{
-			std::optional<int> scale{0};
-			return getNumber<double>(index, scale, "double");
+			assert(isValid());
+			return outRow->getDouble(index);
 		}
 
 		///
@@ -1766,21 +1733,7 @@ namespace fbcpp
 		std::optional<OpaqueDecFloat16> getOpaqueDecFloat16(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::DECFLOAT16:
-					return OpaqueDecFloat16{*reinterpret_cast<const OpaqueDecFloat16*>(&message[descriptor.offset])};
-
-				default:
-					throwInvalidType("OpaqueDecFloat16", descriptor.adjustedType);
-			}
+			return outRow->getOpaqueDecFloat16(index);
 		}
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
@@ -1789,8 +1742,8 @@ namespace fbcpp
 		///
 		std::optional<BoostDecFloat16> getBoostDecFloat16(unsigned index)
 		{
-			std::optional<int> scale{0};
-			return getNumber<BoostDecFloat16>(index, scale, "BoostDecFloat16");
+			assert(isValid());
+			return outRow->getBoostDecFloat16(index);
 		}
 #endif
 
@@ -1800,21 +1753,7 @@ namespace fbcpp
 		std::optional<OpaqueDecFloat34> getOpaqueDecFloat34(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::DECFLOAT34:
-					return OpaqueDecFloat34{*reinterpret_cast<const OpaqueDecFloat34*>(&message[descriptor.offset])};
-
-				default:
-					throwInvalidType("OpaqueDecFloat34", descriptor.adjustedType);
-			}
+			return outRow->getOpaqueDecFloat34(index);
 		}
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
@@ -1823,8 +1762,8 @@ namespace fbcpp
 		///
 		std::optional<BoostDecFloat34> getBoostDecFloat34(unsigned index)
 		{
-			std::optional<int> scale{0};
-			return getNumber<BoostDecFloat34>(index, scale, "BoostDecFloat34");
+			assert(isValid());
+			return outRow->getBoostDecFloat34(index);
 		}
 #endif
 
@@ -1834,22 +1773,7 @@ namespace fbcpp
 		std::optional<Date> getDate(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::DATE:
-					return calendarConverter.opaqueDateToDate(
-						*reinterpret_cast<const OpaqueDate*>(&message[descriptor.offset]));
-
-				default:
-					throwInvalidType("Date", descriptor.adjustedType);
-			}
+			return outRow->getDate(index);
 		}
 
 		///
@@ -1858,21 +1782,7 @@ namespace fbcpp
 		std::optional<OpaqueDate> getOpaqueDate(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::DATE:
-					return OpaqueDate{*reinterpret_cast<const OpaqueDate*>(&message[descriptor.offset])};
-
-				default:
-					throwInvalidType("OpaqueDate", descriptor.adjustedType);
-			}
+			return outRow->getOpaqueDate(index);
 		}
 
 		///
@@ -1881,22 +1791,7 @@ namespace fbcpp
 		std::optional<Time> getTime(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::TIME:
-					return calendarConverter.opaqueTimeToTime(
-						*reinterpret_cast<const OpaqueTime*>(&message[descriptor.offset]));
-
-				default:
-					throwInvalidType("Time", descriptor.adjustedType);
-			}
+			return outRow->getTime(index);
 		}
 
 		///
@@ -1905,21 +1800,7 @@ namespace fbcpp
 		std::optional<OpaqueTime> getOpaqueTime(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::TIME:
-					return OpaqueTime{*reinterpret_cast<const OpaqueTime*>(&message[descriptor.offset])};
-
-				default:
-					throwInvalidType("OpaqueTime", descriptor.adjustedType);
-			}
+			return outRow->getOpaqueTime(index);
 		}
 
 		///
@@ -1928,22 +1809,7 @@ namespace fbcpp
 		std::optional<Timestamp> getTimestamp(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::TIMESTAMP:
-					return calendarConverter.opaqueTimestampToTimestamp(
-						*reinterpret_cast<const OpaqueTimestamp*>(&message[descriptor.offset]));
-
-				default:
-					throwInvalidType("Timestamp", descriptor.adjustedType);
-			}
+			return outRow->getTimestamp(index);
 		}
 
 		///
@@ -1952,21 +1818,7 @@ namespace fbcpp
 		std::optional<OpaqueTimestamp> getOpaqueTimestamp(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::TIMESTAMP:
-					return OpaqueTimestamp{*reinterpret_cast<const OpaqueTimestamp*>(&message[descriptor.offset])};
-
-				default:
-					throwInvalidType("OpaqueTimestamp", descriptor.adjustedType);
-			}
+			return outRow->getOpaqueTimestamp(index);
 		}
 
 		///
@@ -1975,22 +1827,7 @@ namespace fbcpp
 		std::optional<TimeTz> getTimeTz(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::TIME_TZ:
-					return calendarConverter.opaqueTimeTzToTimeTz(
-						*reinterpret_cast<const OpaqueTimeTz*>(&message[descriptor.offset]));
-
-				default:
-					throwInvalidType("TimeTz", descriptor.adjustedType);
-			}
+			return outRow->getTimeTz(index);
 		}
 
 		///
@@ -1999,21 +1836,7 @@ namespace fbcpp
 		std::optional<OpaqueTimeTz> getOpaqueTimeTz(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::TIME_TZ:
-					return OpaqueTimeTz{*reinterpret_cast<const OpaqueTimeTz*>(&message[descriptor.offset])};
-
-				default:
-					throwInvalidType("OpaqueTimeTz", descriptor.adjustedType);
-			}
+			return outRow->getOpaqueTimeTz(index);
 		}
 
 		///
@@ -2022,22 +1845,7 @@ namespace fbcpp
 		std::optional<TimestampTz> getTimestampTz(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::TIMESTAMP_TZ:
-					return calendarConverter.opaqueTimestampTzToTimestampTz(
-						*reinterpret_cast<const OpaqueTimestampTz*>(&message[descriptor.offset]));
-
-				default:
-					throwInvalidType("TimestampTz", descriptor.adjustedType);
-			}
+			return outRow->getTimestampTz(index);
 		}
 
 		///
@@ -2046,21 +1854,7 @@ namespace fbcpp
 		std::optional<OpaqueTimestampTz> getOpaqueTimestampTz(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::TIMESTAMP_TZ:
-					return OpaqueTimestampTz{*reinterpret_cast<const OpaqueTimestampTz*>(&message[descriptor.offset])};
-
-				default:
-					throwInvalidType("OpaqueTimestampTz", descriptor.adjustedType);
-			}
+			return outRow->getOpaqueTimestampTz(index);
 		}
 
 		///
@@ -2069,25 +1863,7 @@ namespace fbcpp
 		std::optional<BlobId> getBlobId(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::BLOB:
-				{
-					BlobId value;
-					value.id = *reinterpret_cast<const ISC_QUAD*>(&message[descriptor.offset]);
-					return value;
-				}
-
-				default:
-					throwInvalidType("BlobId", descriptor.adjustedType);
-			}
+			return outRow->getBlobId(index);
 		}
 
 		///
@@ -2096,71 +1872,7 @@ namespace fbcpp
 		std::optional<std::string> getString(unsigned index)
 		{
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			const auto data = &message[descriptor.offset];
-
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::BOOLEAN:
-					return (message[descriptor.offset] != std::byte{0}) ? std::string{"true"} : std::string{"false"};
-
-				case DescriptorAdjustedType::INT16:
-					return numericConverter.numberToString(
-						ScaledInt16{*reinterpret_cast<const std::int16_t*>(data), descriptor.scale});
-
-				case DescriptorAdjustedType::INT32:
-					return numericConverter.numberToString(
-						ScaledInt32{*reinterpret_cast<const std::int32_t*>(data), descriptor.scale});
-
-				case DescriptorAdjustedType::INT64:
-					return numericConverter.numberToString(
-						ScaledInt64{*reinterpret_cast<const std::int64_t*>(data), descriptor.scale});
-
-				case DescriptorAdjustedType::INT128:
-					return numericConverter.opaqueInt128ToString(
-						*reinterpret_cast<const OpaqueInt128*>(data), descriptor.scale);
-
-				case DescriptorAdjustedType::FLOAT:
-					return numericConverter.numberToString(*reinterpret_cast<const float*>(data));
-
-				case DescriptorAdjustedType::DOUBLE:
-					return numericConverter.numberToString(*reinterpret_cast<const double*>(data));
-
-				case DescriptorAdjustedType::DATE:
-					return calendarConverter.opaqueDateToString(*reinterpret_cast<const OpaqueDate*>(data));
-
-				case DescriptorAdjustedType::TIME:
-					return calendarConverter.opaqueTimeToString(*reinterpret_cast<const OpaqueTime*>(data));
-
-				case DescriptorAdjustedType::TIMESTAMP:
-					return calendarConverter.opaqueTimestampToString(*reinterpret_cast<const OpaqueTimestamp*>(data));
-
-				case DescriptorAdjustedType::TIME_TZ:
-					return calendarConverter.opaqueTimeTzToString(*reinterpret_cast<const OpaqueTimeTz*>(data));
-
-				case DescriptorAdjustedType::TIMESTAMP_TZ:
-					return calendarConverter.opaqueTimestampTzToString(
-						*reinterpret_cast<const OpaqueTimestampTz*>(data));
-
-				case DescriptorAdjustedType::DECFLOAT16:
-					return numericConverter.opaqueDecFloat16ToString(*reinterpret_cast<const OpaqueDecFloat16*>(data));
-
-				case DescriptorAdjustedType::DECFLOAT34:
-					return numericConverter.opaqueDecFloat34ToString(*reinterpret_cast<const OpaqueDecFloat34*>(data));
-
-				case DescriptorAdjustedType::STRING:
-					return std::string{reinterpret_cast<const char*>(data + sizeof(std::uint16_t)),
-						*reinterpret_cast<const std::uint16_t*>(data)};
-
-				default:
-					throwInvalidType("std::string", descriptor.adjustedType);
-			}
+			return outRow->getString(index);
 		}
 
 		///
@@ -2171,7 +1883,11 @@ namespace fbcpp
 		/// @brief Retrieves a column using the most appropriate typed accessor specialization.
 		///
 		template <typename T>
-		T get(unsigned index);
+		T get(unsigned index)
+		{
+			assert(isValid());
+			return outRow->get<T>(index);
+		}
 
 		///
 		/// @brief Retrieves all output columns into a user-defined aggregate struct.
@@ -2183,17 +1899,8 @@ namespace fbcpp
 		template <Aggregate T>
 		T get()
 		{
-			using namespace impl::reflection;
-
-			constexpr std::size_t N = fieldCountV<T>;
-
-			if (N != outDescriptors.size())
-			{
-				throw FbCppException("Struct field count (" + std::to_string(N) +
-					") does not match output column count (" + std::to_string(outDescriptors.size()) + ")");
-			}
-
-			return getStruct<T>(std::make_index_sequence<N>{});
+			assert(isValid());
+			return outRow->get<T>();
 		}
 
 		///
@@ -2228,17 +1935,8 @@ namespace fbcpp
 		template <TupleLike T>
 		T get()
 		{
-			using namespace impl::reflection;
-
-			constexpr std::size_t N = std::tuple_size_v<T>;
-
-			if (N != outDescriptors.size())
-			{
-				throw FbCppException("Tuple element count (" + std::to_string(N) +
-					") does not match output column count (" + std::to_string(outDescriptors.size()) + ")");
-			}
-
-			return getTuple<T>(std::make_index_sequence<N>{});
+			assert(isValid());
+			return outRow->get<T>();
 		}
 
 		///
@@ -2272,30 +1970,8 @@ namespace fbcpp
 		template <VariantLike V>
 		V get(unsigned index)
 		{
-			using namespace impl::reflection;
-
-			static_assert(variantAlternativesSupportedV<V>,
-				"Variant contains unsupported types. All variant alternatives must be types supported by fb-cpp "
-				"(e.g., std::int32_t, std::string, Date, ScaledOpaqueInt128, etc.). Check VariantTypeTraits.h for the "
-				"complete list of supported types.");
-
 			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-
-			if (isNull(index))
-			{
-				if constexpr (variantContainsV<std::monostate, V>)
-					return V{std::monostate{}};
-				else
-				{
-					throw FbCppException(
-						"NULL value encountered but variant does not contain std::monostate at index " +
-						std::to_string(index));
-				}
-			}
-
-			return getVariantValue<V>(index, descriptor);
+			return outRow->get<V>(index);
 		}
 
 		///
@@ -2340,54 +2016,6 @@ namespace fbcpp
 		}
 
 		///
-		/// @brief Validates and returns the descriptor for the given output column index.
-		///
-		const Descriptor& getOutDescriptor(unsigned index)
-		{
-			if (index >= outDescriptors.size())
-				throw std::out_of_range("index out of range");
-
-			return outDescriptors[index];
-		}
-
-		///
-		/// @brief Helper to retrieve all output columns into a struct.
-		///
-		template <typename T, std::size_t... Is>
-		T getStruct(std::index_sequence<Is...>)
-		{
-			using namespace impl::reflection;
-
-			return T{getStructField<FieldType<T, Is>>(static_cast<unsigned>(Is))...};
-		}
-
-		///
-		/// @brief Helper to get a single field value, throwing if NULL for non-optional fields.
-		///
-		template <typename F>
-		auto getStructField(unsigned index)
-		{
-			using namespace impl::reflection;
-
-			if constexpr (isOptionalV<F>)
-				return get<F>(index);
-			else if constexpr (isVariantV<F>)
-				return get<F>(index);
-			else
-			{
-				auto opt = get<std::optional<F>>(index);
-
-				if (!opt.has_value())
-				{
-					throw FbCppException(
-						"Null value encountered for non-optional field at index " + std::to_string(index));
-				}
-
-				return std::move(opt.value());
-			}
-		}
-
-		///
 		/// @brief Helper to set all input parameters from a struct.
 		///
 		template <typename T, std::size_t... Is>
@@ -2400,228 +2028,12 @@ namespace fbcpp
 		}
 
 		///
-		/// @brief Helper to retrieve all output columns into a tuple.
-		///
-		template <typename T, std::size_t... Is>
-		T getTuple(std::index_sequence<Is...>)
-		{
-			using namespace impl::reflection;
-
-			return T{getStructField<std::tuple_element_t<Is, T>>(static_cast<unsigned>(Is))...};
-		}
-
-		///
 		/// @brief Helper to set all input parameters from a tuple.
 		///
 		template <typename T, std::size_t... Is>
 		void setTuple(const T& value, std::index_sequence<Is...>)
 		{
 			(set(static_cast<unsigned>(Is), std::get<Is>(value)), ...);
-		}
-
-		///
-		/// @brief Helper to retrieve a column value as a variant.
-		/// Uses priority: exact type match first, then declaration order for conversions.
-		///
-		template <typename V>
-		V getVariantValue(unsigned index, const Descriptor& descriptor)
-		{
-			using namespace impl::reflection;
-
-			// Try exact type matches first based on SQL type
-			switch (descriptor.adjustedType)
-			{
-				case DescriptorAdjustedType::BOOLEAN:
-					if constexpr (variantContainsV<bool, V>)
-						return V{get<std::optional<bool>>(index).value()};
-					break;
-
-				case DescriptorAdjustedType::INT16:
-					if (descriptor.scale != 0)
-					{
-						// For scaled numbers, prefer exact scaled type, then larger scaled types
-						if constexpr (variantContainsV<ScaledInt16, V>)
-							return V{get<std::optional<ScaledInt16>>(index).value()};
-						if constexpr (variantContainsV<ScaledInt32, V>)
-							return V{get<std::optional<ScaledInt32>>(index).value()};
-						if constexpr (variantContainsV<ScaledInt64, V>)
-							return V{get<std::optional<ScaledInt64>>(index).value()};
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-						if constexpr (variantContainsV<ScaledBoostInt128, V>)
-							return V{get<std::optional<ScaledBoostInt128>>(index).value()};
-#endif
-					}
-					if constexpr (variantContainsV<std::int16_t, V>)
-						return V{get<std::optional<std::int16_t>>(index).value()};
-					break;
-
-				case DescriptorAdjustedType::INT32:
-					if (descriptor.scale != 0)
-					{
-						// For scaled numbers, prefer exact scaled type, then larger scaled types
-						if constexpr (variantContainsV<ScaledInt32, V>)
-							return V{get<std::optional<ScaledInt32>>(index).value()};
-						if constexpr (variantContainsV<ScaledInt64, V>)
-							return V{get<std::optional<ScaledInt64>>(index).value()};
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-						if constexpr (variantContainsV<ScaledBoostInt128, V>)
-							return V{get<std::optional<ScaledBoostInt128>>(index).value()};
-#endif
-					}
-					if constexpr (variantContainsV<std::int32_t, V>)
-						return V{get<std::optional<std::int32_t>>(index).value()};
-					break;
-
-				case DescriptorAdjustedType::INT64:
-					if (descriptor.scale != 0)
-					{
-						// For scaled numbers, prefer exact scaled type, then larger scaled types
-						if constexpr (variantContainsV<ScaledInt64, V>)
-							return V{get<std::optional<ScaledInt64>>(index).value()};
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-						if constexpr (variantContainsV<ScaledBoostInt128, V>)
-							return V{get<std::optional<ScaledBoostInt128>>(index).value()};
-#endif
-					}
-					if constexpr (variantContainsV<std::int64_t, V>)
-						return V{get<std::optional<std::int64_t>>(index).value()};
-					break;
-
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-				case DescriptorAdjustedType::INT128:
-					// Prefer opaque (native Firebird) types first
-					if constexpr (variantContainsV<ScaledOpaqueInt128, V>)
-						return V{get<std::optional<ScaledOpaqueInt128>>(index).value()};
-					else if (descriptor.scale != 0)
-					{
-						if constexpr (variantContainsV<ScaledBoostInt128, V>)
-							return V{get<std::optional<ScaledBoostInt128>>(index).value()};
-					}
-					else if constexpr (variantContainsV<BoostInt128, V>)
-						return V{get<std::optional<BoostInt128>>(index).value()};
-					break;
-#endif
-
-				case DescriptorAdjustedType::FLOAT:
-					if constexpr (variantContainsV<float, V>)
-						return V{get<std::optional<float>>(index).value()};
-					break;
-
-				case DescriptorAdjustedType::DOUBLE:
-					if constexpr (variantContainsV<double, V>)
-						return V{get<std::optional<double>>(index).value()};
-					break;
-
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-				case DescriptorAdjustedType::DECFLOAT16:
-					// Prefer opaque (native Firebird) types first
-					if constexpr (variantContainsV<OpaqueDecFloat16, V>)
-						return V{get<std::optional<OpaqueDecFloat16>>(index).value()};
-					else if constexpr (variantContainsV<BoostDecFloat16, V>)
-						return V{get<std::optional<BoostDecFloat16>>(index).value()};
-					break;
-
-				case DescriptorAdjustedType::DECFLOAT34:
-					// Prefer opaque (native Firebird) types first
-					if constexpr (variantContainsV<OpaqueDecFloat34, V>)
-						return V{get<std::optional<OpaqueDecFloat34>>(index).value()};
-					else if constexpr (variantContainsV<BoostDecFloat34, V>)
-						return V{get<std::optional<BoostDecFloat34>>(index).value()};
-					break;
-#endif
-
-				case DescriptorAdjustedType::STRING:
-					if constexpr (variantContainsV<std::string, V>)
-						return V{get<std::optional<std::string>>(index).value()};
-					break;
-
-				case DescriptorAdjustedType::DATE:
-					// Prefer opaque (native Firebird) types first
-					if constexpr (variantContainsV<OpaqueDate, V>)
-						return V{get<std::optional<OpaqueDate>>(index).value()};
-					else if constexpr (variantContainsV<Date, V>)
-						return V{get<std::optional<Date>>(index).value()};
-					break;
-
-				case DescriptorAdjustedType::TIME:
-					// Prefer opaque (native Firebird) types first
-					if constexpr (variantContainsV<OpaqueTime, V>)
-						return V{get<std::optional<OpaqueTime>>(index).value()};
-					else if constexpr (variantContainsV<Time, V>)
-						return V{get<std::optional<Time>>(index).value()};
-					break;
-
-				case DescriptorAdjustedType::TIMESTAMP:
-					// Prefer opaque (native Firebird) types first
-					if constexpr (variantContainsV<OpaqueTimestamp, V>)
-						return V{get<std::optional<OpaqueTimestamp>>(index).value()};
-					else if constexpr (variantContainsV<Timestamp, V>)
-						return V{get<std::optional<Timestamp>>(index).value()};
-					break;
-
-				case DescriptorAdjustedType::TIME_TZ:
-					// Prefer opaque (native Firebird) types first
-					if constexpr (variantContainsV<OpaqueTimeTz, V>)
-						return V{get<std::optional<OpaqueTimeTz>>(index).value()};
-					else if constexpr (variantContainsV<TimeTz, V>)
-						return V{get<std::optional<TimeTz>>(index).value()};
-					break;
-
-				case DescriptorAdjustedType::TIMESTAMP_TZ:
-					// Prefer opaque (native Firebird) types first
-					if constexpr (variantContainsV<OpaqueTimestampTz, V>)
-						return V{get<std::optional<OpaqueTimestampTz>>(index).value()};
-					else if constexpr (variantContainsV<TimestampTz, V>)
-						return V{get<std::optional<TimestampTz>>(index).value()};
-					break;
-
-				case DescriptorAdjustedType::BLOB:
-					if constexpr (variantContainsV<BlobId, V>)
-						return V{get<std::optional<BlobId>>(index).value()};
-					break;
-
-				default:
-					break;
-			}
-
-			// No exact match found, try variant alternatives in declaration order
-			return tryVariantAlternatives<V, 0>(index, descriptor);
-		}
-
-		///
-		/// @brief Recursively tries variant alternatives for type conversion.
-		///
-		template <typename V, std::size_t I = 0>
-		V tryVariantAlternatives(unsigned index, [[maybe_unused]] const Descriptor& descriptor)
-		{
-			using namespace impl::reflection;
-
-			if constexpr (I >= std::variant_size_v<V>)
-			{
-				throw FbCppException(
-					"Cannot convert SQL type to any variant alternative at index " + std::to_string(index));
-			}
-			else
-			{
-				using Alt = std::variant_alternative_t<I, V>;
-
-				if constexpr (std::is_same_v<Alt, std::monostate>)
-				{
-					// Skip monostate in non-null case
-					return tryVariantAlternatives<V, I + 1>(index, descriptor);
-				}
-				else if constexpr (isOpaqueTypeV<Alt>)
-				{
-					// Skip opaque types - they only match exact SQL types, no conversions
-					return tryVariantAlternatives<V, I + 1>(index, descriptor);
-				}
-				else
-				{
-					// Try this alternative - get<T> will throw if conversion fails
-					auto opt = get<std::optional<Alt>>(index);
-					return V{std::move(opt.value())};
-				}
-			}
 		}
 
 		///
@@ -2688,7 +2100,7 @@ namespace fbcpp
 					const auto boostDecFloat16 = convertNumber<BoostDecFloat16>(
 						valueDescriptor, valueAddress, descriptorScale, "BoostDecFloat16");
 					*reinterpret_cast<OpaqueDecFloat16*>(descriptorData) =
-						numericConverter.boostDecFloat16ToOpaqueDecFloat16(boostDecFloat16);
+						numericConverter.boostDecFloat16ToOpaqueDecFloat16(&statusWrapper, boostDecFloat16);
 					break;
 				}
 
@@ -2697,7 +2109,7 @@ namespace fbcpp
 					const auto boostDecFloat34 = convertNumber<BoostDecFloat34>(
 						valueDescriptor, valueAddress, descriptorScale, "BoostDecFloat34");
 					*reinterpret_cast<OpaqueDecFloat34*>(descriptorData) =
-						numericConverter.boostDecFloat34ToOpaqueDecFloat34(boostDecFloat34);
+						numericConverter.boostDecFloat34ToOpaqueDecFloat34(&statusWrapper, boostDecFloat34);
 					break;
 				}
 #endif
@@ -2707,58 +2119,6 @@ namespace fbcpp
 			}
 
 			*reinterpret_cast<std::int16_t*>(&message[descriptor.nullOffset]) = FB_FALSE;
-		}
-
-		// FIXME: floating to integral
-		///
-		/// @brief Reads numeric column data, performing conversion to the desired type.
-		///
-		template <typename T>
-		std::optional<T> getNumber(unsigned index, std::optional<int>& scale, const char* typeName)
-		{
-			assert(isValid());
-
-			const auto& descriptor = getOutDescriptor(index);
-			const auto* const message = outMessage.data();
-
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
-				return std::nullopt;
-
-			auto data = &message[descriptor.offset];
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-			std::optional<BoostInt128> boostInt128;
-			std::optional<BoostDecFloat16> boostDecFloat16;
-			std::optional<BoostDecFloat34> boostDecFloat34;
-#endif
-
-			// FIXME: Use IUtil
-			switch (descriptor.adjustedType)
-			{
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-				case DescriptorAdjustedType::INT128:
-					boostInt128.emplace(
-						numericConverter.opaqueInt128ToBoostInt128(*reinterpret_cast<const OpaqueInt128*>(data)));
-					data = reinterpret_cast<const std::byte*>(&boostInt128.value());
-					break;
-
-				case DescriptorAdjustedType::DECFLOAT16:
-					boostDecFloat16.emplace(numericConverter.opaqueDecFloat16ToBoostDecFloat16(
-						*reinterpret_cast<const OpaqueDecFloat16*>(data)));
-					data = reinterpret_cast<const std::byte*>(&boostDecFloat16.value());
-					break;
-
-				case DescriptorAdjustedType::DECFLOAT34:
-					boostDecFloat34.emplace(numericConverter.opaqueDecFloat34ToBoostDecFloat34(
-						*reinterpret_cast<const OpaqueDecFloat34*>(data)));
-					data = reinterpret_cast<const std::byte*>(&boostDecFloat34.value());
-					break;
-#endif
-
-				default:
-					break;
-			}
-
-			return convertNumber<T>(descriptor, data, scale, typeName);
 		}
 
 		[[noreturn]] static void throwInvalidType(const char* actualType, DescriptorAdjustedType descriptorType)
@@ -2833,7 +2193,6 @@ namespace fbcpp
 
 	private:
 		Attachment* attachment;
-		FbUniquePtr<Firebird::IStatus> status;
 		impl::StatusWrapper statusWrapper;
 		impl::CalendarConverter calendarConverter;
 		impl::NumericConverter numericConverter;
@@ -2845,6 +2204,7 @@ namespace fbcpp
 		FbRef<fb::IMessageMetadata> outMetadata;
 		std::vector<Descriptor> outDescriptors;
 		std::vector<std::byte> outMessage;
+		std::unique_ptr<Row> outRow;
 		StatementType type;
 		unsigned cursorFlags = 0;
 	};

@@ -139,8 +139,7 @@ Transaction::Transaction(Attachment& attachment, const TransactionOptions& optio
 
 	const auto master = client.getMaster();
 
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
+	StatusWrapper statusWrapper{client};
 
 	auto tpbBuilder = buildTpb(master, statusWrapper, options);
 	const auto tpbBuffer = tpbBuilder->getBuffer(&statusWrapper);
@@ -154,8 +153,7 @@ Transaction::Transaction(Attachment& attachment, std::string_view setTransaction
 {
 	assert(attachment.isValid());
 
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
+	StatusWrapper statusWrapper{client};
 
 	handle.reset(
 		attachment.getHandle()->execute(&statusWrapper, nullptr, static_cast<unsigned>(setTransactionCmd.length()),
@@ -179,8 +177,7 @@ Transaction::Transaction(std::span<std::reference_wrapper<Attachment>> attachmen
 
 	const auto master = client.getMaster();
 
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
+	StatusWrapper statusWrapper{client};
 
 	auto tpbBuilder = buildTpb(master, statusWrapper, options);
 	const auto tpbBuffer = tpbBuilder->getBuffer(&statusWrapper);
@@ -203,8 +200,7 @@ void Transaction::rollback()
 	assert(isValid());
 	assert(state == TransactionState::ACTIVE || state == TransactionState::PREPARED);
 
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
+	StatusWrapper statusWrapper{client};
 
 	handle->rollback(&statusWrapper);
 	handle.reset();
@@ -216,8 +212,7 @@ void Transaction::commit()
 	assert(isValid());
 	assert(state == TransactionState::ACTIVE || state == TransactionState::PREPARED);
 
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
+	StatusWrapper statusWrapper{client};
 
 	handle->commit(&statusWrapper);
 	handle.reset();
@@ -229,8 +224,7 @@ void Transaction::commitRetaining()
 	assert(isValid());
 	assert(state == TransactionState::ACTIVE);
 
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
+	StatusWrapper statusWrapper{client};
 
 	handle->commitRetaining(&statusWrapper);
 }
@@ -240,8 +234,7 @@ void Transaction::rollbackRetaining()
 	assert(isValid());
 	assert(state == TransactionState::ACTIVE);
 
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
+	StatusWrapper statusWrapper{client};
 
 	handle->rollbackRetaining(&statusWrapper);
 }
@@ -256,8 +249,7 @@ void Transaction::prepare(std::span<const std::uint8_t> message)
 	assert(isValid());
 	assert(state == TransactionState::ACTIVE);
 
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
+	StatusWrapper statusWrapper{client};
 
 	handle->prepare(&statusWrapper, static_cast<unsigned>(message.size()), message.data());
 	state = TransactionState::PREPARED;

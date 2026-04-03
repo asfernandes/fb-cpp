@@ -34,10 +34,9 @@ using namespace fbcpp::impl;
 Statement::Statement(
 	Attachment& attachment, Transaction& transaction, std::string_view sql, const StatementOptions& options)
 	: attachment{&attachment},
-	  status{attachment.getClient().newStatus()},
-	  statusWrapper{attachment.getClient(), status.get()},
-	  calendarConverter{attachment.getClient(), &statusWrapper},
-	  numericConverter{attachment.getClient(), &statusWrapper}
+	  statusWrapper{attachment.getClient()},
+	  calendarConverter{attachment.getClient()},
+	  numericConverter{attachment.getClient()}
 {
 	assert(attachment.isValid());
 	assert(transaction.isValid());
@@ -178,6 +177,8 @@ Statement::Statement(
 
 	outMetadata.reset(statementHandle->getOutputMetadata(&statusWrapper));
 	processMetadata(outMetadata, outDescriptors, outMessage);
+
+	outRow = std::make_unique<Row>(attachment.getClient(), outDescriptors, std::span{outMessage});
 }
 
 void Statement::free()

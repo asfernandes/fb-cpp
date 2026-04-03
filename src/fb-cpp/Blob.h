@@ -284,7 +284,6 @@ namespace fbcpp
 			: attachment{o.attachment},
 			  transaction{o.transaction},
 			  id{o.id},
-			  status{std::move(o.status)},
 			  statusWrapper{std::move(o.statusWrapper)},
 			  handle{std::move(o.handle)}
 		{
@@ -427,7 +426,6 @@ namespace fbcpp
 		Attachment& attachment;
 		Transaction& transaction;
 		BlobId id;
-		FbUniquePtr<fb::IStatus> status;
 		impl::StatusWrapper statusWrapper;
 		FbRef<fb::IBlob> handle;
 	};

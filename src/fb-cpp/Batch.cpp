@@ -36,15 +36,13 @@ using namespace fbcpp::impl;
 
 BatchCompletionState::BatchCompletionState(Client& client, FbUniquePtr<fb::IBatchCompletionState> handle) noexcept
 	: client{&client},
-	  status{client.newStatus()},
-	  statusWrapper{client, status.get()},
+	  statusWrapper{client},
 	  handle{std::move(handle)}
 {
 }
 
 BatchCompletionState::BatchCompletionState(BatchCompletionState&& o) noexcept
 	: client{o.client},
-	  status{std::move(o.status)},
 	  statusWrapper{std::move(o.statusWrapper)},
 	  handle{std::move(o.handle)}
 {
@@ -102,8 +100,7 @@ Batch::Batch(Statement& statement, Transaction& transaction, const BatchOptions&
 	: client{&statement.getAttachment().getClient()},
 	  transaction{&transaction},
 	  statement{&statement},
-	  status{client->newStatus()},
-	  statusWrapper{*client, status.get()}
+	  statusWrapper{*client}
 {
 	assert(statement.isValid());
 	assert(transaction.isValid());
@@ -118,8 +115,7 @@ Batch::Batch(Attachment& attachment, Transaction& transaction, std::string_view 
 	const BatchOptions& options)
 	: client{&attachment.getClient()},
 	  transaction{&transaction},
-	  status{client->newStatus()},
-	  statusWrapper{*client, status.get()}
+	  statusWrapper{*client}
 {
 	assert(attachment.isValid());
 	assert(transaction.isValid());
@@ -135,7 +131,6 @@ Batch::Batch(Batch&& o) noexcept
 	: client{o.client},
 	  transaction{o.transaction},
 	  statement{o.statement},
-	  status{std::move(o.status)},
 	  statusWrapper{std::move(o.statusWrapper)},
 	  handle{std::move(o.handle)}
 {

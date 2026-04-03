@@ -104,8 +104,7 @@ EventListener::EventListener(Attachment& attachment, const std::vector<std::stri
 	listening = true;
 	running = true;
 
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
+	StatusWrapper statusWrapper{client};
 
 	eventsHandle.reset(attachment.getHandle()->queEvents(
 		&statusWrapper, &firebirdCallback, static_cast<unsigned>(eventBuffer.size()), eventBuffer.data()));
@@ -249,8 +248,7 @@ void EventListener::handleEvent(unsigned length, const std::uint8_t* events)
 			return;
 		}
 
-		const auto status = client.newStatus();
-		StatusWrapper statusWrapper{client, status.get()};
+		StatusWrapper statusWrapper{client};
 		FbRef<fb::IEvents> newHandle;
 
 		try
@@ -351,8 +349,7 @@ void EventListener::cancelEventsHandle()
 	if (!handle)
 		return;
 
-	const auto status = client.newStatus();
-	StatusWrapper statusWrapper{client, status.get()};
+	StatusWrapper statusWrapper{client};
 
 	handle->cancel(&statusWrapper);
 }

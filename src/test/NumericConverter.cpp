@@ -42,10 +42,7 @@ BOOST_AUTO_TEST_SUITE(NumericConverterSuite)
 
 BOOST_AUTO_TEST_CASE(convertScaledInt16)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::NumericConverter converter{CLIENT, &statusWrapper};
+	impl::NumericConverter converter{CLIENT};
 
 	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int16_t>(ScaledInt16{12'3, -1}, -2), 12'30);
 	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int16_t>(ScaledInt16{-12'3, -1}, -2), -12'30);
@@ -145,10 +142,7 @@ BOOST_AUTO_TEST_CASE(convertScaledInt16)
 
 BOOST_AUTO_TEST_CASE(convertScaledInt32)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::NumericConverter converter{CLIENT, &statusWrapper};
+	impl::NumericConverter converter{CLIENT};
 
 	BOOST_CHECK_THROW(converter.numberToNumber<std::int16_t>(ScaledInt32{12'3, -1}, -4), FbCppException);
 	BOOST_CHECK_THROW(converter.numberToNumber<std::int16_t>(ScaledInt32{214'748'364'7, -1}, -1), FbCppException);
@@ -245,10 +239,7 @@ BOOST_AUTO_TEST_CASE(convertScaledInt32)
 
 BOOST_AUTO_TEST_CASE(convertScaledInt64)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::NumericConverter converter{CLIENT, &statusWrapper};
+	impl::NumericConverter converter{CLIENT};
 
 	BOOST_CHECK_THROW(
 		converter.numberToNumber<std::int32_t>(ScaledInt64{922'337'203'685'477'580'7LL, -1}, -1), FbCppException);
@@ -355,10 +346,7 @@ BOOST_AUTO_TEST_CASE(convertScaledInt64)
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 BOOST_AUTO_TEST_CASE(convertScaledBoostInt128)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::NumericConverter converter{CLIENT, &statusWrapper};
+	impl::NumericConverter converter{CLIENT};
 
 	BOOST_CHECK_THROW(converter.numberToNumber<std::int64_t>(
 						  ScaledBoostInt128{BoostInt128{"170141183460469231731687303715884105727"}, -1}, -1),
@@ -483,10 +471,7 @@ BOOST_AUTO_TEST_CASE(convertScaledBoostInt128)
 
 BOOST_AUTO_TEST_CASE(convertFloat)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::NumericConverter converter{CLIENT, &statusWrapper};
+	impl::NumericConverter converter{CLIENT};
 
 	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int16_t>(12.3f, -2), 12'30);
 	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int16_t>(-12.3f, -2), -12'30);
@@ -567,10 +552,7 @@ BOOST_AUTO_TEST_CASE(convertFloat)
 
 BOOST_AUTO_TEST_CASE(convertDouble)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::NumericConverter converter{CLIENT, &statusWrapper};
+	impl::NumericConverter converter{CLIENT};
 
 	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int16_t>(12.3, -2), 12'30);
 	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int16_t>(-12.3, -2), -12'30);
@@ -653,10 +635,7 @@ BOOST_AUTO_TEST_CASE(convertDouble)
 
 BOOST_AUTO_TEST_CASE(convertDecFloat16)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::NumericConverter converter{CLIENT, &statusWrapper};
+	impl::NumericConverter converter{CLIENT};
 
 	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int16_t>(BoostDecFloat16{"12.3"}, -2), 12'30);
 	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int16_t>(BoostDecFloat16{"-12.3"}, -2), -12'30);
@@ -739,10 +718,7 @@ BOOST_AUTO_TEST_CASE(convertDecFloat16)
 
 BOOST_AUTO_TEST_CASE(convertDecFloat34)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::NumericConverter converter{CLIENT, &statusWrapper};
+	impl::NumericConverter converter{CLIENT};
 
 	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int16_t>(BoostDecFloat34{"12.3"}, -2), 12'30);
 	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int16_t>(BoostDecFloat34{"-12.3"}, -2), -12'30);
@@ -825,10 +801,7 @@ BOOST_AUTO_TEST_CASE(convertDecFloat34)
 
 BOOST_AUTO_TEST_CASE(decFloat16NumberLimits)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::NumericConverter converter{CLIENT, &statusWrapper};
+	impl::NumericConverter converter{CLIENT};
 
 	const auto maxValue = std::numeric_limits<BoostDecFloat16>::max();
 	const auto minValue = std::numeric_limits<BoostDecFloat16>::min();
@@ -853,10 +826,7 @@ BOOST_AUTO_TEST_CASE(decFloat16NumberLimits)
 
 BOOST_AUTO_TEST_CASE(decFloat34NumberLimits)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::NumericConverter converter{CLIENT, &statusWrapper};
+	impl::NumericConverter converter{CLIENT};
 
 	const auto maxValue = std::numeric_limits<BoostDecFloat34>::max();
 	const auto minValue = std::numeric_limits<BoostDecFloat34>::min();

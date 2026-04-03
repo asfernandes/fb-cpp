@@ -45,10 +45,50 @@ namespace fbcpp::impl
 	class StatusWrapper : public fb::IStatusImpl<StatusWrapper, StatusWrapper>
 	{
 	public:
-		explicit StatusWrapper(Client& client, IStatus* status)
+		explicit StatusWrapper(Client& client, IStatus* status = nullptr)
 			: client{&client},
 			  status{status}
 		{
+		}
+
+		StatusWrapper(StatusWrapper&& o) noexcept
+			: client{o.client},
+			  status{o.status},
+			  statusOwner{o.statusOwner},
+			  dirty{o.dirty}
+		{
+			o.status = nullptr;
+			o.statusOwner = false;
+			o.dirty = false;
+		}
+
+		StatusWrapper& operator=(StatusWrapper&& o) noexcept
+		{
+			if (this != &o)
+			{
+				if (statusOwner && status)
+					status->dispose();
+
+				client = o.client;
+				status = o.status;
+				statusOwner = o.statusOwner;
+				dirty = o.dirty;
+
+				o.status = nullptr;
+				o.statusOwner = false;
+				o.dirty = false;
+			}
+
+			return *this;
+		}
+
+		StatusWrapper(const StatusWrapper&) = delete;
+		StatusWrapper& operator=(const StatusWrapper&) = delete;
+
+		~StatusWrapper()
+		{
+			if (statusOwner && status)
+				status->dispose();
 		}
 
 	public:
@@ -66,7 +106,7 @@ namespace fbcpp::impl
 			if (dirty)
 			{
 				dirty = false;
-				status->init();
+				getStatus()->init();
 			}
 		}
 
@@ -105,8 +145,11 @@ namespace fbcpp::impl
 		void dispose() noexcept override
 		{
 			// Disposes only the delegated status. Let the user destroy this instance.
-			status->dispose();
+			if (status)
+				status->dispose();
+
 			status = nullptr;
+			statusOwner = false;
 		}
 
 		void init() noexcept override
@@ -116,52 +159,55 @@ namespace fbcpp::impl
 
 		unsigned getState() const noexcept override
 		{
-			return dirty ? status->getState() : 0;
+			return dirty ? getStatus()->getState() : 0;
 		}
 
 		void setErrors2(unsigned length, const intptr_t* value) noexcept override
 		{
 			dirty = true;
-			status->setErrors2(length, value);
+			getStatus()->setErrors2(length, value);
 		}
 
 		void setWarnings2(unsigned length, const intptr_t* value) noexcept override
 		{
 			dirty = true;
-			status->setWarnings2(length, value);
+			getStatus()->setWarnings2(length, value);
 		}
 
 		void setErrors(const intptr_t* value) noexcept override
 		{
 			dirty = true;
-			status->setErrors(value);
+			getStatus()->setErrors(value);
 		}
 
 		void setWarnings(const intptr_t* value) noexcept override
 		{
 			dirty = true;
-			status->setWarnings(value);
+			getStatus()->setWarnings(value);
 		}
 
 		const intptr_t* getErrors() const noexcept override
 		{
-			return dirty ? status->getErrors() : cleanStatus();
+			return dirty ? getStatus()->getErrors() : cleanStatus();
 		}
 
 		const intptr_t* getWarnings() const noexcept override
 		{
-			return dirty ? status->getWarnings() : cleanStatus();
+			return dirty ? getStatus()->getWarnings() : cleanStatus();
 		}
 
 		IStatus* clone() const noexcept override
 		{
-			return status->clone();
+			return getStatus()->clone();
 		}
 
 	protected:
 		Client* client;
-		IStatus* status;
+		mutable IStatus* status;
+		mutable bool statusOwner = false;
 		bool dirty = false;
+
+		IStatus* getStatus() const;
 
 		static const intptr_t* cleanStatus() noexcept
 		{

@@ -109,10 +109,7 @@ static const std::initializer_list<DateCase> DATE_CASES{
 
 BOOST_DATA_TEST_CASE(dateConversion, data::make(DATE_CASES), dateCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::CalendarConverter converter{CLIENT, &statusWrapper};
+	impl::CalendarConverter converter{CLIENT};
 
 	const auto& date = dateCase.date;
 	const std::string outputText{dateCase.outputText};
@@ -138,10 +135,7 @@ static const std::initializer_list<TimeCase> TIME_CASES{
 
 BOOST_DATA_TEST_CASE(timeConversion, data::make(TIME_CASES), timeCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::CalendarConverter converter{CLIENT, &statusWrapper};
+	impl::CalendarConverter converter{CLIENT};
 
 	const Time time{timeCase.time};
 	const std::string outputText{timeCase.outputText};
@@ -168,10 +162,7 @@ static const std::initializer_list<TimestampCase> TIMESTAMP_CASES{
 
 BOOST_DATA_TEST_CASE(timestampConversion, data::make(TIMESTAMP_CASES), timestampCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
-
-	impl::CalendarConverter converter{CLIENT, &statusWrapper};
+	impl::CalendarConverter converter{CLIENT};
 
 	const auto timestamp = timestampCase.timestamp;
 	const std::string outputText{timestampCase.outputText};
@@ -198,24 +189,23 @@ static const std::initializer_list<TimeTzCase> TIME_TZ_CASES{
 
 BOOST_DATA_TEST_CASE(timeTzConversion, data::make(TIME_TZ_CASES), timeTzCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
-	impl::CalendarConverter converter{CLIENT, &statusWrapper};
+	impl::CalendarConverter converter{CLIENT};
 
 	const TimeTz& timeTz = timeTzCase.timeTz;
 	const std::string outputText{timeTzCase.outputText};
 	const std::string inputText{timeTzCase.inputText.value_or(outputText)};
 
-	const auto opaque = converter.timeTzToOpaqueTimeTz(timeTz);
-	BOOST_CHECK(converter.opaqueTimeTzToTimeTz(opaque) == timeTz);
-	BOOST_CHECK_EQUAL(converter.opaqueTimeTzToString(opaque), outputText);
+	const auto opaque = converter.timeTzToOpaqueTimeTz(&statusWrapper, timeTz);
+	BOOST_CHECK(converter.opaqueTimeTzToTimeTz(&statusWrapper, opaque) == timeTz);
+	BOOST_CHECK_EQUAL(converter.opaqueTimeTzToString(&statusWrapper, opaque), outputText);
 
-	const auto parsed = converter.stringToTimeTz(inputText);
+	const auto parsed = converter.stringToTimeTz(&statusWrapper, inputText);
 	BOOST_CHECK(parsed == timeTz);
 
-	const auto parsedOpaque = converter.stringToOpaqueTimeTz(inputText);
-	BOOST_CHECK(converter.opaqueTimeTzToTimeTz(parsedOpaque) == timeTz);
+	const auto parsedOpaque = converter.stringToOpaqueTimeTz(&statusWrapper, inputText);
+	BOOST_CHECK(converter.opaqueTimeTzToTimeTz(&statusWrapper, parsedOpaque) == timeTz);
 }
 
 
@@ -227,16 +217,15 @@ static const std::initializer_list<TimeTzOffsetCase> TIME_TZ_OFFSET_CASES{
 
 BOOST_DATA_TEST_CASE(timeTzOffsetConversion, data::make(TIME_TZ_OFFSET_CASES), timeTzOffsetCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
-	impl::CalendarConverter converter{CLIENT, &statusWrapper};
+	impl::CalendarConverter converter{CLIENT};
 
 	const std::string outputText{timeTzOffsetCase.outputText};
 	const std::string inputText{timeTzOffsetCase.inputText.value_or(outputText)};
 
-	const auto parsedOpaque = converter.stringToOpaqueTimeTz(inputText);
-	const auto text = converter.opaqueTimeTzToString(parsedOpaque);
+	const auto parsedOpaque = converter.stringToOpaqueTimeTz(&statusWrapper, inputText);
+	const auto text = converter.opaqueTimeTzToString(&statusWrapper, parsedOpaque);
 	BOOST_CHECK_EQUAL(text, inputText);
 }
 
@@ -252,24 +241,23 @@ static const std::initializer_list<TimestampTzCase> TIMESTAMP_TZ_CASES{
 
 BOOST_DATA_TEST_CASE(timestampTzConversion, data::make(TIMESTAMP_TZ_CASES), timestampTzCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
-	impl::CalendarConverter converter{CLIENT, &statusWrapper};
+	impl::CalendarConverter converter{CLIENT};
 
 	const TimestampTz& timestampTz = timestampTzCase.timestampTz;
 	const std::string outputText{timestampTzCase.outputText};
 	const std::string inputText{timestampTzCase.inputText.value_or(outputText)};
 
-	const auto opaque = converter.timestampTzToOpaqueTimestampTz(timestampTz);
-	BOOST_CHECK(converter.opaqueTimestampTzToTimestampTz(opaque) == timestampTz);
-	BOOST_CHECK_EQUAL(converter.opaqueTimestampTzToString(opaque), outputText);
+	const auto opaque = converter.timestampTzToOpaqueTimestampTz(&statusWrapper, timestampTz);
+	BOOST_CHECK(converter.opaqueTimestampTzToTimestampTz(&statusWrapper, opaque) == timestampTz);
+	BOOST_CHECK_EQUAL(converter.opaqueTimestampTzToString(&statusWrapper, opaque), outputText);
 
-	const auto parsed = converter.stringToTimestampTz(inputText);
+	const auto parsed = converter.stringToTimestampTz(&statusWrapper, inputText);
 	BOOST_CHECK(parsed == timestampTz);
 
-	const auto parsedOpaque = converter.stringToOpaqueTimestampTz(inputText);
-	BOOST_CHECK(converter.opaqueTimestampTzToTimestampTz(parsedOpaque) == timestampTz);
+	const auto parsedOpaque = converter.stringToOpaqueTimestampTz(&statusWrapper, inputText);
+	BOOST_CHECK(converter.opaqueTimestampTzToTimestampTz(&statusWrapper, parsedOpaque) == timestampTz);
 }
 
 
@@ -281,16 +269,15 @@ static const std::initializer_list<TimestampTzOffsetCase> TIMESTAMP_TZ_OFFSET_CA
 
 BOOST_DATA_TEST_CASE(timestampTzOffsetConversion, data::make(TIMESTAMP_TZ_OFFSET_CASES), timestampTzOffsetCase)
 {
-	const auto status = CLIENT.newStatus();
-	impl::StatusWrapper statusWrapper{CLIENT, status.get()};
+	impl::StatusWrapper statusWrapper{CLIENT};
 
-	impl::CalendarConverter converter{CLIENT, &statusWrapper};
+	impl::CalendarConverter converter{CLIENT};
 
 	const std::string outputText{timestampTzOffsetCase.outputText};
 	const std::string inputText{timestampTzOffsetCase.inputText.value_or(outputText)};
 
-	const auto parsedOpaque = converter.stringToOpaqueTimestampTz(inputText);
-	const auto text = converter.opaqueTimestampTzToString(parsedOpaque);
+	const auto parsedOpaque = converter.stringToOpaqueTimestampTz(&statusWrapper, inputText);
+	const auto text = converter.opaqueTimestampTzToString(&statusWrapper, parsedOpaque);
 	BOOST_CHECK_EQUAL(text, inputText);
 }
 
