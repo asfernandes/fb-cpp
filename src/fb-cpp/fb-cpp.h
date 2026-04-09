@@ -34,5 +34,7 @@
 #include "Batch.h"
 #include "Blob.h"
 #include "EventListener.h"
+#include "ServiceManager.h"
+#include "BackupManager.h"
 
 #endif  // FBCPP_H
