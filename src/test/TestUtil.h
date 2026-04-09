@@ -27,6 +27,7 @@
 
 #include "fb-cpp/Attachment.h"
 #include "fb-cpp/Client.h"
+#include <optional>
 #include <string>
 #include <string_view>
 #include <boost/test/unit_test.hpp>
@@ -38,7 +39,8 @@ namespace fbcpp::test
 {
 	extern Client CLIENT;
 
-	std::string getTempFile(const std::string_view name);
+	std::optional<std::string> getServer();
+	std::string getTempFile(const std::string_view name, bool includeServerPrefix = true);
 
 	class FbDropDatabase
 	{
@@ -48,9 +50,19 @@ namespace fbcpp::test
 		{
 		}
 
-		~FbDropDatabase()
+		~FbDropDatabase() noexcept
 		{
-			attachment.dropDatabase();
+			if (attachment.isValid())
+			{
+				try
+				{
+					attachment.dropDatabase();
+				}
+				catch (...)
+				{
+					// Ignore cleanup failures in test teardown.
+				}
+			}
 		}
 
 		FbDropDatabase(const FbDropDatabase&) = delete;

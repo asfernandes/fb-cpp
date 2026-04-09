@@ -89,20 +89,27 @@ namespace fbcpp::test
 
 			~GlobalFixture()
 			{
+				CLIENT.shutdown();
+
 				if (removeTempDir)
 				{
 					std::error_code ec;
 					fs::remove(tempDir, ec);
 				}
-
-				CLIENT.shutdown();
 			}
 		};
 	}  // namespace
 
-	std::string getTempFile(const std::string_view name)
+	std::string getTempFile(const std::string_view name, bool includeServerPrefix)
 	{
-		return testServerPrefix + (tempDir / name).string();
+		const auto path = (tempDir / name).string();
+		return includeServerPrefix ? testServerPrefix + path : path;
+	}
+
+	std::optional<std::string> getServer()
+	{
+		return testServerPrefix.empty() ? std::nullopt
+										: std::optional{testServerPrefix.substr(0, testServerPrefix.size() - 1u)};
 	}
 }  // namespace fbcpp::test
 
