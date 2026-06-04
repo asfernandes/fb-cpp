@@ -42,6 +42,27 @@
 ///
 namespace fbcpp
 {
+	///
+	/// Replica mode.
+	///
+	enum class ReplicaMode
+	{
+		///
+		/// The database is not a replica (operates as primary).
+		///
+		NONE,
+
+		///
+		/// Read-only replica.
+		///
+		READ_ONLY,
+
+		///
+		/// Read-write replica.
+		///
+		READ_WRITE
+	};
+
 	class Client;
 
 	///

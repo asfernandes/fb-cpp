@@ -296,12 +296,30 @@ namespace fbcpp
 			return *this;
 		}
 
+		///
+		/// Returns the replica mode.
+		///
+		const std::optional<ReplicaMode>& getReplicaMode() const
+		{
+			return replicaMode;
+		}
+
+		///
+		/// Sets the replica mode.
+		///
+		RestoreOptions& setReplicaMode(ReplicaMode value)
+		{
+			replicaMode = value;
+			return *this;
+		}
+
 	private:
 		std::vector<DatabaseFileSpec> databaseFiles;
 		std::vector<std::string> backupFiles;
 		bool replace = false;
 		ServiceManager::VerboseOutput verboseOutput;
 		std::optional<std::uint32_t> parallelWorkers;
+		std::optional<ReplicaMode> replicaMode;
 	};
 
 	///

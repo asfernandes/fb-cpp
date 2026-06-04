@@ -84,6 +84,24 @@ void BackupManager::restore(const RestoreOptions& options)
 	if (const auto parallelWorkers = options.getParallelWorkers())
 		builder->insertInt(&statusWrapper, isc_spb_res_parallel_workers, static_cast<int>(*parallelWorkers));
 
+	if (const auto replicaMode = options.getReplicaMode())
+	{
+		std::uint8_t modeVal = 0;
+		switch (*replicaMode)
+		{
+			case ReplicaMode::NONE:
+				modeVal = isc_spb_res_rm_none;
+				break;
+			case ReplicaMode::READ_ONLY:
+				modeVal = isc_spb_res_rm_readonly;
+				break;
+			case ReplicaMode::READ_WRITE:
+				modeVal = isc_spb_res_rm_readwrite;
+				break;
+		}
+		builder->insertBytes(&statusWrapper, isc_spb_res_replica_mode, &modeVal, 1u);
+	}
+
 	const auto buffer = builder->getBuffer(&statusWrapper);
 	const auto length = builder->getBufferLength(&statusWrapper);
 
