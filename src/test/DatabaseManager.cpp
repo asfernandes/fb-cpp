@@ -56,7 +56,8 @@ BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 			CLIENT, databaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
 		Transaction transaction{attachment};
 
-		Statement queryContext{attachment, transaction, "select rdb$get_context('SYSTEM', 'REPLICA_MODE') from rdb$database"};
+		Statement queryContext{
+			attachment, transaction, "select rdb$get_context('SYSTEM', 'REPLICA_MODE') from rdb$database"};
 		BOOST_REQUIRE(queryContext.execute(transaction));
 		BOOST_CHECK(!queryContext.getString(0).has_value());
 
@@ -72,7 +73,8 @@ BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 		Attachment attachment{CLIENT, databaseUri, attachmentOptions};
 		Transaction transaction{attachment};
 
-		Statement queryContext{attachment, transaction, "select rdb$get_context('SYSTEM', 'REPLICA_MODE') from rdb$database"};
+		Statement queryContext{
+			attachment, transaction, "select rdb$get_context('SYSTEM', 'REPLICA_MODE') from rdb$database"};
 		BOOST_REQUIRE(queryContext.execute(transaction));
 		BOOST_REQUIRE(queryContext.getString(0).has_value());
 		BOOST_CHECK_EQUAL(queryContext.getString(0).value(), "READ-ONLY");
@@ -88,7 +90,8 @@ BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 		Attachment attachment{CLIENT, databaseUri, attachmentOptions};
 		Transaction transaction{attachment};
 
-		Statement queryContext{attachment, transaction, "select rdb$get_context('SYSTEM', 'REPLICA_MODE') from rdb$database"};
+		Statement queryContext{
+			attachment, transaction, "select rdb$get_context('SYSTEM', 'REPLICA_MODE') from rdb$database"};
 		BOOST_REQUIRE(queryContext.execute(transaction));
 		BOOST_CHECK(!queryContext.getString(0).has_value());
 
@@ -121,14 +124,18 @@ BOOST_AUTO_TEST_CASE(restoreWithReplicaMode)
 
 	BackupManager backupManager{CLIENT, makeServiceManagerOptions()};
 	backupManager.backup(BackupOptions().setDatabase(sourceDatabasePath).setBackupFile(backupFile));
-	backupManager.restore(RestoreOptions().setDatabase(restoredDatabasePath).setBackupFile(backupFile).setReplicaMode(ReplicaMode::READ_WRITE));
+	backupManager.restore(RestoreOptions()
+			.setDatabase(restoredDatabasePath)
+			.setBackupFile(backupFile)
+			.setReplicaMode(ReplicaMode::READ_WRITE));
 
 	{  // scope
 		Attachment restored{CLIENT, restoredDatabaseUri, attachmentOptions};
 		FbDropDatabase restoredDrop{restored};
 		Transaction transaction{restored};
 
-		Statement queryContext{restored, transaction, "select rdb$get_context('SYSTEM', 'REPLICA_MODE') from rdb$database"};
+		Statement queryContext{
+			restored, transaction, "select rdb$get_context('SYSTEM', 'REPLICA_MODE') from rdb$database"};
 		BOOST_REQUIRE(queryContext.execute(transaction));
 		BOOST_REQUIRE(queryContext.getString(0).has_value());
 		BOOST_CHECK_EQUAL(queryContext.getString(0).value(), "READ-WRITE");
