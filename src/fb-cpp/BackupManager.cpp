@@ -24,6 +24,7 @@
 
 #include "BackupManager.h"
 #include "Client.h"
+#include <cassert>
 
 using namespace fbcpp;
 using namespace fbcpp::impl;
@@ -97,6 +98,9 @@ void BackupManager::restore(const RestoreOptions& options)
 				break;
 			case ReplicaMode::READ_WRITE:
 				modeVal = isc_spb_res_rm_readwrite;
+				break;
+			default:
+				assert(false);
 				break;
 		}
 		builder->insertBytes(&statusWrapper, isc_spb_res_replica_mode, &modeVal, 1u);

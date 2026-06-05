@@ -38,7 +38,7 @@ namespace fbcpp
 	///
 	/// Represents options used to configure database properties through the service manager.
 	///
-	class DatabaseOptions final
+	class DatabaseManagerOptions final
 	{
 	public:
 		///
@@ -52,7 +52,7 @@ namespace fbcpp
 		///
 		/// Sets the database path to be configured.
 		///
-		DatabaseOptions& setDatabase(const std::string& value)
+		DatabaseManagerOptions& setDatabase(const std::string& value)
 		{
 			database = value;
 			return *this;
@@ -69,7 +69,7 @@ namespace fbcpp
 		///
 		/// Sets the replica mode.
 		///
-		DatabaseOptions& setReplicaMode(ReplicaMode value)
+		DatabaseManagerOptions& setReplicaMode(ReplicaMode value)
 		{
 			replicaMode = value;
 			return *this;
@@ -92,7 +92,7 @@ namespace fbcpp
 		///
 		/// Configures database properties using the provided options.
 		///
-		void configure(const DatabaseOptions& options);
+		void execute(const DatabaseManagerOptions& options);
 	};
 }  // namespace fbcpp
 

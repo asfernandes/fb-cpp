@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 	}
 
 	DatabaseManager manager{CLIENT, makeServiceManagerOptions()};
-	manager.configure(DatabaseOptions().setDatabase(databasePath).setReplicaMode(ReplicaMode::READ_ONLY));
+	manager.execute(DatabaseManagerOptions().setDatabase(databasePath).setReplicaMode(ReplicaMode::READ_ONLY));
 
 	{  // scope
 		Attachment attachment{CLIENT, databaseUri, attachmentOptions};
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 		BOOST_CHECK_EQUAL(queryMon.getInt32(0).value(), 1);
 	}
 
-	manager.configure(DatabaseOptions().setDatabase(databasePath).setReplicaMode(ReplicaMode::NONE));
+	manager.execute(DatabaseManagerOptions().setDatabase(databasePath).setReplicaMode(ReplicaMode::NONE));
 
 	{  // scope
 		Attachment attachment{CLIENT, databaseUri, attachmentOptions};

@@ -24,12 +24,13 @@
 
 #include "DatabaseManager.h"
 #include "Client.h"
+#include <cassert>
 
 using namespace fbcpp;
 using namespace fbcpp::impl;
 
 
-void DatabaseManager::configure(const DatabaseOptions& options)
+void DatabaseManager::execute(const DatabaseManagerOptions& options)
 {
 	StatusWrapper statusWrapper{getClient()};
 	auto builder =
@@ -50,6 +51,9 @@ void DatabaseManager::configure(const DatabaseOptions& options)
 				break;
 			case ReplicaMode::READ_WRITE:
 				modeVal = isc_spb_prp_rm_readwrite;
+				break;
+			default:
+				assert(false);
 				break;
 		}
 		builder->insertBytes(&statusWrapper, isc_spb_prp_replica_mode, &modeVal, 1u);
