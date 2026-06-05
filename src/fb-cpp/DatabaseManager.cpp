@@ -22,14 +22,14 @@
  * SOFTWARE.
  */
 
-#include "ConfigManager.h"
+#include "DatabaseManager.h"
 #include "Client.h"
 
 using namespace fbcpp;
 using namespace fbcpp::impl;
 
 
-void ConfigManager::configure(const ConfigOptions& options)
+void DatabaseManager::configure(const DatabaseOptions& options)
 {
 	StatusWrapper statusWrapper{getClient()};
 	auto builder =

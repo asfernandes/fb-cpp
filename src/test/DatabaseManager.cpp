@@ -24,7 +24,7 @@
 
 #include "TestUtil.h"
 #include "fb-cpp/BackupManager.h"
-#include "fb-cpp/ConfigManager.h"
+#include "fb-cpp/DatabaseManager.h"
 #include "fb-cpp/Exception.h"
 #include "fb-cpp/Statement.h"
 #include "fb-cpp/Transaction.h"
@@ -43,12 +43,12 @@ namespace
 	}
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(ConfigManagerSuite)
+BOOST_AUTO_TEST_SUITE(DatabaseManagerSuite)
 
 BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 {
-	const auto databasePath = getTempFile("ConfigManager-setReplicaModeNone.fdb", false);
-	const auto databaseUri = getTempFile("ConfigManager-setReplicaModeNone.fdb");
+	const auto databasePath = getTempFile("DatabaseManager-setReplicaModeNone.fdb", false);
+	const auto databaseUri = getTempFile("DatabaseManager-setReplicaModeNone.fdb");
 	const auto attachmentOptions = AttachmentOptions().setConnectionCharSet("UTF8");
 
 	{  // scope
@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 		BOOST_CHECK_EQUAL(queryMon.getInt32(0).value(), 0);
 	}
 
-	ConfigManager manager{CLIENT, makeServiceManagerOptions()};
-	manager.configure(ConfigOptions().setDatabase(databasePath).setReplicaMode(ReplicaMode::READ_ONLY));
+	DatabaseManager manager{CLIENT, makeServiceManagerOptions()};
+	manager.configure(DatabaseOptions().setDatabase(databasePath).setReplicaMode(ReplicaMode::READ_ONLY));
 
 	{  // scope
 		Attachment attachment{CLIENT, databaseUri, attachmentOptions};
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 		BOOST_CHECK_EQUAL(queryMon.getInt32(0).value(), 1);
 	}
 
-	manager.configure(ConfigOptions().setDatabase(databasePath).setReplicaMode(ReplicaMode::NONE));
+	manager.configure(DatabaseOptions().setDatabase(databasePath).setReplicaMode(ReplicaMode::NONE));
 
 	{  // scope
 		Attachment attachment{CLIENT, databaseUri, attachmentOptions};
@@ -103,11 +103,11 @@ BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 
 BOOST_AUTO_TEST_CASE(restoreWithReplicaMode)
 {
-	const auto sourceDatabasePath = getTempFile("ConfigManager-restoreReplica-source.fdb", false);
-	const auto restoredDatabasePath = getTempFile("ConfigManager-restoreReplica-restored.fdb", false);
-	const auto backupFile = getTempFile("ConfigManager-restoreReplica.fbk", false);
-	const auto sourceDatabaseUri = getTempFile("ConfigManager-restoreReplica-source.fdb");
-	const auto restoredDatabaseUri = getTempFile("ConfigManager-restoreReplica-restored.fdb");
+	const auto sourceDatabasePath = getTempFile("DatabaseManager-restoreReplica-source.fdb", false);
+	const auto restoredDatabasePath = getTempFile("DatabaseManager-restoreReplica-restored.fdb", false);
+	const auto backupFile = getTempFile("DatabaseManager-restoreReplica.fbk", false);
+	const auto sourceDatabaseUri = getTempFile("DatabaseManager-restoreReplica-source.fdb");
+	const auto restoredDatabaseUri = getTempFile("DatabaseManager-restoreReplica-restored.fdb");
 	const auto attachmentOptions = AttachmentOptions().setConnectionCharSet("UTF8");
 
 	{  // scope

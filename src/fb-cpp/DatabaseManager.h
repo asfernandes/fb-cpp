@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef FBCPP_CONFIG_MANAGER_H
-#define FBCPP_CONFIG_MANAGER_H
+#ifndef FBCPP_DATABASE_MANAGER_H
+#define FBCPP_DATABASE_MANAGER_H
 
 #include "ServiceManager.h"
 #include <optional>
@@ -38,7 +38,7 @@ namespace fbcpp
 	///
 	/// Represents options used to configure database properties through the service manager.
 	///
-	class ConfigOptions final
+	class DatabaseOptions final
 	{
 	public:
 		///
@@ -52,7 +52,7 @@ namespace fbcpp
 		///
 		/// Sets the database path to be configured.
 		///
-		ConfigOptions& setDatabase(const std::string& value)
+		DatabaseOptions& setDatabase(const std::string& value)
 		{
 			database = value;
 			return *this;
@@ -69,7 +69,7 @@ namespace fbcpp
 		///
 		/// Sets the replica mode.
 		///
-		ConfigOptions& setReplicaMode(ReplicaMode value)
+		DatabaseOptions& setReplicaMode(ReplicaMode value)
 		{
 			replicaMode = value;
 			return *this;
@@ -83,7 +83,7 @@ namespace fbcpp
 	///
 	/// Executes configuration and maintenance operations through the Firebird service manager.
 	///
-	class ConfigManager final : public ServiceManager
+	class DatabaseManager final : public ServiceManager
 	{
 	public:
 		using ServiceManager::ServiceManager;
@@ -92,9 +92,9 @@ namespace fbcpp
 		///
 		/// Configures database properties using the provided options.
 		///
-		void configure(const ConfigOptions& options);
+		void configure(const DatabaseOptions& options);
 	};
 }  // namespace fbcpp
 
 
-#endif  // FBCPP_CONFIG_MANAGER_H
+#endif  // FBCPP_DATABASE_MANAGER_H
