@@ -340,6 +340,20 @@ namespace fbcpp
 		template <typename T>
 		std::optional<T> queryScalar(Transaction& transaction, std::string_view sql, const StatementOptions& options);
 
+		///
+		/// Prepares and executes a query using the supplied transaction and returns the first row mapped as T.
+		///
+		template <typename T>
+		std::optional<T> queryFirstRowAs(Transaction& transaction, std::string_view sql);
+
+		///
+		/// Prepares and executes a query using the supplied transaction and statement options and returns the first row
+		/// mapped as T.
+		///
+		template <typename T>
+		std::optional<T> queryFirstRowAs(
+			Transaction& transaction, std::string_view sql, const StatementOptions& options);
+
 	private:
 		void disconnectOrDrop(bool drop);
 
@@ -369,6 +383,29 @@ namespace fbcpp
 			return std::nullopt;
 
 		return rowSet.getRow(0).get<std::optional<T>>(0);
+	}
+
+	template <typename T>
+	std::optional<T> Attachment::queryFirstRowAs(Transaction& transaction, std::string_view sql)
+	{
+		auto rowSet = queryRowSet(transaction, sql, 1u);
+
+		if (rowSet.getCount() == 0u)
+			return std::nullopt;
+
+		return rowSet.getRow(0).get<T>();
+	}
+
+	template <typename T>
+	std::optional<T> Attachment::queryFirstRowAs(
+		Transaction& transaction, std::string_view sql, const StatementOptions& options)
+	{
+		auto rowSet = queryRowSet(transaction, sql, 1u, options);
+
+		if (rowSet.getCount() == 0u)
+			return std::nullopt;
+
+		return rowSet.getRow(0).get<T>();
 	}
 }  // namespace fbcpp
 

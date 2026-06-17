@@ -342,6 +342,171 @@ BOOST_AUTO_TEST_CASE(queryScalarThrowsForNonQueryStatement)
 	transaction.commit();
 }
 
+BOOST_AUTO_TEST_CASE(queryFirstRowAsReturnsStructFromFirstRow)
+{
+	struct Result
+	{
+		std::int32_t id;
+		std::optional<std::string> name;
+	};
+
+	const auto database = getTempFile("Attachment-queryFirstRowAsReturnsStructFromFirstRow.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_REQUIRE(
+		attachment.execute(transaction, "create table t (id integer not null primary key, name varchar(20))"));
+	transaction.commitRetaining();
+
+	BOOST_REQUIRE(attachment.execute(transaction, "insert into t (id, name) values (1, 'one')"));
+	BOOST_REQUIRE(attachment.execute(transaction, "insert into t (id, name) values (2, 'two')"));
+
+	const auto value = attachment.queryFirstRowAs<Result>(transaction, "select id, name from t order by id");
+
+	BOOST_REQUIRE(value.has_value());
+	BOOST_CHECK_EQUAL(value->id, 1);
+	BOOST_REQUIRE(value->name.has_value());
+	BOOST_CHECK_EQUAL(*value->name, "one");
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryFirstRowAsReturnsTupleFromFirstRow)
+{
+	using Result = std::tuple<std::int32_t, std::optional<std::string>>;
+
+	const auto database = getTempFile("Attachment-queryFirstRowAsReturnsTupleFromFirstRow.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	const auto value = attachment.queryFirstRowAs<Result>(transaction, "select 42, 'answer' from rdb$database");
+
+	BOOST_REQUIRE(value.has_value());
+	BOOST_CHECK_EQUAL(std::get<0>(*value), 42);
+	BOOST_REQUIRE(std::get<1>(*value).has_value());
+	BOOST_CHECK_EQUAL(*std::get<1>(*value), "answer");
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryFirstRowAsReturnsNulloptForNoRows)
+{
+	struct Result
+	{
+		std::int32_t id;
+	};
+
+	const auto database = getTempFile("Attachment-queryFirstRowAsReturnsNulloptForNoRows.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	const auto value = attachment.queryFirstRowAs<Result>(transaction, "select 1 from rdb$database where 1 = 0");
+
+	BOOST_CHECK(!value.has_value());
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryFirstRowAsSupportsStatementOptions)
+{
+	using Result = std::tuple<std::int32_t>;
+
+	const auto database = getTempFile("Attachment-queryFirstRowAsSupportsStatementOptions.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	const auto value = attachment.queryFirstRowAs<Result>(
+		transaction, "select 1 from rdb$database", StatementOptions().setDialect(3u));
+
+	BOOST_REQUIRE(value.has_value());
+	BOOST_CHECK_EQUAL(std::get<0>(*value), 1);
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryFirstRowAsSupportsProcedureWithOutputColumns)
+{
+	struct Result
+	{
+		std::int32_t id;
+		std::optional<std::string> name;
+	};
+
+	const auto database = getTempFile("Attachment-queryFirstRowAsSupportsProcedureWithOutputColumns.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_REQUIRE(attachment.execute(transaction,
+		"create procedure p returns (id integer, name varchar(20)) as begin id = 42; name = 'answer'; suspend; end"));
+	transaction.commitRetaining();
+
+	const auto value = attachment.queryFirstRowAs<Result>(transaction, "execute procedure p");
+
+	BOOST_REQUIRE(value.has_value());
+	BOOST_CHECK_EQUAL(value->id, 42);
+	BOOST_REQUIRE(value->name.has_value());
+	BOOST_CHECK_EQUAL(*value->name, "answer");
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryFirstRowAsThrowsForFieldCountMismatch)
+{
+	struct Result
+	{
+		std::int32_t id;
+	};
+
+	const auto database = getTempFile("Attachment-queryFirstRowAsThrowsForFieldCountMismatch.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_CHECK_THROW(attachment.queryFirstRowAs<Result>(transaction, "select 1, 2 from rdb$database"), FbCppException);
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryFirstRowAsThrowsForNullIntoNonOptionalField)
+{
+	struct Result
+	{
+		std::int32_t id;
+	};
+
+	const auto database = getTempFile("Attachment-queryFirstRowAsThrowsForNullIntoNonOptionalField.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_CHECK_THROW(attachment.queryFirstRowAs<Result>(transaction, "select cast(null as integer) from rdb$database"),
+		FbCppException);
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryFirstRowAsThrowsForNonQueryStatement)
+{
+	struct Result
+	{
+		std::int32_t id;
+	};
+
+	const auto database = getTempFile("Attachment-queryFirstRowAsThrowsForNonQueryStatement.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_CHECK_THROW(attachment.queryFirstRowAs<Result>(transaction, "create table t (id integer)"), FbCppException);
+
+	transaction.commit();
+}
+
 BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 {
 	const auto database = getTempFile("Attachment-isNotValidAfterMove.fdb");
