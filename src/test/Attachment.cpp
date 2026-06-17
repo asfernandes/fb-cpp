@@ -507,6 +507,172 @@ BOOST_AUTO_TEST_CASE(queryFirstRowAsThrowsForNonQueryStatement)
 	transaction.commit();
 }
 
+BOOST_AUTO_TEST_CASE(executeBindsTupleParameters)
+{
+	const auto database = getTempFile("Attachment-executeBindsTupleParameters.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_REQUIRE(
+		attachment.execute(transaction, "create table t (id integer not null primary key, name varchar(20))"));
+	transaction.commitRetaining();
+
+	BOOST_REQUIRE(attachment.execute(
+		transaction, "insert into t (id, name) values (?, ?)", std::tuple{1, std::string_view{"one"}}));
+	BOOST_REQUIRE(attachment.execute(transaction, "insert into t (id, name) values (?, ?)",
+		StatementOptions().setDialect(3u), std::tuple{2, std::string_view{"two"}}));
+
+	const auto count = attachment.queryScalar<std::int32_t>(transaction, "select count(*) from t");
+	BOOST_REQUIRE(count.has_value());
+	BOOST_CHECK_EQUAL(*count, 2);
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(executeBindsStructParameters)
+{
+	struct Params
+	{
+		std::int32_t id;
+		std::string_view name;
+	};
+
+	const auto database = getTempFile("Attachment-executeBindsStructParameters.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_REQUIRE(
+		attachment.execute(transaction, "create table t (id integer not null primary key, name varchar(20))"));
+	transaction.commitRetaining();
+
+	BOOST_REQUIRE(attachment.execute(transaction, "insert into t (id, name) values (?, ?)", Params{1, "one"}));
+
+	const auto name = attachment.queryScalar<std::string>(transaction, "select name from t where id = 1");
+	BOOST_REQUIRE(name.has_value());
+	BOOST_CHECK_EQUAL(*name, "one");
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryRowSetBindsTupleParameters)
+{
+	const auto database = getTempFile("Attachment-queryRowSetBindsTupleParameters.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_REQUIRE(attachment.execute(transaction, "create table t (id integer not null primary key)"));
+	transaction.commitRetaining();
+
+	BOOST_REQUIRE(attachment.execute(transaction, "insert into t (id) values (?)", std::tuple{1}));
+	BOOST_REQUIRE(attachment.execute(transaction, "insert into t (id) values (?)", std::tuple{2}));
+	BOOST_REQUIRE(attachment.execute(transaction, "insert into t (id) values (?)", std::tuple{3}));
+
+	auto rowSet = attachment.queryRowSet(transaction, "select id from t where id > ? order by id", 10u, std::tuple{1});
+
+	BOOST_REQUIRE_EQUAL(rowSet.getCount(), 2u);
+	BOOST_CHECK_EQUAL(rowSet.getRow(0).getInt32(0).value(), 2);
+	BOOST_CHECK_EQUAL(rowSet.getRow(1).getInt32(0).value(), 3);
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryRowSetBindsOptionsAndStructParameters)
+{
+	struct Params
+	{
+		std::int32_t minId;
+	};
+
+	const auto database = getTempFile("Attachment-queryRowSetBindsOptionsAndStructParameters.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_REQUIRE(attachment.execute(transaction, "create table t (id integer not null primary key)"));
+	transaction.commitRetaining();
+
+	BOOST_REQUIRE(attachment.execute(transaction, "insert into t (id) values (?)", std::tuple{1}));
+	BOOST_REQUIRE(attachment.execute(transaction, "insert into t (id) values (?)", std::tuple{2}));
+
+	auto rowSet = attachment.queryRowSet(
+		transaction, "select id from t where id > ? order by id", 10u, StatementOptions().setDialect(3u), Params{1});
+
+	BOOST_REQUIRE_EQUAL(rowSet.getCount(), 1u);
+	BOOST_CHECK_EQUAL(rowSet.getRow(0).getInt32(0).value(), 2);
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryScalarBindsTupleParameters)
+{
+	const auto database = getTempFile("Attachment-queryScalarBindsTupleParameters.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_REQUIRE(
+		attachment.execute(transaction, "create table t (id integer not null primary key, name varchar(20))"));
+	transaction.commitRetaining();
+
+	BOOST_REQUIRE(attachment.execute(
+		transaction, "insert into t (id, name) values (?, ?)", std::tuple{1, std::string_view{"one"}}));
+
+	const auto name =
+		attachment.queryScalar<std::string>(transaction, "select name from t where id = ?", std::tuple{1});
+	const auto nameWithOptions = attachment.queryScalar<std::string>(
+		transaction, "select name from t where id = ?", StatementOptions().setDialect(3u), std::tuple{1});
+
+	BOOST_REQUIRE(name.has_value());
+	BOOST_CHECK_EQUAL(*name, "one");
+	BOOST_REQUIRE(nameWithOptions.has_value());
+	BOOST_CHECK_EQUAL(*nameWithOptions, "one");
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryFirstRowAsBindsStructParameters)
+{
+	struct Params
+	{
+		std::int32_t id;
+	};
+
+	struct Result
+	{
+		std::int32_t id;
+		std::optional<std::string> name;
+	};
+
+	const auto database = getTempFile("Attachment-queryFirstRowAsBindsStructParameters.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_REQUIRE(
+		attachment.execute(transaction, "create table t (id integer not null primary key, name varchar(20))"));
+	transaction.commitRetaining();
+
+	BOOST_REQUIRE(attachment.execute(
+		transaction, "insert into t (id, name) values (?, ?)", std::tuple{1, std::string_view{"one"}}));
+
+	const auto value =
+		attachment.queryFirstRowAs<Result>(transaction, "select id, name from t where id = ?", Params{1});
+	const auto valueWithOptions = attachment.queryFirstRowAs<Result>(
+		transaction, "select id, name from t where id = ?", StatementOptions().setDialect(3u), Params{1});
+
+	BOOST_REQUIRE(value.has_value());
+	BOOST_CHECK_EQUAL(value->id, 1);
+	BOOST_REQUIRE(value->name.has_value());
+	BOOST_CHECK_EQUAL(*value->name, "one");
+	BOOST_REQUIRE(valueWithOptions.has_value());
+	BOOST_CHECK_EQUAL(valueWithOptions->id, 1);
+
+	transaction.commit();
+}
+
 BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 {
 	const auto database = getTempFile("Attachment-isNotValidAfterMove.fdb");

@@ -181,6 +181,52 @@ Statement::Statement(
 	outRow = std::make_unique<Row>(attachment.getClient(), outDescriptors, std::span{outMessage});
 }
 
+Statement::Statement(Statement&& o) noexcept
+	: attachment{o.attachment},
+	  statusWrapper{std::move(o.statusWrapper)},
+	  calendarConverter{std::move(o.calendarConverter)},
+	  numericConverter{std::move(o.numericConverter)},
+	  statementHandle{std::move(o.statementHandle)},
+	  resultSetHandle{std::move(o.resultSetHandle)},
+	  inMetadata{std::move(o.inMetadata)},
+	  inDescriptors{std::move(o.inDescriptors)},
+	  inMessage{std::move(o.inMessage)},
+	  outMetadata{std::move(o.outMetadata)},
+	  outDescriptors{std::move(o.outDescriptors)},
+	  outMessage{std::move(o.outMessage)},
+	  outRow{std::make_unique<Row>(attachment->getClient(), outDescriptors, std::span{outMessage})},
+	  type{o.type},
+	  cursorFlags{o.cursorFlags}
+{
+	o.outRow.reset();
+}
+
+Statement& Statement::operator=(Statement&& o) noexcept
+{
+	if (this != &o)
+	{
+		attachment = o.attachment;
+		statusWrapper = std::move(o.statusWrapper);
+		calendarConverter = std::move(o.calendarConverter);
+		numericConverter = std::move(o.numericConverter);
+		statementHandle = std::move(o.statementHandle);
+		resultSetHandle = std::move(o.resultSetHandle);
+		inMetadata = std::move(o.inMetadata);
+		inDescriptors = std::move(o.inDescriptors);
+		inMessage = std::move(o.inMessage);
+		outMetadata = std::move(o.outMetadata);
+		outDescriptors = std::move(o.outDescriptors);
+		outMessage = std::move(o.outMessage);
+		outRow = std::make_unique<Row>(attachment->getClient(), outDescriptors, std::span{outMessage});
+		type = o.type;
+		cursorFlags = o.cursorFlags;
+
+		o.outRow.reset();
+	}
+
+	return *this;
+}
+
 void Statement::free()
 {
 	assert(isValid());
@@ -241,6 +287,11 @@ bool Statement::execute(Transaction& transaction)
 				outMetadata.get(), outMessageData);
 			return true;
 	}
+}
+
+Client& Statement::getClient() noexcept
+{
+	return attachment->getClient();
 }
 
 bool Statement::fetchNext()

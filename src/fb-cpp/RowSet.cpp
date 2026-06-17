@@ -23,6 +23,7 @@
  */
 
 #include "RowSet.h"
+#include "Attachment.h"
 #include "Client.h"
 #include "Statement.h"
 #include <algorithm>

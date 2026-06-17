@@ -97,27 +97,21 @@ void Attachment::dropDatabase()
 	disconnectOrDrop(true);
 }
 
-bool Attachment::execute(Transaction& transaction, std::string_view sql)
-{
-	return execute(transaction, sql, StatementOptions{});
-}
-
 bool Attachment::execute(Transaction& transaction, std::string_view sql, const StatementOptions& options)
 {
 	Statement statement{*this, transaction, sql, options};
 	return statement.execute(transaction);
 }
 
-RowSet Attachment::queryRowSet(Transaction& transaction, std::string_view sql, unsigned maxRows)
-{
-	return queryRowSet(transaction, sql, maxRows, StatementOptions{});
-}
-
 RowSet Attachment::queryRowSet(
 	Transaction& transaction, std::string_view sql, unsigned maxRows, const StatementOptions& options)
 {
 	Statement statement{*this, transaction, sql, options};
+	return queryPreparedRowSet(statement, transaction, maxRows);
+}
 
+RowSet Attachment::queryPreparedRowSet(Statement& statement, Transaction& transaction, unsigned maxRows)
+{
 	switch (statement.getType())
 	{
 		case StatementType::SELECT:
