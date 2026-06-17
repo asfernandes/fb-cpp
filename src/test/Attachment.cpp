@@ -244,6 +244,104 @@ BOOST_AUTO_TEST_CASE(queryRowSetRejectsProcedureWithoutOutputColumns)
 	transaction.commit();
 }
 
+BOOST_AUTO_TEST_CASE(queryScalarReturnsFirstColumnOfFirstRow)
+{
+	const auto database = getTempFile("Attachment-queryScalarReturnsFirstColumnOfFirstRow.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_REQUIRE(
+		attachment.execute(transaction, "create table t (id integer not null primary key, name varchar(20))"));
+	transaction.commitRetaining();
+
+	BOOST_REQUIRE(attachment.execute(transaction, "insert into t (id, name) values (1, 'one')"));
+	BOOST_REQUIRE(attachment.execute(transaction, "insert into t (id, name) values (2, 'two')"));
+
+	const auto value = attachment.queryScalar<std::string>(transaction, "select name, id from t order by id");
+
+	BOOST_REQUIRE(value.has_value());
+	BOOST_CHECK_EQUAL(*value, "one");
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryScalarReturnsNulloptForNoRows)
+{
+	const auto database = getTempFile("Attachment-queryScalarReturnsNulloptForNoRows.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	const auto value = attachment.queryScalar<std::int32_t>(transaction, "select 1 from rdb$database where 1 = 0");
+
+	BOOST_CHECK(!value.has_value());
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryScalarReturnsNulloptForNullColumn)
+{
+	const auto database = getTempFile("Attachment-queryScalarReturnsNulloptForNullColumn.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	const auto value =
+		attachment.queryScalar<std::int32_t>(transaction, "select cast(null as integer) from rdb$database");
+
+	BOOST_CHECK(!value.has_value());
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryScalarSupportsStatementOptions)
+{
+	const auto database = getTempFile("Attachment-queryScalarSupportsStatementOptions.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	const auto value = attachment.queryScalar<std::int32_t>(
+		transaction, "select 1 from rdb$database", StatementOptions().setDialect(3u));
+
+	BOOST_REQUIRE(value.has_value());
+	BOOST_CHECK_EQUAL(*value, 1);
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryScalarSupportsProcedureWithOutputColumns)
+{
+	const auto database = getTempFile("Attachment-queryScalarSupportsProcedureWithOutputColumns.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_REQUIRE(attachment.execute(transaction,
+		"create procedure p returns (id integer, name varchar(20)) as begin id = 42; name = 'answer'; suspend; end"));
+	transaction.commitRetaining();
+
+	const auto value = attachment.queryScalar<std::int32_t>(transaction, "execute procedure p");
+
+	BOOST_REQUIRE(value.has_value());
+	BOOST_CHECK_EQUAL(*value, 42);
+
+	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryScalarThrowsForNonQueryStatement)
+{
+	const auto database = getTempFile("Attachment-queryScalarThrowsForNonQueryStatement.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_CHECK_THROW(attachment.queryScalar<std::int32_t>(transaction, "create table t (id integer)"), FbCppException);
+
+	transaction.commit();
+}
+
 BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 {
 	const auto database = getTempFile("Attachment-isNotValidAfterMove.fdb");

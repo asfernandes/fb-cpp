@@ -27,6 +27,7 @@
 
 #include "fb-api.h"
 #include "SmartPtrs.h"
+#include "RowSet.h"
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -42,7 +43,6 @@
 namespace fbcpp
 {
 	class Client;
-	class RowSet;
 	class StatementOptions;
 	class Transaction;
 
@@ -327,6 +327,19 @@ namespace fbcpp
 		RowSet queryRowSet(
 			Transaction& transaction, std::string_view sql, unsigned maxRows, const StatementOptions& options);
 
+		///
+		/// Prepares and executes a query using the supplied transaction and returns the first column of the first row.
+		///
+		template <typename T>
+		std::optional<T> queryScalar(Transaction& transaction, std::string_view sql);
+
+		///
+		/// Prepares and executes a query using the supplied transaction and statement options and returns the first
+		/// column of the first row.
+		///
+		template <typename T>
+		std::optional<T> queryScalar(Transaction& transaction, std::string_view sql, const StatementOptions& options);
+
 	private:
 		void disconnectOrDrop(bool drop);
 
@@ -334,6 +347,29 @@ namespace fbcpp
 		Client* client;
 		FbRef<fb::IAttachment> handle;
 	};
+
+	template <typename T>
+	std::optional<T> Attachment::queryScalar(Transaction& transaction, std::string_view sql)
+	{
+		auto rowSet = queryRowSet(transaction, sql, 1u);
+
+		if (rowSet.getCount() == 0u)
+			return std::nullopt;
+
+		return rowSet.getRow(0).get<std::optional<T>>(0);
+	}
+
+	template <typename T>
+	std::optional<T> Attachment::queryScalar(
+		Transaction& transaction, std::string_view sql, const StatementOptions& options)
+	{
+		auto rowSet = queryRowSet(transaction, sql, 1u, options);
+
+		if (rowSet.getCount() == 0u)
+			return std::nullopt;
+
+		return rowSet.getRow(0).get<std::optional<T>>(0);
+	}
 }  // namespace fbcpp
 
 
