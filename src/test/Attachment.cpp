@@ -92,6 +92,23 @@ BOOST_AUTO_TEST_CASE(createDatabaseWithForcedWritesOff)
 	transaction.commit();
 }
 
+BOOST_AUTO_TEST_CASE(executePreparesAndExecutesStatement)
+{
+	const auto database = getTempFile("Attachment-executePreparesAndExecutesStatement.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	BOOST_CHECK(attachment.execute(transaction, "create table t (id integer not null primary key)"));
+	transaction.commitRetaining();
+
+	BOOST_CHECK(attachment.execute(transaction, "insert into t (id) values (1)"));
+	BOOST_CHECK(attachment.execute(transaction, "select id from t"));
+	BOOST_CHECK(!attachment.execute(transaction, "select id from t where id = 2"));
+
+	transaction.commit();
+}
+
 BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 {
 	const auto database = getTempFile("Attachment-isNotValidAfterMove.fdb");

@@ -31,6 +31,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <cstddef>
 
@@ -41,6 +42,8 @@
 namespace fbcpp
 {
 	class Client;
+	class StatementOptions;
+	class Transaction;
 
 	///
 	/// Represents options used when creating an Attachment object.
@@ -300,6 +303,16 @@ namespace fbcpp
 		/// Drops the database.
 		///
 		void dropDatabase();
+
+		///
+		/// Prepares and executes an SQL statement using the supplied transaction.
+		///
+		bool execute(Transaction& transaction, std::string_view sql);
+
+		///
+		/// Prepares and executes an SQL statement using the supplied transaction and statement options.
+		///
+		bool execute(Transaction& transaction, std::string_view sql, const StatementOptions& options);
 
 	private:
 		void disconnectOrDrop(bool drop);

@@ -25,6 +25,8 @@
 #include "Attachment.h"
 #include "Client.h"
 #include "Exception.h"
+#include "Statement.h"
+#include "Transaction.h"
 
 using namespace fbcpp;
 using namespace fbcpp::impl;
@@ -92,4 +94,15 @@ void Attachment::disconnect()
 void Attachment::dropDatabase()
 {
 	disconnectOrDrop(true);
+}
+
+bool Attachment::execute(Transaction& transaction, std::string_view sql)
+{
+	return execute(transaction, sql, StatementOptions{});
+}
+
+bool Attachment::execute(Transaction& transaction, std::string_view sql, const StatementOptions& options)
+{
+	Statement statement{*this, transaction, sql, options};
+	return statement.execute(transaction);
 }
