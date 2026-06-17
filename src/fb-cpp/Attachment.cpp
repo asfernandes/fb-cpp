@@ -129,5 +129,6 @@ RowSet Attachment::queryPreparedRowSet(Statement& statement, Transaction& transa
 	}
 
 	const auto hasRow = statement.execute(transaction);
-	return RowSet{statement, hasRow ? maxRows : 0u, hasRow};
+	const auto effectiveMaxRows = statement.getType() == StatementType::EXEC_PROCEDURE ? 1u : maxRows;
+	return RowSet{statement, hasRow ? effectiveMaxRows : 0u, hasRow};
 }
