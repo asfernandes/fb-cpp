@@ -42,6 +42,7 @@
 namespace fbcpp
 {
 	class Client;
+	class RowSet;
 	class StatementOptions;
 	class Transaction;
 
@@ -313,6 +314,18 @@ namespace fbcpp
 		/// Prepares and executes an SQL statement using the supplied transaction and statement options.
 		///
 		bool execute(Transaction& transaction, std::string_view sql, const StatementOptions& options);
+
+		///
+		/// Prepares and executes a query using the supplied transaction and returns up to maxRows rows.
+		///
+		RowSet queryRowSet(Transaction& transaction, std::string_view sql, unsigned maxRows);
+
+		///
+		/// Prepares and executes a query using the supplied transaction and statement options and returns up to maxRows
+		/// rows.
+		///
+		RowSet queryRowSet(
+			Transaction& transaction, std::string_view sql, unsigned maxRows, const StatementOptions& options);
 
 	private:
 		void disconnectOrDrop(bool drop);

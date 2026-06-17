@@ -25,19 +25,25 @@
 #include "RowSet.h"
 #include "Client.h"
 #include "Statement.h"
+#include <algorithm>
 
 using namespace fbcpp;
 using namespace fbcpp::impl;
 
 
 RowSet::RowSet(Statement& statement, unsigned maxRows)
+	: RowSet{statement, maxRows, false}
+{
+}
+
+RowSet::RowSet(Statement& statement, unsigned maxRows, bool includeCurrentRow)
 	: client{&statement.getAttachment().getClient()},
 	  statusWrapper{statement.getAttachment().getClient()},
 	  numericConverter{statement.getAttachment().getClient()},
 	  calendarConverter{statement.getAttachment().getClient()}
 {
 	assert(statement.isValid());
-	assert(statement.getResultSetHandle());
+	assert(includeCurrentRow || statement.getResultSetHandle());
 
 	descriptors = statement.getOutputDescriptors();
 
@@ -49,7 +55,22 @@ RowSet::RowSet(Statement& statement, unsigned maxRows)
 	auto resultSet = statement.getResultSetHandle();
 	auto* dest = buffer.data();
 
-	for (unsigned i = 0; i < maxRows; ++i)
+	if (includeCurrentRow && maxRows > 0u)
+	{
+		auto& currentRow = statement.getOutputMessage();
+		assert(currentRow.size() == messageLength);
+		std::copy(currentRow.begin(), currentRow.end(), dest);
+		dest += messageLength;
+		++count;
+	}
+
+	if (!resultSet)
+	{
+		buffer.resize(static_cast<std::size_t>(dest - buffer.data()));
+		return;
+	}
+
+	for (unsigned i = count; i < maxRows; ++i)
 	{
 		if (resultSet->fetchNext(&statusWrapper, dest) != fb::IStatus::RESULT_OK)
 			break;

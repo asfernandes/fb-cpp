@@ -69,6 +69,14 @@ namespace fbcpp
 		///
 		explicit RowSet(Statement& statement, unsigned maxRows);
 
+		///
+		/// @brief Fetches up to `maxRows` rows from the current result set of `statement`.
+		///
+		/// When `includeCurrentRow` is true, the current output message already fetched by `statement.execute()` is
+		/// copied as the first row before fetching the remaining rows from the result set.
+		///
+		explicit RowSet(Statement& statement, unsigned maxRows, bool includeCurrentRow);
+
 		RowSet(RowSet&& o) noexcept
 			: client{o.client},
 			  count{o.count},

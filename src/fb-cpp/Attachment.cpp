@@ -25,6 +25,7 @@
 #include "Attachment.h"
 #include "Client.h"
 #include "Exception.h"
+#include "RowSet.h"
 #include "Statement.h"
 #include "Transaction.h"
 
@@ -105,4 +106,34 @@ bool Attachment::execute(Transaction& transaction, std::string_view sql, const S
 {
 	Statement statement{*this, transaction, sql, options};
 	return statement.execute(transaction);
+}
+
+RowSet Attachment::queryRowSet(Transaction& transaction, std::string_view sql, unsigned maxRows)
+{
+	return queryRowSet(transaction, sql, maxRows, StatementOptions{});
+}
+
+RowSet Attachment::queryRowSet(
+	Transaction& transaction, std::string_view sql, unsigned maxRows, const StatementOptions& options)
+{
+	Statement statement{*this, transaction, sql, options};
+
+	switch (statement.getType())
+	{
+		case StatementType::SELECT:
+		case StatementType::SELECT_FOR_UPDATE:
+			break;
+
+		case StatementType::EXEC_PROCEDURE:
+			if (!statement.getOutputDescriptors().empty())
+				break;
+
+			throw FbCppException("Cannot use procedure without output columns with Attachment::queryRowSet");
+
+		default:
+			throw FbCppException("Cannot use non-query SQL with Attachment::queryRowSet");
+	}
+
+	const auto hasRow = statement.execute(transaction);
+	return RowSet{statement, hasRow ? maxRows : 0u, hasRow};
 }
