@@ -37,5 +37,6 @@
 #include "ServiceManager.h"
 #include "BackupManager.h"
 #include "DatabaseManager.h"
+#include "DatabasePropertyManager.h"
 
 #endif  // FBCPP_H
