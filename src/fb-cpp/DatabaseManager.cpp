@@ -25,7 +25,6 @@
 #include "DatabaseManager.h"
 #include "Client.h"
 #include <cassert>
-#include <iostream>
 
 using namespace fbcpp;
 using namespace fbcpp::impl;
@@ -96,8 +95,10 @@ void DatabaseManager::setProperties(const DatabasePropertiesOptions& options)
 				builder->insertInt(&statusWrapper, isc_spb_prp_deny_new_attachments, timeout);
 				break;
 			case ShutdownMode::FORCED:
-			default:
 				builder->insertInt(&statusWrapper, isc_spb_prp_force_shutdown, timeout);
+				break;
+			default:
+				assert(false);
 				break;
 		}
 	}
