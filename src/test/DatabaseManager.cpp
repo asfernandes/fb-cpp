@@ -212,8 +212,7 @@ BOOST_AUTO_TEST_CASE(databaseShutdownAndOnline)
 	DatabaseManager manager{CLIENT, makeServiceManagerOptions()};
 
 	// Shutdown the database
-	manager.setProperties(
-		DatabasePropertiesOptions()
+	manager.setProperties(DatabasePropertiesOptions()
 			.setDatabase(databasePath)
 			.setShutdownState(ShutdownState::FULL)
 			.setShutdownMode(ShutdownMode::FORCED)
@@ -223,10 +222,7 @@ BOOST_AUTO_TEST_CASE(databaseShutdownAndOnline)
 	BOOST_CHECK_THROW(Attachment(CLIENT, databaseUri, attachmentOptions), DatabaseException);
 
 	// Bring the database online
-	manager.setProperties(
-		DatabasePropertiesOptions()
-			.setDatabase(databasePath)
-			.setOnline(true));
+	manager.setProperties(DatabasePropertiesOptions().setDatabase(databasePath).setOnline(true));
 
 	// Attachment should succeed when online
 	{  // scope
