@@ -194,4 +194,51 @@ BOOST_AUTO_TEST_CASE(databaseSweepAndValidate)
 	cleanup.dropDatabase();
 }
 
+BOOST_AUTO_TEST_CASE(databaseShutdownAndOnline)
+{
+	const auto databasePath = getTempFile("DatabaseManager-shutdownAndOnline.fdb", false);
+	const auto databaseUri = getTempFile("DatabaseManager-shutdownAndOnline.fdb");
+	const auto attachmentOptions = AttachmentOptions().setConnectionCharSet("UTF8");
+
+	{  // scope
+		Attachment attachment{
+			CLIENT, databaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+		Transaction transaction{attachment};
+		Statement createTable{attachment, transaction, "create table test (id integer)"};
+		BOOST_REQUIRE(createTable.execute(transaction));
+		transaction.commit();
+	}
+
+	DatabaseManager manager{CLIENT, makeServiceManagerOptions()};
+
+	// Shutdown the database
+	manager.setProperties(
+		DatabasePropertiesOptions()
+			.setDatabase(databasePath)
+			.setShutdownState(ShutdownState::FULL)
+			.setShutdownMode(ShutdownMode::FORCED)
+			.setShutdownTimeout(0));
+
+	// Attachment should fail when the database is shutdown
+	BOOST_CHECK_THROW(Attachment(CLIENT, databaseUri, attachmentOptions), DatabaseException);
+
+	// Bring the database online
+	manager.setProperties(
+		DatabasePropertiesOptions()
+			.setDatabase(databasePath)
+			.setOnline(true));
+
+	// Attachment should succeed when online
+	{  // scope
+		Attachment attachment{CLIENT, databaseUri, attachmentOptions};
+		Transaction transaction{attachment};
+		Statement query{attachment, transaction, "select count(*) from test"};
+		BOOST_REQUIRE(query.execute(transaction));
+		BOOST_CHECK_EQUAL(query.getInt32(0).value(), 0);
+	}
+
+	Attachment cleanup{CLIENT, databaseUri, attachmentOptions};
+	cleanup.dropDatabase();
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -37,6 +37,53 @@
 namespace fbcpp
 {
 	///
+	/// Shutdown state for a Firebird database.
+	///
+	enum class ShutdownState
+	{
+		///
+		/// Normal online state.
+		///
+		NORMAL,
+
+		///
+		/// Multi-user shutdown.
+		///
+		MULTI,
+
+		///
+		/// Single-user shutdown.
+		///
+		SINGLE,
+
+		///
+		/// Full exclusive shutdown.
+		///
+		FULL
+	};
+
+	///
+	/// Shutdown mode for a Firebird database.
+	///
+	enum class ShutdownMode
+	{
+		///
+		/// Forced shutdown: disconnects all users immediately after the timeout.
+		///
+		FORCED,
+
+		///
+		/// Deny new transactions: waits for existing transactions to finish.
+		///
+		DENY_TRANSACTIONS,
+
+		///
+		/// Deny new attachments: waits for existing connections to finish.
+		///
+		DENY_ATTACHMENTS
+	};
+
+	///
 	/// Represents options used to configure database properties through the service manager.
 	///
 	class DatabasePropertiesOptions final
@@ -76,9 +123,81 @@ namespace fbcpp
 			return *this;
 		}
 
+		///
+		/// Returns the shutdown state.
+		///
+		const std::optional<ShutdownState>& getShutdownState() const
+		{
+			return shutdownState;
+		}
+
+		///
+		/// Sets the shutdown state.
+		///
+		DatabasePropertiesOptions& setShutdownState(ShutdownState value)
+		{
+			shutdownState = value;
+			return *this;
+		}
+
+		///
+		/// Returns the shutdown mode.
+		///
+		const std::optional<ShutdownMode>& getShutdownMode() const
+		{
+			return shutdownMode;
+		}
+
+		///
+		/// Sets the shutdown mode.
+		///
+		DatabasePropertiesOptions& setShutdownMode(ShutdownMode value)
+		{
+			shutdownMode = value;
+			return *this;
+		}
+
+		///
+		/// Returns the shutdown timeout in seconds.
+		///
+		const std::optional<int>& getShutdownTimeout() const
+		{
+			return shutdownTimeout;
+		}
+
+		///
+		/// Sets the shutdown timeout in seconds.
+		///
+		DatabasePropertiesOptions& setShutdownTimeout(int value)
+		{
+			shutdownTimeout = value;
+			return *this;
+		}
+
+		///
+		/// Returns whether the database should be brought online.
+		///
+		const std::optional<bool>& getOnline() const
+		{
+			return online;
+		}
+
+		///
+		/// Sets whether the database should be brought online.
+		///
+		DatabasePropertiesOptions& setOnline(bool value)
+		{
+			online = value;
+			return *this;
+		}
+
 	private:
 		std::string database;
 		std::optional<ReplicaMode> replicaMode;
+		std::optional<ShutdownState> shutdownState;
+		std::optional<ShutdownMode> shutdownMode;
+		std::optional<int> shutdownTimeout;
+		std::optional<bool> online;
 	};
 
 	///

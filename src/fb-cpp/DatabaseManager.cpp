@@ -25,6 +25,7 @@
 #include "DatabaseManager.h"
 #include "Client.h"
 #include <cassert>
+#include <iostream>
 
 using namespace fbcpp;
 using namespace fbcpp::impl;
@@ -57,6 +58,57 @@ void DatabaseManager::setProperties(const DatabasePropertiesOptions& options)
 				break;
 		}
 		builder->insertBytes(&statusWrapper, isc_spb_prp_replica_mode, &modeVal, 1u);
+	}
+
+	if (const auto shutdownState = options.getShutdownState())
+	{
+		std::uint8_t stateVal = 0;
+		switch (*shutdownState)
+		{
+			case ShutdownState::NORMAL:
+				stateVal = isc_spb_prp_sm_normal;
+				break;
+			case ShutdownState::MULTI:
+				stateVal = isc_spb_prp_sm_multi;
+				break;
+			case ShutdownState::SINGLE:
+				stateVal = isc_spb_prp_sm_single;
+				break;
+			case ShutdownState::FULL:
+				stateVal = isc_spb_prp_sm_full;
+				break;
+			default:
+				assert(false);
+				break;
+		}
+		builder->insertBytes(&statusWrapper, isc_spb_prp_shutdown_mode, &stateVal, 1u);
+	}
+
+	if (const auto shutdownMode = options.getShutdownMode())
+	{
+		const auto timeout = options.getShutdownTimeout().value_or(0);
+		switch (*shutdownMode)
+		{
+			case ShutdownMode::DENY_TRANSACTIONS:
+				builder->insertInt(&statusWrapper, isc_spb_prp_deny_new_transactions, timeout);
+				break;
+			case ShutdownMode::DENY_ATTACHMENTS:
+				builder->insertInt(&statusWrapper, isc_spb_prp_deny_new_attachments, timeout);
+				break;
+			case ShutdownMode::FORCED:
+			default:
+				builder->insertInt(&statusWrapper, isc_spb_prp_force_shutdown, timeout);
+				break;
+		}
+	}
+
+	if (const auto online = options.getOnline())
+	{
+		if (*online)
+		{
+			std::uint8_t stateVal = isc_spb_prp_sm_normal;
+			builder->insertBytes(&statusWrapper, isc_spb_prp_online_mode, &stateVal, 1u);
+		}
 	}
 
 	const auto buffer = builder->getBuffer(&statusWrapper);
