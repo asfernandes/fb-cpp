@@ -27,6 +27,7 @@
 
 #include "Client.h"
 #include "Attachment.h"
+#include "AttachmentPool.h"
 #include "Transaction.h"
 #include "Descriptor.h"
 #include "Statement.h"

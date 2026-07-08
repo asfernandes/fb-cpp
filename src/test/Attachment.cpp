@@ -749,8 +749,8 @@ BOOST_AUTO_TEST_CASE(resetSession)
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
-	attachment.execute(transaction,
-		"select rdb$set_context('USER_SESSION', 'test_var', 'test_value') from rdb$database");
+	attachment.execute(
+		transaction, "select rdb$set_context('USER_SESSION', 'test_var', 'test_value') from rdb$database");
 	const auto valueBefore = attachment.queryScalar<std::string>(
 		transaction, "select rdb$get_context('USER_SESSION', 'test_var') from rdb$database");
 	BOOST_REQUIRE(valueBefore.has_value());
