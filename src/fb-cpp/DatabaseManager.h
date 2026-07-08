@@ -37,9 +37,9 @@
 namespace fbcpp
 {
 	///
-	/// Shutdown state for a Firebird database.
+	/// Shutdown mode for a Firebird database.
 	///
-	enum class ShutdownState
+	enum class ShutdownMode
 	{
 		///
 		/// Normal online state.
@@ -63,9 +63,9 @@ namespace fbcpp
 	};
 
 	///
-	/// Shutdown mode for a Firebird database.
+	/// Shutdown type for a Firebird database.
 	///
-	enum class ShutdownMode
+	enum class ShutdownType
 	{
 		///
 		/// Forced shutdown: disconnects all users immediately after the timeout.
@@ -124,23 +124,6 @@ namespace fbcpp
 		}
 
 		///
-		/// Returns the shutdown state.
-		///
-		const std::optional<ShutdownState>& getShutdownState() const
-		{
-			return shutdownState;
-		}
-
-		///
-		/// Sets the shutdown state.
-		///
-		DatabasePropertiesOptions& setShutdownState(ShutdownState value)
-		{
-			shutdownState = value;
-			return *this;
-		}
-
-		///
 		/// Returns the shutdown mode.
 		///
 		const std::optional<ShutdownMode>& getShutdownMode() const
@@ -154,6 +137,23 @@ namespace fbcpp
 		DatabasePropertiesOptions& setShutdownMode(ShutdownMode value)
 		{
 			shutdownMode = value;
+			return *this;
+		}
+
+		///
+		/// Returns the shutdown type.
+		///
+		const std::optional<ShutdownType>& getShutdownType() const
+		{
+			return shutdownType;
+		}
+
+		///
+		/// Sets the shutdown type.
+		///
+		DatabasePropertiesOptions& setShutdownType(ShutdownType value)
+		{
+			shutdownType = value;
 			return *this;
 		}
 
@@ -194,8 +194,8 @@ namespace fbcpp
 	private:
 		std::string database;
 		std::optional<ReplicaMode> replicaMode;
-		std::optional<ShutdownState> shutdownState;
 		std::optional<ShutdownMode> shutdownMode;
+		std::optional<ShutdownType> shutdownType;
 		std::optional<int> shutdownTimeout;
 		std::optional<bool> online;
 	};

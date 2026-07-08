@@ -41,6 +41,7 @@ void DatabaseManager::setProperties(const DatabasePropertiesOptions& options)
 	if (const auto replicaMode = options.getReplicaMode())
 	{
 		std::uint8_t modeVal = 0;
+
 		switch (*replicaMode)
 		{
 			case ReplicaMode::NONE:
@@ -56,45 +57,49 @@ void DatabaseManager::setProperties(const DatabasePropertiesOptions& options)
 				assert(false);
 				break;
 		}
+
 		builder->insertBytes(&statusWrapper, isc_spb_prp_replica_mode, &modeVal, 1u);
 	}
 
-	if (const auto shutdownState = options.getShutdownState())
+	if (const auto shutdownMode = options.getShutdownMode())
 	{
 		std::uint8_t stateVal = 0;
-		switch (*shutdownState)
+
+		switch (*shutdownMode)
 		{
-			case ShutdownState::NORMAL:
+			case ShutdownMode::NORMAL:
 				stateVal = isc_spb_prp_sm_normal;
 				break;
-			case ShutdownState::MULTI:
+			case ShutdownMode::MULTI:
 				stateVal = isc_spb_prp_sm_multi;
 				break;
-			case ShutdownState::SINGLE:
+			case ShutdownMode::SINGLE:
 				stateVal = isc_spb_prp_sm_single;
 				break;
-			case ShutdownState::FULL:
+			case ShutdownMode::FULL:
 				stateVal = isc_spb_prp_sm_full;
 				break;
 			default:
 				assert(false);
 				break;
 		}
+
 		builder->insertBytes(&statusWrapper, isc_spb_prp_shutdown_mode, &stateVal, 1u);
 	}
 
-	if (const auto shutdownMode = options.getShutdownMode())
+	if (const auto shutdownType = options.getShutdownType())
 	{
 		const auto timeout = options.getShutdownTimeout().value_or(0);
-		switch (*shutdownMode)
+
+		switch (*shutdownType)
 		{
-			case ShutdownMode::DENY_TRANSACTIONS:
+			case ShutdownType::DENY_TRANSACTIONS:
 				builder->insertInt(&statusWrapper, isc_spb_prp_deny_new_transactions, timeout);
 				break;
-			case ShutdownMode::DENY_ATTACHMENTS:
+			case ShutdownType::DENY_ATTACHMENTS:
 				builder->insertInt(&statusWrapper, isc_spb_prp_deny_new_attachments, timeout);
 				break;
-			case ShutdownMode::FORCED:
+			case ShutdownType::FORCED:
 				builder->insertInt(&statusWrapper, isc_spb_prp_force_shutdown, timeout);
 				break;
 			default:

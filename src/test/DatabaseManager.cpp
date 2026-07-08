@@ -214,8 +214,8 @@ BOOST_AUTO_TEST_CASE(databaseShutdownAndOnline)
 	// Shutdown the database
 	manager.setProperties(DatabasePropertiesOptions()
 			.setDatabase(databasePath)
-			.setShutdownState(ShutdownState::FULL)
-			.setShutdownMode(ShutdownMode::FORCED)
+			.setShutdownMode(ShutdownMode::FULL)
+			.setShutdownType(ShutdownType::FORCED)
 			.setShutdownTimeout(0));
 
 	// Attachment should fail when the database is shutdown
