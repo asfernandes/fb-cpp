@@ -97,6 +97,25 @@ void Attachment::dropDatabase()
 	disconnectOrDrop(true);
 }
 
+void Attachment::ping()
+{
+	assert(isValid());
+
+	StatusWrapper statusWrapper{*client};
+
+	handle->ping(&statusWrapper);
+}
+
+void Attachment::resetSession()
+{
+	assert(isValid());
+
+	StatusWrapper statusWrapper{*client};
+
+	handle->execute(
+		&statusWrapper, nullptr, 0, "alter session reset", SQL_DIALECT_V6, nullptr, nullptr, nullptr, nullptr);
+}
+
 bool Attachment::execute(Transaction& transaction, std::string_view sql, const StatementOptions& options)
 {
 	Statement statement{*this, transaction, sql, options};

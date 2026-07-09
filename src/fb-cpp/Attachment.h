@@ -307,6 +307,16 @@ namespace fbcpp
 		void dropDatabase();
 
 		///
+		/// Checks if the connection to the database is alive.
+		///
+		void ping();
+
+		///
+		/// Resets the session state.
+		///
+		void resetSession();
+
+		///
 		/// Prepares and executes an SQL statement using the supplied transaction.
 		///
 		bool execute(Transaction& transaction, std::string_view sql, const StatementOptions& options = {});

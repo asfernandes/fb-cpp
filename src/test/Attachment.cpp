@@ -733,4 +733,37 @@ BOOST_AUTO_TEST_CASE(isNotValidAfterDropDatabase)
 	BOOST_CHECK_EQUAL(attachment1.isValid(), false);
 }
 
+BOOST_AUTO_TEST_CASE(ping)
+{
+	const auto database = getTempFile("Attachment-ping.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	BOOST_CHECK_NO_THROW(attachment.ping());
+}
+
+BOOST_AUTO_TEST_CASE(resetSession)
+{
+	const auto database = getTempFile("Attachment-resetSession.fdb");
+	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	attachment.execute(transaction,
+		"select rdb$set_context('USER_SESSION', 'test_var', 'test_value') from rdb$database");
+	const auto valueBefore = attachment.queryScalar<std::string>(
+		transaction, "select rdb$get_context('USER_SESSION', 'test_var') from rdb$database");
+	BOOST_REQUIRE(valueBefore.has_value());
+	BOOST_CHECK_EQUAL(*valueBefore, "test_value");
+	transaction.commit();
+
+	attachment.resetSession();
+
+	Transaction transaction2{attachment};
+	const auto valueAfter = attachment.queryScalar<std::string>(
+		transaction2, "select rdb$get_context('USER_SESSION', 'test_var') from rdb$database");
+	BOOST_CHECK(!valueAfter.has_value());
+	transaction2.commit();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
