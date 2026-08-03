@@ -27,6 +27,7 @@
 #include "Attachment.h"
 #include "Client.h"
 #include "Exception.h"
+#include "fb-cpp-export.h"
 #include "SmartPtrs.h"
 #include "fb-api.h"
 #include <condition_variable>
@@ -63,7 +64,7 @@ namespace fbcpp
 	///
 	/// Observes Firebird events and forwards aggregated counts to a callback on a background thread.
 	///
-	class EventListener final
+	class FB_CPP_EXPORT EventListener final
 	{
 	public:
 		///

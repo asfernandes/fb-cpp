@@ -25,6 +25,7 @@
 #ifndef FBCPP_ROWSET_H
 #define FBCPP_ROWSET_H
 
+#include "fb-cpp-export.h"
 #include "fb-api.h"
 #include "Row.h"
 #include "SmartPtrs.h"
@@ -52,7 +53,7 @@ namespace fbcpp
 	/// construction the RowSet is independent of its source Statement and can
 	/// be used, moved, or destroyed freely.
 	///
-	class RowSet final
+	class FB_CPP_EXPORT RowSet final
 	{
 
 	public:

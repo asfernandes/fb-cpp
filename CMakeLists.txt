@@ -55,6 +55,34 @@ add_subdirectory(doc)
 
 if(BUILD_TESTING)
 	add_subdirectory(src/test)
+
+	set(_fb_cpp_vcpkg_installed_dir "${VCPKG_INSTALLED_DIR}")
+	if(_fb_cpp_vcpkg_installed_dir AND NOT IS_ABSOLUTE "${_fb_cpp_vcpkg_installed_dir}")
+		get_filename_component(_fb_cpp_vcpkg_installed_dir "${_fb_cpp_vcpkg_installed_dir}"
+			ABSOLUTE BASE_DIR "${CMAKE_BINARY_DIR}")
+	endif()
+
+	set(_fb_cpp_toolchain_file "${CMAKE_TOOLCHAIN_FILE}")
+	if(_fb_cpp_toolchain_file AND NOT IS_ABSOLUTE "${_fb_cpp_toolchain_file}")
+		get_filename_component(_fb_cpp_toolchain_file "${_fb_cpp_toolchain_file}"
+			ABSOLUTE BASE_DIR "${CMAKE_SOURCE_DIR}")
+	endif()
+
+	add_test(NAME fb-cpp-installed-consumer
+		COMMAND ${CMAKE_COMMAND}
+			-D "FB_CPP_BUILD_DIR=${CMAKE_BINARY_DIR}"
+			-D "FB_CPP_BUILD_CONFIG=$<CONFIG>"
+			-D "FB_CPP_CONSUMER_BINARY_DIR=${CMAKE_BINARY_DIR}/installed-consumer"
+			-D "FB_CPP_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/installed"
+			-D "FB_CPP_SOURCE_DIR=${CMAKE_SOURCE_DIR}"
+			-D "FB_CPP_VCPKG_INSTALLED_DIR=${_fb_cpp_vcpkg_installed_dir}"
+			-D "FB_CPP_VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}"
+			-D "FB_CPP_CMAKE_TOOLCHAIN_FILE=${_fb_cpp_toolchain_file}"
+			-P "${CMAKE_CURRENT_SOURCE_DIR}/tests/consumer/Run.cmake"
+	)
+
+	unset(_fb_cpp_vcpkg_installed_dir)
+	unset(_fb_cpp_toolchain_file)
 endif()
 
 

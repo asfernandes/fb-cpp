@@ -26,6 +26,7 @@
 #define FBCPP_ATTACHMENT_POOL_H
 
 #include "Attachment.h"
+#include "fb-cpp-export.h"
 #include "fb-api.h"
 #include <cassert>
 #include <chrono>
@@ -227,7 +228,7 @@ namespace fbcpp
 	/// The leased Attachment is confined to the thread holding the lease; it is not thread-safe.
 	/// Returns the Attachment to the pool when the lease is destroyed, unless it was already released.
 	///
-	class PooledAttachment final
+	class FB_CPP_EXPORT PooledAttachment final
 	{
 		friend class AttachmentPool;
 
@@ -334,7 +335,7 @@ namespace fbcpp
 	/// The Client and the AttachmentPool must exist and remain valid while there are outstanding
 	/// PooledAttachment leases.
 	///
-	class AttachmentPool final
+	class FB_CPP_EXPORT AttachmentPool final
 	{
 		friend class PooledAttachment;
 

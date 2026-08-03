@@ -26,6 +26,7 @@
 #define FBCPP_CLIENT_H
 
 #include "config.h"
+#include "fb-cpp-export.h"
 #include "fb-api.h"
 #include "SmartPtrs.h"
 #include <cassert>
@@ -49,7 +50,7 @@ namespace fbcpp
 	/// The Client must exist and remain valid while there are other objects using it, such as Attachment, Transaction
 	/// and Statement.
 	///
-	class Client final
+	class FB_CPP_EXPORT Client final
 	{
 	public:
 		///

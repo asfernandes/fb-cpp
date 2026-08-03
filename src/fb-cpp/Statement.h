@@ -26,6 +26,7 @@
 #define FBCPP_STATEMENT_H
 
 #include "config.h"
+#include "fb-cpp-export.h"
 #include "fb-api.h"
 #include "types.h"
 #include "Blob.h"
@@ -134,7 +135,7 @@ namespace fbcpp
 	///
 	/// Prepares, executes, and fetches SQL statements against a Firebird attachment.
 	///
-	class Statement final
+	class FB_CPP_EXPORT Statement final
 	{
 	public:
 		///

@@ -30,6 +30,16 @@ jobs:
 
   build-linux:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - name: static
+            buildSharedLibs: 'OFF'
+            triplet: x64-linux
+          - name: dynamic
+            buildSharedLibs: 'ON'
+            triplet: x64-linux-dynamic
     env:
       USERNAME: asfernandes
       VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
@@ -50,9 +60,9 @@ jobs:
             vcpkg/buildtrees
             vcpkg/packages
             build/vcpkg_installed
-          key: ${{ runner.os }}-vcpkg-v3-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          key: ${{ runner.os }}-vcpkg-v4-${{ matrix.variant.name }}-${{ matrix.variant.triplet }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'CMakePresets.json', 'cmake/triplets/*.cmake') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-v3-
+            ${{ runner.os }}-vcpkg-v4-${{ matrix.variant.name }}-${{ matrix.variant.triplet }}-
 
       - name: Install system dependencies
         run: |
@@ -105,13 +115,13 @@ jobs:
       - name: Configure CMake
         run: |
           cp CMakeUserPresets.json.posix.template CMakeUserPresets.json
-          cmake --preset default
+          cmake --preset default -DBUILD_SHARED_LIBS=${{ matrix.variant.buildSharedLibs }} -DVCPKG_TARGET_TRIPLET=${{ matrix.variant.triplet }}
 
       - name: Upload vcpkg failure logs
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: vcpkg-logs-${{ github.job }}
+          name: vcpkg-logs-${{ github.job }}-${{ matrix.variant.name }}
           path: vcpkg/buildtrees/**/*.log
           if-no-files-found: ignore
 
@@ -124,11 +134,22 @@ jobs:
           ctest --preset default --output-on-failure -j8
 
       - name: Build documentation
+        if: matrix.variant.name == 'static'
         run: |
           cmake --build --preset default --target docs
 
   build-windows:
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - name: static
+            buildSharedLibs: 'OFF'
+            triplet: x64-windows-static-md
+          - name: dynamic
+            buildSharedLibs: 'ON'
+            triplet: x64-windows
     env:
       USERNAME: asfernandes
       VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
@@ -149,9 +170,9 @@ jobs:
             vcpkg/buildtrees
             vcpkg/packages
             build/vcpkg_installed
-          key: ${{ runner.os }}-vcpkg-v3-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          key: ${{ runner.os }}-vcpkg-v4-${{ matrix.variant.name }}-${{ matrix.variant.triplet }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'CMakePresets.json', 'cmake/triplets/*.cmake') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-v3-
+            ${{ runner.os }}-vcpkg-v4-${{ matrix.variant.name }}-${{ matrix.variant.triplet }}-
 
       - name: Install Firebird
         shell: cmd
@@ -197,13 +218,13 @@ jobs:
         shell: cmd
         run: |
           copy CMakeUserPresets.json.windows-vs2026.template CMakeUserPresets.json
-          cmake --preset default
+          cmake --preset default -DBUILD_SHARED_LIBS=${{ matrix.variant.buildSharedLibs }} -DVCPKG_TARGET_TRIPLET=${{ matrix.variant.triplet }}
 
       - name: Upload vcpkg failure logs
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: vcpkg-logs-${{ github.job }}
+          name: vcpkg-logs-${{ github.job }}-${{ matrix.variant.name }}
           path: vcpkg/buildtrees/**/*.log
           if-no-files-found: ignore
 
@@ -219,6 +240,16 @@ jobs:
 
   build-macos:
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - name: static
+            buildSharedLibs: 'OFF'
+            triplet: arm64-osx
+          - name: dynamic
+            buildSharedLibs: 'ON'
+            triplet: arm64-osx-dynamic
     env:
       USERNAME: asfernandes
       VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
@@ -239,9 +270,9 @@ jobs:
             vcpkg/buildtrees
             vcpkg/packages
             build/vcpkg_installed
-          key: ${{ runner.os }}-vcpkg-v3-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          key: ${{ runner.os }}-vcpkg-v4-${{ matrix.variant.name }}-${{ matrix.variant.triplet }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'CMakePresets.json', 'cmake/triplets/*.cmake') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-v3-
+            ${{ runner.os }}-vcpkg-v4-${{ matrix.variant.name }}-${{ matrix.variant.triplet }}-
 
       - name: Install system dependencies
         run: |
@@ -286,13 +317,13 @@ jobs:
       - name: Configure CMake
         run: |
           cp CMakeUserPresets.json.posix.template CMakeUserPresets.json
-          cmake --preset default
+          cmake --preset default -DBUILD_SHARED_LIBS=${{ matrix.variant.buildSharedLibs }} -DVCPKG_TARGET_TRIPLET=${{ matrix.variant.triplet }}
 
       - name: Upload vcpkg failure logs
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: vcpkg-logs-${{ github.job }}
+          name: vcpkg-logs-${{ github.job }}-${{ matrix.variant.name }}
           path: vcpkg/buildtrees/**/*.log
           if-no-files-found: ignore
 

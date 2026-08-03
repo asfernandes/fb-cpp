@@ -25,6 +25,7 @@
 #ifndef FBCPP_BLOB_H
 #define FBCPP_BLOB_H
 
+#include "fb-cpp-export.h"
 #include "fb-api.h"
 #include "SmartPtrs.h"
 #include "Exception.h"
@@ -264,7 +265,7 @@ namespace fbcpp
 	///
 	/// Provides read and write access to Firebird blobs.
 	///
-	class Blob final
+	class FB_CPP_EXPORT Blob final
 	{
 	public:
 		///
