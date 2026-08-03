@@ -297,7 +297,8 @@ jobs:
               autoconf-archive \
               automake \
               libtool \
-              mono
+              mono \
+              llvm
 
       - name: Configure NuGet duplicate handling
         if: github.repository == 'asfernandes/fb-cpp'
@@ -335,6 +336,10 @@ jobs:
           mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
             setapikey "${{ secrets.GITHUB_TOKEN }}" \
             -Source "${{ env.FEED_URL }}"
+
+      - name: Add LLVM tools to PATH
+        if: runner.os == 'MacOS'
+        run: echo "$(brew --prefix llvm)/bin" >> "$GITHUB_PATH"
 
       - name: Configure CMake
         run: |
