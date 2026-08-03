@@ -80,6 +80,12 @@ jobs:
               libtomcrypt1 \
               mono-complete
 
+      - name: Configure NuGet duplicate handling
+        if: github.repository == 'asfernandes/fb-cpp'
+        run: |
+          echo "VCPKG_MONO_EXE=$(command -v mono)" >> "$GITHUB_ENV"
+          echo "${{ github.workspace }}/.github/bin" >> "$GITHUB_PATH"
+
       - name: Install Firebird
         run: |
           wget -nv -O Firebird-5.0.3.1683-0-linux-x64.tar.gz \
@@ -282,6 +288,12 @@ jobs:
               automake \
               libtool \
               mono
+
+      - name: Configure NuGet duplicate handling
+        if: github.repository == 'asfernandes/fb-cpp'
+        run: |
+          echo "VCPKG_MONO_EXE=$(command -v mono)" >> "$GITHUB_ENV"
+          echo "${{ github.workspace }}/.github/bin" >> "$GITHUB_PATH"
 
       - name: Install Firebird
         run: |
