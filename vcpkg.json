@@ -34,7 +34,7 @@
     {
       "name": "firebird",
       "version": "5.0.4",
-      "port-version": 3
+      "port-version": 4
     },
     {
       "name": "icu",
