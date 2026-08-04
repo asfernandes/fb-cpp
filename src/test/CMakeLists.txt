@@ -17,7 +17,6 @@ add_executable(${PROJECT_NAME}
 
 find_package(Boost REQUIRED
 	COMPONENTS
-		filesystem
 		unit_test_framework
 )
 
@@ -30,7 +29,6 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
 	PRIVATE fb-cpp
 	PRIVATE firebird
-	PRIVATE Boost::filesystem
 	PRIVATE Boost::unit_test_framework
 )
 

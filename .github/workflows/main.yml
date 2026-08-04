@@ -147,7 +147,7 @@ jobs:
           ctest --preset default --output-on-failure -j8
 
       - name: Build documentation
-        if: matrix.variant.name == 'static'
+        if: matrix.variant.name == 'dynamic'
         run: |
           cmake --build --preset default --target docs
 

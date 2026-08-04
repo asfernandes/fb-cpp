@@ -2,8 +2,25 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(fb-cpp CXX)
 
-option(FB_CPP_USE_BOOST_DLL "Enable Boost.DLL support for loading fbclient at runtime" ON)
-option(FB_CPP_USE_BOOST_MULTIPRECISION "Enable Boost.Multiprecision helpers for INT128 and DECFLOAT types" ON)
+set(_fb_cpp_use_boost_dll_default ON)
+if(DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
+	if(NOT EXISTS "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/boost-dll")
+		set(_fb_cpp_use_boost_dll_default OFF)
+	endif()
+endif()
+option(FB_CPP_USE_BOOST_DLL "Enable Boost.DLL support for loading fbclient at runtime"
+	${_fb_cpp_use_boost_dll_default})
+unset(_fb_cpp_use_boost_dll_default)
+
+set(_fb_cpp_use_boost_multiprecision_default ON)
+if(DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
+	if(NOT EXISTS "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/boost-multiprecision")
+		set(_fb_cpp_use_boost_multiprecision_default OFF)
+	endif()
+endif()
+option(FB_CPP_USE_BOOST_MULTIPRECISION "Enable Boost.Multiprecision helpers for INT128 and DECFLOAT types"
+	${_fb_cpp_use_boost_multiprecision_default})
+unset(_fb_cpp_use_boost_multiprecision_default)
 
 file(GLOB_RECURSE SRC
 	"*.h"
