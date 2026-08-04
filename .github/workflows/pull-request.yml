@@ -29,13 +29,9 @@ jobs:
           ./check-format.sh
 
   build-linux:
-    concurrency:
-      group: build-linux
-      cancel-in-progress: false
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 1
       matrix:
         variant:
           - name: static
@@ -44,11 +40,6 @@ jobs:
           - name: dynamic
             buildSharedLibs: 'ON'
             triplet: x64-linux-dynamic
-    env:
-      USERNAME: asfernandes
-      VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
-      FEED_URL: ${{ github.repository == 'asfernandes/fb-cpp' && 'https://nuget.pkg.github.com/asfernandes/index.json' || '' }}
-      VCPKG_BINARY_SOURCES: ${{ github.repository == 'asfernandes/fb-cpp' && 'clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite' || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -102,20 +93,6 @@ jobs:
         run: |
           ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
-      - name: Configure vcpkg binary caching
-        if: github.repository == 'asfernandes/fb-cpp'
-        run: |
-          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
-            sources add \
-            -Source "${{ env.FEED_URL }}" \
-            -StorePasswordInClearText \
-            -Name GitHubPackages \
-            -UserName "${{ env.USERNAME }}" \
-            -Password "${{ secrets.GITHUB_TOKEN }}"
-          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
-            setapikey "${{ secrets.GITHUB_TOKEN }}" \
-            -Source "${{ env.FEED_URL }}"
-
       - name: Configure CMake
         run: |
           cp CMakeUserPresets.json.posix.template CMakeUserPresets.json
@@ -143,13 +120,9 @@ jobs:
           cmake --build --preset default --target docs
 
   build-windows:
-    concurrency:
-      group: build-windows
-      cancel-in-progress: false
     runs-on: windows-latest
     strategy:
       fail-fast: false
-      max-parallel: 1
       matrix:
         variant:
           - name: static
@@ -158,11 +131,6 @@ jobs:
           - name: dynamic
             buildSharedLibs: 'ON'
             triplet: x64-windows
-    env:
-      USERNAME: asfernandes
-      VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
-      FEED_URL: ${{ github.repository == 'asfernandes/fb-cpp' && 'https://nuget.pkg.github.com/asfernandes/index.json' || '' }}
-      VCPKG_BINARY_SOURCES: ${{ github.repository == 'asfernandes/fb-cpp' && 'clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite' || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -207,21 +175,6 @@ jobs:
         run: |
           vcpkg\bootstrap-vcpkg.bat -disableMetrics
 
-      - name: Configure vcpkg binary caching
-        if: github.repository == 'asfernandes/fb-cpp'
-        shell: pwsh
-        run: |
-          .$(${{ env.VCPKG_EXE }} fetch nuget) `
-            sources add `
-            -Source "${{ env.FEED_URL }}" `
-            -StorePasswordInClearText `
-            -Name GitHubPackages `
-            -UserName "${{ env.USERNAME }}" `
-            -Password "${{ secrets.GITHUB_TOKEN }}"
-          .$(${{ env.VCPKG_EXE }} fetch nuget) `
-            setapikey "${{ secrets.GITHUB_TOKEN }}" `
-            -Source "${{ env.FEED_URL }}"
-
       - name: Configure CMake
         shell: cmd
         run: |
@@ -247,13 +200,9 @@ jobs:
           ctest --preset default --output-on-failure -j8
 
   build-macos:
-    concurrency:
-      group: build-macos
-      cancel-in-progress: false
     runs-on: macos-latest
     strategy:
       fail-fast: false
-      max-parallel: 1
       matrix:
         variant:
           - name: static
@@ -262,11 +211,6 @@ jobs:
           - name: dynamic
             buildSharedLibs: 'ON'
             triplet: arm64-osx-dynamic
-    env:
-      USERNAME: asfernandes
-      VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
-      FEED_URL: ${{ github.repository == 'asfernandes/fb-cpp' && 'https://nuget.pkg.github.com/asfernandes/index.json' || '' }}
-      VCPKG_BINARY_SOURCES: ${{ github.repository == 'asfernandes/fb-cpp' && 'clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite' || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -312,20 +256,6 @@ jobs:
       - name: Bootstrap vcpkg
         run: |
           ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
-
-      - name: Configure vcpkg binary caching
-        if: github.repository == 'asfernandes/fb-cpp'
-        run: |
-          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
-            sources add \
-            -Source "${{ env.FEED_URL }}" \
-            -StorePasswordInClearText \
-            -Name GitHubPackages \
-            -UserName "${{ env.USERNAME }}" \
-            -Password "${{ secrets.GITHUB_TOKEN }}"
-          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
-            setapikey "${{ secrets.GITHUB_TOKEN }}" \
-            -Source "${{ env.FEED_URL }}"
 
       - name: Add LLVM tools to PATH
         if: runner.os == 'MacOS'
