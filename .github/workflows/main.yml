@@ -33,9 +33,13 @@ jobs:
           ./check-format.sh
 
   build-linux:
+    concurrency:
+      group: build-linux
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         variant:
           - name: static
@@ -83,12 +87,6 @@ jobs:
               libtommath1 \
               libtomcrypt1 \
               mono-complete
-
-      - name: Configure NuGet duplicate handling
-        if: github.repository == 'asfernandes/fb-cpp'
-        run: |
-          echo "VCPKG_MONO_EXE=$(command -v mono)" >> "$GITHUB_ENV"
-          echo "${{ github.workspace }}/.github/bin" >> "$GITHUB_PATH"
 
       - name: Install Firebird
         run: |
@@ -155,9 +153,13 @@ jobs:
           path: build/Debug/doc/docs/html
 
   build-windows:
+    concurrency:
+      group: build-windows
+      cancel-in-progress: false
     runs-on: windows-latest
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         variant:
           - name: static
@@ -255,9 +257,13 @@ jobs:
           ctest --preset default --output-on-failure -j8
 
   build-macos:
+    concurrency:
+      group: build-macos
+      cancel-in-progress: false
     runs-on: macos-latest
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         variant:
           - name: static
@@ -299,12 +305,6 @@ jobs:
               libtool \
               mono \
               llvm
-
-      - name: Configure NuGet duplicate handling
-        if: github.repository == 'asfernandes/fb-cpp'
-        run: |
-          echo "VCPKG_MONO_EXE=$(command -v mono)" >> "$GITHUB_ENV"
-          echo "${{ github.workspace }}/.github/bin" >> "$GITHUB_PATH"
 
       - name: Install Firebird
         run: |

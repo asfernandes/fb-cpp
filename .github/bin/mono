@@ -1,7 +1,0 @@
-#!/bin/sh
-
-if [ "${2:-}" = "push" ]; then
-	set -- "$@" -SkipDuplicate
-fi
-
-exec "$VCPKG_MONO_EXE" "$@"
