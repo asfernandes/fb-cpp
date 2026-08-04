@@ -2,8 +2,25 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(fb-cpp CXX)
 
-option(FB_CPP_USE_BOOST_DLL "Enable Boost.DLL support for loading fbclient at runtime" ON)
-option(FB_CPP_USE_BOOST_MULTIPRECISION "Enable Boost.Multiprecision helpers for INT128 and DECFLOAT types" ON)
+set(_fb_cpp_use_boost_dll_default ON)
+if(DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
+	if(NOT EXISTS "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/boost-dll")
+		set(_fb_cpp_use_boost_dll_default OFF)
+	endif()
+endif()
+option(FB_CPP_USE_BOOST_DLL "Enable Boost.DLL support for loading fbclient at runtime"
+	${_fb_cpp_use_boost_dll_default})
+unset(_fb_cpp_use_boost_dll_default)
+
+set(_fb_cpp_use_boost_multiprecision_default ON)
+if(DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
+	if(NOT EXISTS "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/boost-multiprecision")
+		set(_fb_cpp_use_boost_multiprecision_default OFF)
+	endif()
+endif()
+option(FB_CPP_USE_BOOST_MULTIPRECISION "Enable Boost.Multiprecision helpers for INT128 and DECFLOAT types"
+	${_fb_cpp_use_boost_multiprecision_default})
+unset(_fb_cpp_use_boost_multiprecision_default)
 
 file(GLOB_RECURSE SRC
 	"*.h"
@@ -31,10 +48,16 @@ add_library(${PROJECT_NAME}
 	${SRC}
 )
 
+include(GenerateExportHeader)
+generate_export_header(${PROJECT_NAME}
+	BASE_NAME FB_CPP
+	EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/fb-cpp-export.h"
+)
 
 target_include_directories(${PROJECT_NAME}
 	PUBLIC
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/..>
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 		$<INSTALL_INTERFACE:include>
 )
 
@@ -63,13 +86,17 @@ target_compile_definitions(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
 		firebird
-	PRIVATE
-		${CMAKE_DL_LIBS}
 )
+
+if(FB_CPP_USE_BOOST_DLL)
+	target_link_libraries(${PROJECT_NAME}
+		PUBLIC Boost::dll
+	)
+endif()
 
 if(FB_CPP_USE_BOOST_MULTIPRECISION)
 	target_link_libraries(${PROJECT_NAME}
-		PRIVATE Boost::multiprecision
+		PUBLIC Boost::multiprecision
 	)
 endif()
 
@@ -93,6 +120,10 @@ foreach(HEADER_FILE ${HEADER_FILES})
 		)
 	endif()
 endforeach()
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/fb-cpp-export.h"
+	DESTINATION include/fb-cpp
+)
 
 install(TARGETS ${PROJECT_NAME}
 	EXPORT ${PROJECT_NAME}Targets

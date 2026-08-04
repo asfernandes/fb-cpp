@@ -26,6 +26,7 @@
 #define FBCPP_EXCEPTION_H
 
 #include "fb-api.h"
+#include "fb-cpp-export.h"
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -42,7 +43,7 @@ namespace fbcpp
 
 namespace fbcpp::impl
 {
-	class StatusWrapper : public fb::IStatusImpl<StatusWrapper, StatusWrapper>
+	class FB_CPP_EXPORT StatusWrapper : public fb::IStatusImpl<StatusWrapper, StatusWrapper>
 	{
 	public:
 		explicit StatusWrapper(Client& client, IStatus* status = nullptr)
@@ -226,7 +227,7 @@ namespace fbcpp
 	///
 	/// Base exception class for all fb-cpp exceptions.
 	///
-	class FbCppException : public std::runtime_error
+	class FB_CPP_EXPORT FbCppException : public std::runtime_error
 	{
 	public:
 		using std::runtime_error::runtime_error;
@@ -243,7 +244,7 @@ namespace fbcpp
 	///
 	/// Exception thrown when a Firebird database operation fails.
 	///
-	class DatabaseException final : public FbCppException
+	class FB_CPP_EXPORT DatabaseException final : public FbCppException
 	{
 	public:
 		///

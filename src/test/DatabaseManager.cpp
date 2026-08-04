@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 
 	{  // scope
 		Attachment attachment{
-			CLIENT, databaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+			getClient(), databaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
 		Transaction transaction{attachment};
 
 		Statement queryContext{
@@ -66,11 +66,11 @@ BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 		BOOST_CHECK_EQUAL(queryMon.getInt32(0).value(), 0);
 	}
 
-	DatabaseManager manager{CLIENT, makeServiceManagerOptions()};
+	DatabaseManager manager{getClient(), makeServiceManagerOptions()};
 	manager.setProperties(DatabasePropertiesOptions().setDatabase(databasePath).setReplicaMode(ReplicaMode::READ_ONLY));
 
 	{  // scope
-		Attachment attachment{CLIENT, databaseUri, attachmentOptions};
+		Attachment attachment{getClient(), databaseUri, attachmentOptions};
 		Transaction transaction{attachment};
 
 		Statement queryContext{
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 	manager.setProperties(DatabasePropertiesOptions().setDatabase(databasePath).setReplicaMode(ReplicaMode::NONE));
 
 	{  // scope
-		Attachment attachment{CLIENT, databaseUri, attachmentOptions};
+		Attachment attachment{getClient(), databaseUri, attachmentOptions};
 		Transaction transaction{attachment};
 
 		Statement queryContext{
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(setReplicaModeNone)
 		BOOST_CHECK_EQUAL(queryMon.getInt32(0).value(), 0);
 	}
 
-	Attachment cleanup{CLIENT, databaseUri, attachmentOptions};
+	Attachment cleanup{getClient(), databaseUri, attachmentOptions};
 	cleanup.dropDatabase();
 }
 
@@ -115,14 +115,14 @@ BOOST_AUTO_TEST_CASE(restoreWithReplicaMode)
 
 	{  // scope
 		Attachment attachment{
-			CLIENT, sourceDatabaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+			getClient(), sourceDatabaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
 		Transaction transaction{attachment};
 		Statement create{attachment, transaction, "create table test(id integer)"};
 		create.execute(transaction);
 		transaction.commit();
 	}
 
-	BackupManager backupManager{CLIENT, makeServiceManagerOptions()};
+	BackupManager backupManager{getClient(), makeServiceManagerOptions()};
 	backupManager.backup(BackupOptions().setDatabase(sourceDatabasePath).setBackupFile(backupFile));
 	backupManager.restore(RestoreOptions()
 			.setDatabase(restoredDatabasePath)
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(restoreWithReplicaMode)
 			.setReplicaMode(ReplicaMode::READ_WRITE));
 
 	{  // scope
-		Attachment restored{CLIENT, restoredDatabaseUri, attachmentOptions};
+		Attachment restored{getClient(), restoredDatabaseUri, attachmentOptions};
 		FbDropDatabase restoredDrop{restored};
 		Transaction transaction{restored};
 
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(restoreWithReplicaMode)
 		BOOST_CHECK_EQUAL(queryMon.getInt32(0).value(), 2);
 	}
 
-	Attachment cleanup{CLIENT, sourceDatabaseUri, attachmentOptions};
+	Attachment cleanup{getClient(), sourceDatabaseUri, attachmentOptions};
 	cleanup.dropDatabase();
 }
 
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(databaseSweepAndValidate)
 
 	{  // scope
 		Attachment attachment{
-			CLIENT, databaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+			getClient(), databaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
 		Transaction transaction{attachment};
 
 		Statement createTable{attachment, transaction, "create table test (id integer)"};
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(databaseSweepAndValidate)
 	}
 
 	{  // scope
-		Attachment attachment{CLIENT, databaseUri, attachmentOptions};
+		Attachment attachment{getClient(), databaseUri, attachmentOptions};
 		Transaction transaction{attachment};
 
 		Statement insertData{attachment, transaction, "insert into test (id) values (1)"};
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(databaseSweepAndValidate)
 		transaction.commit();
 	}
 
-	DatabaseManager manager{CLIENT, makeServiceManagerOptions()};
+	DatabaseManager manager{getClient(), makeServiceManagerOptions()};
 
 	// 1. Run database sweep
 	BOOST_CHECK_NO_THROW(manager.repair(DatabaseRepairOptions().setDatabase(databasePath).setSweep(true)));
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(databaseSweepAndValidate)
 	// 4. Run database upgrade (minor ODS upgrade)
 	BOOST_CHECK_NO_THROW(manager.repair(DatabaseRepairOptions().setDatabase(databasePath).setUpgradeDb(true)));
 
-	Attachment cleanup{CLIENT, databaseUri, attachmentOptions};
+	Attachment cleanup{getClient(), databaseUri, attachmentOptions};
 	cleanup.dropDatabase();
 }
 
@@ -202,14 +202,14 @@ BOOST_AUTO_TEST_CASE(databaseShutdownAndOnline)
 
 	{  // scope
 		Attachment attachment{
-			CLIENT, databaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+			getClient(), databaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
 		Transaction transaction{attachment};
 		Statement createTable{attachment, transaction, "create table test (id integer)"};
 		BOOST_REQUIRE(createTable.execute(transaction));
 		transaction.commit();
 	}
 
-	DatabaseManager manager{CLIENT, makeServiceManagerOptions()};
+	DatabaseManager manager{getClient(), makeServiceManagerOptions()};
 
 	// Shutdown the database
 	manager.setProperties(DatabasePropertiesOptions()
@@ -219,21 +219,21 @@ BOOST_AUTO_TEST_CASE(databaseShutdownAndOnline)
 			.setShutdownTimeout(0));
 
 	// Attachment should fail when the database is shutdown
-	BOOST_CHECK_THROW(Attachment(CLIENT, databaseUri, attachmentOptions), DatabaseException);
+	BOOST_CHECK_THROW(Attachment(getClient(), databaseUri, attachmentOptions), DatabaseException);
 
 	// Bring the database online
 	manager.setProperties(DatabasePropertiesOptions().setDatabase(databasePath).setOnline(true));
 
 	// Attachment should succeed when online
 	{  // scope
-		Attachment attachment{CLIENT, databaseUri, attachmentOptions};
+		Attachment attachment{getClient(), databaseUri, attachmentOptions};
 		Transaction transaction{attachment};
 		Statement query{attachment, transaction, "select count(*) from test"};
 		BOOST_REQUIRE(query.execute(transaction));
 		BOOST_CHECK_EQUAL(query.getInt32(0).value(), 0);
 	}
 
-	Attachment cleanup{CLIENT, databaseUri, attachmentOptions};
+	Attachment cleanup{getClient(), databaseUri, attachmentOptions};
 	cleanup.dropDatabase();
 }
 

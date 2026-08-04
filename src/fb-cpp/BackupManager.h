@@ -26,6 +26,7 @@
 #define FBCPP_BACKUP_MANAGER_H
 
 #include "ServiceManager.h"
+#include "fb-cpp-export.h"
 #include <cstdint>
 #include <optional>
 #include <stdexcept>
@@ -325,7 +326,7 @@ namespace fbcpp
 	///
 	/// Executes backup and restore operations through the Firebird service manager.
 	///
-	class BackupManager final : public ServiceManager
+	class FB_CPP_EXPORT BackupManager final : public ServiceManager
 	{
 	public:
 		using ServiceManager::ServiceManager;

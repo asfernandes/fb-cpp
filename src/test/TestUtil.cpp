@@ -37,11 +37,11 @@ namespace fs = std::filesystem;
 
 namespace fbcpp::test
 {
-	// Client CLIENT{"fbclient"};
-	Client CLIENT{fb::fb_get_master_interface()};
-
 	namespace
 	{
+		struct GlobalFixture;
+		GlobalFixture* currentGlobalFixture = nullptr;
+
 		fs::path tempDir;
 		bool removeTempDir = false;
 		std::string testServerPrefix;
@@ -59,8 +59,13 @@ namespace fbcpp::test
 
 		struct GlobalFixture
 		{
+			// Keep the static Firebird client out of Boost.Test's discovery process.
+			std::optional<Client> client;
+
 			GlobalFixture()
 			{
+				currentGlobalFixture = this;
+
 				const char* testDirEnv = std::getenv("FBCPP_TEST_DIR");
 				const char* testServerEnv = std::getenv("FBCPP_TEST_SERVER");
 				if (testServerEnv && *testServerEnv)
@@ -89,16 +94,36 @@ namespace fbcpp::test
 
 			~GlobalFixture()
 			{
-				CLIENT.shutdown();
+				if (client)
+				{
+					client->shutdown();
+					client.reset();
+				}
 
 				if (removeTempDir)
 				{
 					std::error_code ec;
 					fs::remove(tempDir, ec);
 				}
+
+				currentGlobalFixture = nullptr;
+			}
+
+			Client& getClient()
+			{
+				if (!client)
+					client.emplace(fb::fb_get_master_interface());
+
+				return *client;
 			}
 		};
 	}  // namespace
+
+	Client& getClient()
+	{
+		assert(currentGlobalFixture);
+		return currentGlobalFixture->getClient();
+	}
 
 	std::string getTempFile(const std::string_view name, bool includeServerPrefix)
 	{

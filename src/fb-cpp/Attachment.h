@@ -25,6 +25,7 @@
 #ifndef FBCPP_ATTACHMENT_H
 #define FBCPP_ATTACHMENT_H
 
+#include "fb-cpp-export.h"
 #include "fb-api.h"
 #include "RowSet.h"
 #include "SmartPtrs.h"
@@ -214,7 +215,7 @@ namespace fbcpp
 	/// The Attachment must exist and remain valid while there are other objects using it, such as Transaction and
 	/// Statement.
 	///
-	class Attachment final
+	class FB_CPP_EXPORT Attachment final
 	{
 	public:
 		///

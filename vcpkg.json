@@ -9,7 +9,10 @@
   "license": "MIT",
   "supports": "(windows & !uwp) | linux | osx",
   "dependencies": [
-    "boost-dll",
+    {
+      "name": "boost-dll",
+      "platform": "!static"
+    },
     "boost-multiprecision",
     "boost-test",
     "firebird",
@@ -34,7 +37,7 @@
     {
       "name": "firebird",
       "version": "5.0.4",
-      "port-version": 1
+      "port-version": 4
     },
     {
       "name": "icu",

@@ -25,6 +25,7 @@
 #ifndef FBCPP_BATCH_H
 #define FBCPP_BATCH_H
 
+#include "fb-cpp-export.h"
 #include "fb-api.h"
 #include "Blob.h"
 #include "Descriptor.h"
@@ -182,7 +183,7 @@ namespace fbcpp
 	///
 	/// This is a move-only type. The underlying Firebird handle is disposed in the destructor.
 	///
-	class BatchCompletionState final
+	class FB_CPP_EXPORT BatchCompletionState final
 	{
 	public:
 		///
@@ -270,7 +271,7 @@ namespace fbcpp
 	/// - From an **`Attachment` + SQL text** — uses `IAttachment::createBatch()`.
 	///   Messages must be added via the raw `add()` method.
 	///
-	class Batch final
+	class FB_CPP_EXPORT Batch final
 	{
 	public:
 		///

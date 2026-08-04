@@ -26,6 +26,7 @@
 #define FBCPP_SERVICE_MANAGER_H
 
 #include "Exception.h"
+#include "fb-cpp-export.h"
 #include "fb-api.h"
 #include "SmartPtrs.h"
 #include <cstdint>
@@ -194,7 +195,7 @@ namespace fbcpp
 	///
 	/// Represents a connection to the Firebird service manager.
 	///
-	class ServiceManager
+	class FB_CPP_EXPORT ServiceManager
 	{
 	public:
 		///

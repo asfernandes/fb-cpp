@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(restoreOptionsRejectLengthAfterItemWithoutLength)
 
 BOOST_AUTO_TEST_CASE(serviceManagerDisconnectAndMove)
 {
-	ServiceManager manager1{CLIENT, makeServiceManagerOptions()};
+	ServiceManager manager1{getClient(), makeServiceManagerOptions()};
 	BOOST_CHECK(manager1.isValid());
 
 	auto manager2 = std::move(manager1);
@@ -163,7 +163,7 @@ BOOST_DATA_TEST_CASE(backupAndRestoreRoundTrip, data::make(BACKUP_RESTORE_VERBOS
 
 	{  // scope
 		Attachment attachment{
-			CLIENT, sourceDatabaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+			getClient(), sourceDatabaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
 
 		Transaction transaction{attachment};
 
@@ -177,7 +177,7 @@ BOOST_DATA_TEST_CASE(backupAndRestoreRoundTrip, data::make(BACKUP_RESTORE_VERBOS
 		transaction.commit();
 	}
 
-	BackupManager manager{CLIENT, makeServiceManagerOptions()};
+	BackupManager manager{getClient(), makeServiceManagerOptions()};
 	std::vector<std::string> backupVerboseLines;
 	auto backupOptions = BackupOptions().setDatabase(sourceDatabasePath).setBackupFile(backupFile);
 
@@ -196,7 +196,7 @@ BOOST_DATA_TEST_CASE(backupAndRestoreRoundTrip, data::make(BACKUP_RESTORE_VERBOS
 	manager.restore(restoreOptions);
 	BOOST_CHECK_EQUAL(!restoreVerboseLines.empty(), testCase.restoreVerbose);
 
-	Attachment restored{CLIENT, restoredDatabaseUri, attachmentOptions};
+	Attachment restored{getClient(), restoredDatabaseUri, attachmentOptions};
 	FbDropDatabase restoredDrop{restored};
 	Transaction transaction{restored};
 	Statement query{restored, transaction, "select id, name from test"};
@@ -205,7 +205,7 @@ BOOST_DATA_TEST_CASE(backupAndRestoreRoundTrip, data::make(BACKUP_RESTORE_VERBOS
 	BOOST_CHECK_EQUAL(query.getString(1).value(), "backup");
 	transaction.commit();
 
-	Attachment cleanup{CLIENT, sourceDatabaseUri, attachmentOptions};
+	Attachment cleanup{getClient(), sourceDatabaseUri, attachmentOptions};
 	cleanup.dropDatabase();
 }
 
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(restoreReplace)
 
 	{  // scope
 		Attachment attachment{
-			CLIENT, sourceDatabaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+			getClient(), sourceDatabaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
 
 		Transaction transaction{attachment};
 
@@ -233,12 +233,12 @@ BOOST_AUTO_TEST_CASE(restoreReplace)
 		transaction.commit();
 	}
 
-	BackupManager manager{CLIENT, makeServiceManagerOptions()};
+	BackupManager manager{getClient(), makeServiceManagerOptions()};
 	manager.backup(BackupOptions().setDatabase(sourceDatabasePath).setBackupFile(backupFile));
 	manager.restore(RestoreOptions().setDatabase(restoredDatabasePath).setBackupFile(backupFile));
 	manager.restore(RestoreOptions().setDatabase(restoredDatabasePath).setBackupFile(backupFile).setReplace(true));
 
-	Attachment restored{CLIENT, restoredDatabaseUri, attachmentOptions};
+	Attachment restored{getClient(), restoredDatabaseUri, attachmentOptions};
 	FbDropDatabase restoredDrop{restored};
 	Transaction transaction{restored};
 	Statement query{restored, transaction, "select id from test"};
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(restoreReplace)
 	BOOST_CHECK_EQUAL(query.getInt32(0).value(), 7);
 	transaction.commit();
 
-	Attachment cleanup{CLIENT, sourceDatabaseUri, attachmentOptions};
+	Attachment cleanup{getClient(), sourceDatabaseUri, attachmentOptions};
 	cleanup.dropDatabase();
 }
 
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(multiFileDatabaseAndBackupRoundTrip)
 
 	{  // scope
 		Attachment attachment{
-			CLIENT, sourceDatabaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+			getClient(), sourceDatabaseUri, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
 
 		Transaction transaction{attachment};
 
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(multiFileDatabaseAndBackupRoundTrip)
 		transaction.commit();
 	}
 
-	BackupManager manager{CLIENT, makeServiceManagerOptions()};
+	BackupManager manager{getClient(), makeServiceManagerOptions()};
 	manager.backup(
 		BackupOptions().setDatabase(sourceDatabasePath).addBackupFile(backupFile1, 2048).addBackupFile(backupFile2));
 
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(multiFileDatabaseAndBackupRoundTrip)
 			.addBackupFile(backupFile1)
 			.addBackupFile(backupFile2));
 
-	Attachment restored{CLIENT, restoredDatabaseUri, attachmentOptions};
+	Attachment restored{getClient(), restoredDatabaseUri, attachmentOptions};
 	FbDropDatabase restoredDrop{restored};
 	Transaction transaction{restored};
 	Statement query{restored, transaction, "select count(*), min(id), max(id) from test"};
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(multiFileDatabaseAndBackupRoundTrip)
 	BOOST_CHECK_EQUAL(normalizedFilename(queryFiles.getString(1).value()), normalizedFilename(restoredSecondaryPath));
 	transaction.commit();
 
-	Attachment cleanup{CLIENT, sourceDatabaseUri, attachmentOptions};
+	Attachment cleanup{getClient(), sourceDatabaseUri, attachmentOptions};
 	cleanup.dropDatabase();
 }
 

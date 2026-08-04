@@ -10,9 +10,6 @@ permissions:
   id-token: write
   packages: write
 
-concurrency:
-  group: ${{ github.ref }}
-
 jobs:
   clang-format-check:
     runs-on: ubuntu-latest
@@ -34,11 +31,16 @@ jobs:
 
   build-linux:
     runs-on: ubuntu-latest
-    env:
-      USERNAME: asfernandes
-      VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
-      FEED_URL: ${{ github.repository == 'asfernandes/fb-cpp' && 'https://nuget.pkg.github.com/asfernandes/index.json' || '' }}
-      VCPKG_BINARY_SOURCES: ${{ github.repository == 'asfernandes/fb-cpp' && 'clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite' || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - name: static
+            buildSharedLibs: 'OFF'
+            triplet: x64-linux
+          - name: dynamic
+            buildSharedLibs: 'ON'
+            triplet: x64-linux-dynamic
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -54,9 +56,9 @@ jobs:
             vcpkg/buildtrees
             vcpkg/packages
             build/vcpkg_installed
-          key: ${{ runner.os }}-vcpkg-v3-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          key: ${{ runner.os }}-vcpkg-v4-${{ matrix.variant.name }}-${{ matrix.variant.triplet }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'CMakePresets.json', 'cmake/triplets/*.cmake') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-v3-
+            ${{ runner.os }}-vcpkg-v4-${{ matrix.variant.name }}-${{ matrix.variant.triplet }}-
 
       - name: Install system dependencies
         run: |
@@ -92,30 +94,16 @@ jobs:
         run: |
           ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
-      - name: Configure vcpkg binary caching
-        if: github.repository == 'asfernandes/fb-cpp'
-        run: |
-          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
-            sources add \
-            -Source "${{ env.FEED_URL }}" \
-            -StorePasswordInClearText \
-            -Name GitHubPackages \
-            -UserName "${{ env.USERNAME }}" \
-            -Password "${{ secrets.GITHUB_TOKEN }}"
-          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
-            setapikey "${{ secrets.GITHUB_TOKEN }}" \
-            -Source "${{ env.FEED_URL }}"
-
       - name: Configure CMake
         run: |
           cp CMakeUserPresets.json.posix.template CMakeUserPresets.json
-          cmake --preset default
+          cmake --preset default -DBUILD_SHARED_LIBS=${{ matrix.variant.buildSharedLibs }} -DVCPKG_TARGET_TRIPLET=${{ matrix.variant.triplet }}
 
       - name: Upload vcpkg failure logs
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: vcpkg-logs-${{ github.job }}
+          name: vcpkg-logs-${{ github.job }}-${{ matrix.variant.name }}
           path: vcpkg/buildtrees/**/*.log
           if-no-files-found: ignore
 
@@ -128,21 +116,28 @@ jobs:
           ctest --preset default --output-on-failure -j8
 
       - name: Build documentation
+        if: matrix.variant.name == 'dynamic'
         run: |
           cmake --build --preset default --target docs
 
       - name: Upload documentation artifact
+        if: matrix.variant.name == 'dynamic'
         uses: actions/upload-pages-artifact@v4
         with:
           path: build/Debug/doc/docs/html
 
   build-windows:
     runs-on: windows-latest
-    env:
-      USERNAME: asfernandes
-      VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
-      FEED_URL: ${{ github.repository == 'asfernandes/fb-cpp' && 'https://nuget.pkg.github.com/asfernandes/index.json' || '' }}
-      VCPKG_BINARY_SOURCES: ${{ github.repository == 'asfernandes/fb-cpp' && 'clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite' || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - name: static
+            buildSharedLibs: 'OFF'
+            triplet: x64-windows-static-md
+          - name: dynamic
+            buildSharedLibs: 'ON'
+            triplet: x64-windows
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -158,9 +153,9 @@ jobs:
             vcpkg/buildtrees
             vcpkg/packages
             build/vcpkg_installed
-          key: ${{ runner.os }}-vcpkg-v3-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          key: ${{ runner.os }}-vcpkg-v4-${{ matrix.variant.name }}-${{ matrix.variant.triplet }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'CMakePresets.json', 'cmake/triplets/*.cmake') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-v3-
+            ${{ runner.os }}-vcpkg-v4-${{ matrix.variant.name }}-${{ matrix.variant.triplet }}-
 
       - name: Install Firebird
         shell: cmd
@@ -187,32 +182,17 @@ jobs:
         run: |
           vcpkg\bootstrap-vcpkg.bat -disableMetrics
 
-      - name: Configure vcpkg binary caching
-        if: github.repository == 'asfernandes/fb-cpp'
-        shell: pwsh
-        run: |
-          .$(${{ env.VCPKG_EXE }} fetch nuget) `
-            sources add `
-            -Source "${{ env.FEED_URL }}" `
-            -StorePasswordInClearText `
-            -Name GitHubPackages `
-            -UserName "${{ env.USERNAME }}" `
-            -Password "${{ secrets.GITHUB_TOKEN }}"
-          .$(${{ env.VCPKG_EXE }} fetch nuget) `
-            setapikey "${{ secrets.GITHUB_TOKEN }}" `
-            -Source "${{ env.FEED_URL }}"
-
       - name: Configure CMake
         shell: cmd
         run: |
           copy CMakeUserPresets.json.windows-vs2026.template CMakeUserPresets.json
-          cmake --preset default
+          cmake --preset default -DBUILD_SHARED_LIBS=${{ matrix.variant.buildSharedLibs }} -DVCPKG_TARGET_TRIPLET=${{ matrix.variant.triplet }}
 
       - name: Upload vcpkg failure logs
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: vcpkg-logs-${{ github.job }}
+          name: vcpkg-logs-${{ github.job }}-${{ matrix.variant.name }}
           path: vcpkg/buildtrees/**/*.log
           if-no-files-found: ignore
 
@@ -228,11 +208,16 @@ jobs:
 
   build-macos:
     runs-on: macos-latest
-    env:
-      USERNAME: asfernandes
-      VCPKG_EXE: ${{ github.workspace }}/vcpkg/vcpkg
-      FEED_URL: ${{ github.repository == 'asfernandes/fb-cpp' && 'https://nuget.pkg.github.com/asfernandes/index.json' || '' }}
-      VCPKG_BINARY_SOURCES: ${{ github.repository == 'asfernandes/fb-cpp' && 'clear;nuget,https://nuget.pkg.github.com/asfernandes/index.json,readwrite' || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - name: static
+            buildSharedLibs: 'OFF'
+            triplet: arm64-osx
+          - name: dynamic
+            buildSharedLibs: 'ON'
+            triplet: arm64-osx-dynamic
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -248,9 +233,9 @@ jobs:
             vcpkg/buildtrees
             vcpkg/packages
             build/vcpkg_installed
-          key: ${{ runner.os }}-vcpkg-v3-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          key: ${{ runner.os }}-vcpkg-v4-${{ matrix.variant.name }}-${{ matrix.variant.triplet }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'CMakePresets.json', 'cmake/triplets/*.cmake') }}
           restore-keys: |
-            ${{ runner.os }}-vcpkg-v3-
+            ${{ runner.os }}-vcpkg-v4-${{ matrix.variant.name }}-${{ matrix.variant.triplet }}-
 
       - name: Install system dependencies
         run: |
@@ -259,7 +244,8 @@ jobs:
               autoconf-archive \
               automake \
               libtool \
-              mono
+              mono \
+              llvm
 
       - name: Install Firebird
         run: |
@@ -278,30 +264,20 @@ jobs:
         run: |
           ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
-      - name: Configure vcpkg binary caching
-        if: github.repository == 'asfernandes/fb-cpp'
-        run: |
-          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
-            sources add \
-            -Source "${{ env.FEED_URL }}" \
-            -StorePasswordInClearText \
-            -Name GitHubPackages \
-            -UserName "${{ env.USERNAME }}" \
-            -Password "${{ secrets.GITHUB_TOKEN }}"
-          mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
-            setapikey "${{ secrets.GITHUB_TOKEN }}" \
-            -Source "${{ env.FEED_URL }}"
+      - name: Add LLVM tools to PATH
+        if: runner.os == 'MacOS'
+        run: echo "$(brew --prefix llvm)/bin" >> "$GITHUB_PATH"
 
       - name: Configure CMake
         run: |
           cp CMakeUserPresets.json.posix.template CMakeUserPresets.json
-          cmake --preset default
+          cmake --preset default -DBUILD_SHARED_LIBS=${{ matrix.variant.buildSharedLibs }} -DVCPKG_TARGET_TRIPLET=${{ matrix.variant.triplet }}
 
       - name: Upload vcpkg failure logs
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: vcpkg-logs-${{ github.job }}
+          name: vcpkg-logs-${{ github.job }}-${{ matrix.variant.name }}
           path: vcpkg/buildtrees/**/*.log
           if-no-files-found: ignore
 

@@ -26,6 +26,7 @@
 #define FBCPP_DATABASE_MANAGER_H
 
 #include "ServiceManager.h"
+#include "fb-cpp-export.h"
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -428,7 +429,7 @@ namespace fbcpp
 	///
 	/// Executes configuration and maintenance operations through the Firebird service manager.
 	///
-	class DatabaseManager final : public ServiceManager
+	class FB_CPP_EXPORT DatabaseManager final : public ServiceManager
 	{
 	public:
 		using ServiceManager::ServiceManager;

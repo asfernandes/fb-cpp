@@ -125,6 +125,29 @@ ctest --preset default
 cmake --build --preset default --target docs
 ```
 
+To build the library as a shared library with dynamic vcpkg dependencies, pass the desired linkage and triplet to an
+existing platform preset:
+
+```bash
+# Linux
+cmake --preset posix-ninja-debug \
+    -DBUILD_SHARED_LIBS=ON \
+    -DVCPKG_TARGET_TRIPLET=x64-linux-dynamic
+cmake --build --preset posix-ninja-debug
+
+# macOS
+cmake --preset posix-ninja-debug \
+    -DBUILD_SHARED_LIBS=ON \
+    -DVCPKG_TARGET_TRIPLET=arm64-osx-dynamic
+cmake --build --preset posix-ninja-debug
+
+# Windows
+cmake --preset windows-vs2026 \
+    -DBUILD_SHARED_LIBS=ON \
+    -DVCPKG_TARGET_TRIPLET=x64-windows
+cmake --build --preset windows-vs2026-debug
+```
+
 ## Documentation
 
 The complete API documentation is available in the build `doc/docs/` directory after building with the `docs` target.
