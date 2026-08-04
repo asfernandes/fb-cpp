@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(readWriteMultiSegment)
 {
 	const auto database = getTempFile("Blob-readWriteMultiSegment.fdb");
 
-	Attachment attachment{CLIENT, database,
+	Attachment attachment{getClient(), database,
 		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(createWriteRead)
 {
 	const auto database = getTempFile("Blob-createWriteRead.fdb");
 
-	Attachment attachment{CLIENT, database,
+	Attachment attachment{getClient(), database,
 		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(cancelDiscardsHandle)
 {
 	const auto database = getTempFile("Blob-cancelDiscardsHandle.fdb");
 
-	Attachment attachment{CLIENT, database,
+	Attachment attachment{getClient(), database,
 		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 

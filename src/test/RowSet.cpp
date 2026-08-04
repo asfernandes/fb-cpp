@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(fetchRowsIntoRowSet)
 {
 	const auto database = getTempFile("RowSet-fetchRowsIntoRowSet.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(fetchFewerRowsThanMaxRows)
 {
 	const auto database = getTempFile("RowSet-fetchFewerRowsThanMaxRows.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(rowSetIsDisconnectedFromStatement)
 {
 	const auto database = getTempFile("RowSet-isDisconnectedFromStatement.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(moveConstructor)
 {
 	const auto database = getTempFile("RowSet-moveConstructor.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(moveAssignment)
 {
 	const auto database = getTempFile("RowSet-moveAssignment.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(fetchMultipleBatchesFromSameStatement)
 {
 	const auto database = getTempFile("RowSet-fetchMultipleBatches.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};

@@ -37,7 +37,7 @@ using namespace fbcpp;
 
 namespace fbcpp::test
 {
-	extern Client CLIENT;
+	Client& getClient();
 
 	std::optional<std::string> getServer();
 	std::string getTempFile(const std::string_view name, bool includeServerPrefix = true);

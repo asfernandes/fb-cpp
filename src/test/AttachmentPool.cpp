@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_SUITE(AttachmentPoolSuite)
 BOOST_AUTO_TEST_CASE(lifecycleAndCounts)
 {
 	const auto database = getTempFile("AttachmentPool-lifecycleAndCounts.fdb");
-	Attachment setup{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment setup{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase setupDrop{setup};
 
 	{  // scope
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(lifecycleAndCounts)
 	AttachmentPoolOptions options;
 	options.setAttachmentOptions(AttachmentOptions().setConnectionCharSet("UTF8")).setMinSize(2u).setMaxSize(4u);
 
-	AttachmentPool pool{CLIENT, database, options};
+	AttachmentPool pool{getClient(), database, options};
 	BOOST_CHECK_EQUAL(pool.size(), 2u);
 	BOOST_CHECK_EQUAL(pool.availableCount(), 2u);
 	BOOST_CHECK_EQUAL(pool.inUseCount(), 0u);
@@ -76,10 +76,10 @@ BOOST_AUTO_TEST_CASE(lifecycleAndCounts)
 BOOST_AUTO_TEST_CASE(acquireReusesUnderlyingConnection)
 {
 	const auto database = getTempFile("AttachmentPool-acquireReusesUnderlyingConnection.fdb");
-	Attachment setup{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment setup{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase setupDrop{setup};
 
-	AttachmentPool pool{CLIENT, database, AttachmentPoolOptions().setMinSize(1u).setMaxSize(1u)};
+	AttachmentPool pool{getClient(), database, AttachmentPoolOptions().setMinSize(1u).setMaxSize(1u)};
 
 	fb::IAttachment* firstHandle = nullptr;
 
@@ -99,11 +99,11 @@ BOOST_AUTO_TEST_CASE(acquireReusesUnderlyingConnection)
 BOOST_AUTO_TEST_CASE(acquireThrowsWhenExhaustedAndUnblocksOnRelease)
 {
 	const auto database = getTempFile("AttachmentPool-acquireThrowsWhenExhaustedAndUnblocksOnRelease.fdb");
-	Attachment setup{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment setup{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase setupDrop{setup};
 
 	AttachmentPool pool{
-		CLIENT, database, AttachmentPoolOptions().setMinSize(0u).setMaxSize(1u).setAcquireTimeout(200ms)};
+		getClient(), database, AttachmentPoolOptions().setMinSize(0u).setMaxSize(1u).setAcquireTimeout(200ms)};
 
 	auto lease1 = pool.acquire();
 	BOOST_CHECK_EQUAL(pool.inUseCount(), 1u);
@@ -121,10 +121,10 @@ BOOST_AUTO_TEST_CASE(acquireThrowsWhenExhaustedAndUnblocksOnRelease)
 BOOST_AUTO_TEST_CASE(leaseSemantics)
 {
 	const auto database = getTempFile("AttachmentPool-leaseSemantics.fdb");
-	Attachment setup{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment setup{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase setupDrop{setup};
 
-	AttachmentPool pool{CLIENT, database, AttachmentPoolOptions().setMinSize(1u).setMaxSize(1u)};
+	AttachmentPool pool{getClient(), database, AttachmentPoolOptions().setMinSize(1u).setMaxSize(1u)};
 
 	auto lease1 = pool.acquire();
 	BOOST_CHECK(lease1.isValid());
@@ -145,11 +145,11 @@ BOOST_AUTO_TEST_CASE(leaseSemantics)
 BOOST_AUTO_TEST_CASE(sessionResetOnRelease)
 {
 	const auto database = getTempFile("AttachmentPool-sessionResetOnRelease.fdb");
-	Attachment setup{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment setup{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase setupDrop{setup};
 
 	AttachmentPool pool{
-		CLIENT, database, AttachmentPoolOptions().setMinSize(1u).setMaxSize(1u).setSessionResetOnRelease(true)};
+		getClient(), database, AttachmentPoolOptions().setMinSize(1u).setMaxSize(1u).setSessionResetOnRelease(true)};
 
 	fb::IAttachment* firstHandle = nullptr;
 

@@ -29,13 +29,13 @@ BOOST_AUTO_TEST_SUITE(ClientSuite)
 
 BOOST_AUTO_TEST_CASE(getMaster)
 {
-	const auto master = CLIENT.getMaster();
+	const auto master = getClient().getMaster();
 	BOOST_CHECK(master);
 }
 
 BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 {
-	Client client1{CLIENT.getMaster()};
+	Client client1{getClient().getMaster()};
 	BOOST_CHECK_EQUAL(client1.isValid(), true);
 
 	auto client2 = std::move(client1);

@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(constructorPreparesStatement)
 {
 	const auto database = getTempFile("Statement-constructorPreparesStatement.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(moveConstructorTransfersOwnership)
 {
 	const auto database = getTempFile("Statement-moveConstructorTransfersOwnership.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 {
 	const auto database = getTempFile("Statement-isNotValidAfterMove.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(moveAssignmentTransfersOwnership)
 {
 	const auto database = getTempFile("Statement-moveAssignmentTransfersOwnership.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(moveAssignmentToMovedFromStatement)
 {
 	const auto database = getTempFile("Statement-moveAssignmentToMovedFrom.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(freeReleasesHandle)
 {
 	const auto database = getTempFile("Statement-freeReleasesHandle.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(unsupportedStatementsThrow)
 {
 	const auto database = getTempFile("Statement-unsupportedStatementsThrow.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(constructorWithExplicitDialect)
 
 	// Connect using dialect 1.
 	Attachment attachment{
-		CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setSqlDialect(1u)};
+		getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setSqlDialect(1u)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(getTypeReturnsCorrectStatementType)
 {
 	const auto database = getTempFile("Statement-getTypeReturnsCorrectStatementType.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(getInputOutputDescriptors)
 {
 	const auto database = getTempFile("Statement-getInputOutputDescriptors.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(constructorProvidesMetadataHandles)
 {
 	const auto database = getTempFile("Statement-constructorProvidesMetadataHandles.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(descriptorMetadataFields)
 {
 	const auto database = getTempFile("Statement-descriptorMetadataFields.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(getOutputMessageContainsFetchedValueAtMetadataOffset)
 {
 	const auto database = getTempFile("Statement-getOutputMessageContainsFetchedValueAtMetadataOffset.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(getLegacyPlan)
 {
 	const auto database = getTempFile("Statement-getLegacyPlan.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(getPlan)
 {
 	const auto database = getTempFile("Statement-getPlan.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(setNullParameter)
 {
 	const auto database = getTempFile("Statement-setNullParameter.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(clearParametersToNull)
 {
 	const auto database = getTempFile("Statement-clearParametersToNull.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE(isNullDetectsNullColumn)
 {
 	const auto database = getTempFile("Statement-isNullDetectsNullColumn.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(nullRoundTrip)
 {
 	const auto database = getTempFile("Statement-nullRoundTrip.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -497,7 +497,7 @@ BOOST_AUTO_TEST_CASE(setBoolToBoolean)
 {
 	const auto database = getTempFile("Statement-setBoolToBoolean.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -512,7 +512,7 @@ BOOST_AUTO_TEST_CASE(getBoolFromBoolean)
 {
 	const auto database = getTempFile("Statement-getBoolFromBoolean.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -529,7 +529,7 @@ BOOST_AUTO_TEST_CASE(setStringToBoolColumn)
 {
 	const auto database = getTempFile("Statement-setStringToBoolColumn.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE(getStringFromBoolColumn)
 {
 	const auto database = getTempFile("Statement-getStringFromBoolColumn.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(setInt16ToSmallint)
 {
 	const auto database = getTempFile("Statement-setInt16ToSmallint.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE(setInt32ToInteger)
 {
 	const auto database = getTempFile("Statement-setInt32ToInteger.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -594,7 +594,7 @@ BOOST_AUTO_TEST_CASE(setInt64ToBigint)
 {
 	const auto database = getTempFile("Statement-setInt64ToBigint.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -609,7 +609,7 @@ BOOST_AUTO_TEST_CASE(setInt16ToInteger)
 {
 	const auto database = getTempFile("Statement-setInt16ToInteger.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -624,7 +624,7 @@ BOOST_AUTO_TEST_CASE(setInt32ToBigint)
 {
 	const auto database = getTempFile("Statement-setInt32ToBigint.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -639,7 +639,7 @@ BOOST_AUTO_TEST_CASE(getInt32FromSmallint)
 {
 	const auto database = getTempFile("Statement-getInt32FromSmallint.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -654,7 +654,7 @@ BOOST_AUTO_TEST_CASE(getInt64FromInteger)
 {
 	const auto database = getTempFile("Statement-getInt64FromInteger.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -669,7 +669,7 @@ BOOST_AUTO_TEST_CASE(setStringToIntColumn)
 {
 	const auto database = getTempFile("Statement-setStringToIntColumn.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -684,7 +684,7 @@ BOOST_AUTO_TEST_CASE(getStringFromIntColumn)
 {
 	const auto database = getTempFile("Statement-getStringFromIntColumn.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -704,7 +704,7 @@ BOOST_AUTO_TEST_CASE(setScaledInt64ToNumeric)
 {
 	const auto database = getTempFile("Statement-setScaledInt64ToNumeric.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE(getScaledInt64FromNumeric)
 {
 	const auto database = getTempFile("Statement-getScaledInt64FromNumeric.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -739,7 +739,7 @@ BOOST_AUTO_TEST_CASE(setInt32ToNumeric)
 {
 	const auto database = getTempFile("Statement-setInt32ToNumeric.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -757,7 +757,7 @@ BOOST_AUTO_TEST_CASE(setStringToNumeric)
 {
 	const auto database = getTempFile("Statement-setStringToNumeric.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -775,7 +775,7 @@ BOOST_AUTO_TEST_CASE(getStringFromNumeric)
 {
 	const auto database = getTempFile("Statement-getStringFromNumeric.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -794,7 +794,7 @@ BOOST_AUTO_TEST_CASE(setFloatToFloat)
 {
 	const auto database = getTempFile("Statement-setFloatToFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -809,7 +809,7 @@ BOOST_AUTO_TEST_CASE(setDoubleToDoublePrecision)
 {
 	const auto database = getTempFile("Statement-setDoubleToDoublePrecision.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -824,7 +824,7 @@ BOOST_AUTO_TEST_CASE(setFloatToDouble)
 {
 	const auto database = getTempFile("Statement-setFloatToDouble.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -839,7 +839,7 @@ BOOST_AUTO_TEST_CASE(setInt32ToFloat)
 {
 	const auto database = getTempFile("Statement-setInt32ToFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -854,7 +854,7 @@ BOOST_AUTO_TEST_CASE(setStringToFloat)
 {
 	const auto database = getTempFile("Statement-setStringToFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -869,7 +869,7 @@ BOOST_AUTO_TEST_CASE(getStringFromFloat)
 {
 	const auto database = getTempFile("Statement-getStringFromFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -885,7 +885,7 @@ BOOST_AUTO_TEST_CASE(getDoubleFromFloat)
 {
 	const auto database = getTempFile("Statement-getDoubleFromFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -905,7 +905,7 @@ BOOST_AUTO_TEST_CASE(setFloatInfToFloat)
 {
 	const auto database = getTempFile("Statement-setFloatInfToFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -923,7 +923,7 @@ BOOST_AUTO_TEST_CASE(setFloatNegInfToFloat)
 {
 	const auto database = getTempFile("Statement-setFloatNegInfToFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -941,7 +941,7 @@ BOOST_AUTO_TEST_CASE(setFloatNaNToFloat)
 {
 	const auto database = getTempFile("Statement-setFloatNaNToFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -958,7 +958,7 @@ BOOST_AUTO_TEST_CASE(setDoubleInfToDouble)
 {
 	const auto database = getTempFile("Statement-setDoubleInfToDouble.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -976,7 +976,7 @@ BOOST_AUTO_TEST_CASE(setDoubleNegInfToDouble)
 {
 	const auto database = getTempFile("Statement-setDoubleNegInfToDouble.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -994,7 +994,7 @@ BOOST_AUTO_TEST_CASE(setDoubleNaNToDouble)
 {
 	const auto database = getTempFile("Statement-setDoubleNaNToDouble.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1011,7 +1011,7 @@ BOOST_AUTO_TEST_CASE(getStringFromFloatInf)
 {
 	const auto database = getTempFile("Statement-getStringFromFloatInf.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1026,7 +1026,7 @@ BOOST_AUTO_TEST_CASE(getStringFromFloatNegInf)
 {
 	const auto database = getTempFile("Statement-getStringFromFloatNegInf.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1041,7 +1041,7 @@ BOOST_AUTO_TEST_CASE(getStringFromFloatNaN)
 {
 	const auto database = getTempFile("Statement-getStringFromFloatNaN.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1056,7 +1056,7 @@ BOOST_AUTO_TEST_CASE(getStringFromDoubleInf)
 {
 	const auto database = getTempFile("Statement-getStringFromDoubleInf.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1071,7 +1071,7 @@ BOOST_AUTO_TEST_CASE(getStringFromDoubleNegInf)
 {
 	const auto database = getTempFile("Statement-getStringFromDoubleNegInf.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1086,7 +1086,7 @@ BOOST_AUTO_TEST_CASE(getStringFromDoubleNaN)
 {
 	const auto database = getTempFile("Statement-getStringFromDoubleNaN.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1101,7 +1101,7 @@ BOOST_AUTO_TEST_CASE(setInfToIntegerThrows)
 {
 	const auto database = getTempFile("Statement-setInfToIntegerThrows.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1114,7 +1114,7 @@ BOOST_AUTO_TEST_CASE(setNaNToIntegerThrows)
 {
 	const auto database = getTempFile("Statement-setNaNToIntegerThrows.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1127,7 +1127,7 @@ BOOST_AUTO_TEST_CASE(setInfToNumericThrows)
 {
 	const auto database = getTempFile("Statement-setInfToNumericThrows.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1140,7 +1140,7 @@ BOOST_AUTO_TEST_CASE(setNaNToNumericThrows)
 {
 	const auto database = getTempFile("Statement-setNaNToNumericThrows.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1158,7 +1158,7 @@ BOOST_AUTO_TEST_CASE(setStringToVarchar)
 {
 	const auto database = getTempFile("Statement-setStringToVarchar.fdb");
 
-	Attachment attachment{CLIENT, database,
+	Attachment attachment{getClient(), database,
 		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
@@ -1174,7 +1174,7 @@ BOOST_AUTO_TEST_CASE(getStringFromVarchar)
 {
 	const auto database = getTempFile("Statement-getStringFromVarchar.fdb");
 
-	Attachment attachment{CLIENT, database,
+	Attachment attachment{getClient(), database,
 		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
@@ -1189,7 +1189,7 @@ BOOST_AUTO_TEST_CASE(stringTruncationThrows)
 {
 	const auto database = getTempFile("Statement-stringTruncationThrows.fdb");
 
-	Attachment attachment{CLIENT, database,
+	Attachment attachment{getClient(), database,
 		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
 	FbDropDatabase attachmentDrop{attachment};
 
@@ -1208,7 +1208,7 @@ BOOST_AUTO_TEST_CASE(setDateToDate)
 {
 	const auto database = getTempFile("Statement-setDateToDate.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1228,7 +1228,7 @@ BOOST_AUTO_TEST_CASE(getDateFromDate)
 {
 	const auto database = getTempFile("Statement-getDateFromDate.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1246,7 +1246,7 @@ BOOST_AUTO_TEST_CASE(setTimeToTime)
 {
 	const auto database = getTempFile("Statement-setTimeToTime.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1266,7 +1266,7 @@ BOOST_AUTO_TEST_CASE(setTimestampToTimestamp)
 {
 	const auto database = getTempFile("Statement-setTimestampToTimestamp.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1289,7 +1289,7 @@ BOOST_AUTO_TEST_CASE(setTimeTzToTimeTz)
 {
 	const auto database = getTempFile("Statement-setTimeTzToTimeTz.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1311,7 +1311,7 @@ BOOST_AUTO_TEST_CASE(setTimestampTzToTimestampTz)
 {
 	const auto database = getTempFile("Statement-setTimestampTzToTimestampTz.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1335,7 +1335,7 @@ BOOST_AUTO_TEST_CASE(setStringToDate)
 {
 	const auto database = getTempFile("Statement-setStringToDate.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1354,7 +1354,7 @@ BOOST_AUTO_TEST_CASE(getStringFromDate)
 {
 	const auto database = getTempFile("Statement-getStringFromDate.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1368,7 +1368,7 @@ BOOST_AUTO_TEST_CASE(setStringToTime)
 {
 	const auto database = getTempFile("Statement-setStringToTime.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1387,7 +1387,7 @@ BOOST_AUTO_TEST_CASE(getStringFromTime)
 {
 	const auto database = getTempFile("Statement-getStringFromTime.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1401,7 +1401,7 @@ BOOST_AUTO_TEST_CASE(setStringToTimestamp)
 {
 	const auto database = getTempFile("Statement-setStringToTimestamp.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1420,7 +1420,7 @@ BOOST_AUTO_TEST_CASE(getStringFromTimestamp)
 {
 	const auto database = getTempFile("Statement-getStringFromTimestamp.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1434,7 +1434,7 @@ BOOST_AUTO_TEST_CASE(setStringToTimeTz)
 {
 	const auto database = getTempFile("Statement-setStringToTimeTz.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1451,7 +1451,7 @@ BOOST_AUTO_TEST_CASE(getStringFromTimeTz)
 {
 	const auto database = getTempFile("Statement-getStringFromTimeTz.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1466,7 +1466,7 @@ BOOST_AUTO_TEST_CASE(setStringToTimestampTz)
 {
 	const auto database = getTempFile("Statement-setStringToTimestampTz.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1486,7 +1486,7 @@ BOOST_AUTO_TEST_CASE(getStringFromTimestampTz)
 {
 	const auto database = getTempFile("Statement-getStringFromTimestampTz.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1506,7 +1506,7 @@ BOOST_AUTO_TEST_CASE(setBlobIdToBlob)
 {
 	const auto database = getTempFile("Statement-setBlobIdToBlob.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1531,7 +1531,7 @@ BOOST_AUTO_TEST_CASE(getBlobIdFromBlob)
 {
 	const auto database = getTempFile("Statement-getBlobIdFromBlob.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1565,7 +1565,7 @@ BOOST_AUTO_TEST_CASE(fetchNextIteratesRows)
 {
 	const auto database = getTempFile("Statement-fetchNextIteratesRows.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1600,7 +1600,7 @@ BOOST_AUTO_TEST_CASE(fetchReturnsFalseAtEnd)
 {
 	const auto database = getTempFile("Statement-fetchReturnsFalseAtEnd.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1614,7 +1614,7 @@ BOOST_AUTO_TEST_CASE(cursorMethodsReturnFalseWithoutResultSet)
 {
 	const auto database = getTempFile("Statement-cursorMethodsReturnFalseWithoutResultSet.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1639,7 +1639,7 @@ BOOST_AUTO_TEST_CASE(cursorName)
 {
 	const auto database = getTempFile("Statement-cursorName.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1691,7 +1691,7 @@ BOOST_AUTO_TEST_CASE(setBoostInt128ToInt128)
 {
 	const auto database = getTempFile("Statement-setBoostInt128ToInt128.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1710,7 +1710,7 @@ BOOST_AUTO_TEST_CASE(getBoostInt128FromInt128)
 {
 	const auto database = getTempFile("Statement-getBoostInt128FromInt128.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1726,7 +1726,7 @@ BOOST_AUTO_TEST_CASE(setScaledBoostInt128ToNumeric38)
 {
 	const auto database = getTempFile("Statement-setScaledBoostInt128ToNumeric38.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1747,7 +1747,7 @@ BOOST_AUTO_TEST_CASE(getScaledBoostInt128FromNumeric38)
 {
 	const auto database = getTempFile("Statement-getScaledBoostInt128FromNumeric38.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1764,7 +1764,7 @@ BOOST_AUTO_TEST_CASE(setInt64ToInt128)
 {
 	const auto database = getTempFile("Statement-setInt64ToInt128.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1781,7 +1781,7 @@ BOOST_AUTO_TEST_CASE(getStringFromInt128)
 {
 	const auto database = getTempFile("Statement-getStringFromInt128.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1802,7 +1802,7 @@ BOOST_AUTO_TEST_CASE(setBoostDecFloat16ToDecFloat16)
 {
 	const auto database = getTempFile("Statement-setBoostDecFloat16ToDecFloat16.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1821,7 +1821,7 @@ BOOST_AUTO_TEST_CASE(getBoostDecFloat16FromDecFloat16)
 {
 	const auto database = getTempFile("Statement-getBoostDecFloat16FromDecFloat16.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1836,7 +1836,7 @@ BOOST_AUTO_TEST_CASE(setBoostDecFloat34ToDecFloat34)
 {
 	const auto database = getTempFile("Statement-setBoostDecFloat34ToDecFloat34.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1855,7 +1855,7 @@ BOOST_AUTO_TEST_CASE(getBoostDecFloat34FromDecFloat34)
 {
 	const auto database = getTempFile("Statement-getBoostDecFloat34FromDecFloat34.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1871,7 +1871,7 @@ BOOST_AUTO_TEST_CASE(setDoubleToDecFloat)
 {
 	const auto database = getTempFile("Statement-setDoubleToDecFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1888,7 +1888,7 @@ BOOST_AUTO_TEST_CASE(getStringFromDecFloat)
 {
 	const auto database = getTempFile("Statement-getStringFromDecFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1904,7 +1904,7 @@ BOOST_AUTO_TEST_CASE(setStringToDecFloat16)
 {
 	const auto database = getTempFile("Statement-setStringToDecFloat16.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1921,7 +1921,7 @@ BOOST_AUTO_TEST_CASE(setStringToDecFloat34)
 {
 	const auto database = getTempFile("Statement-setStringToDecFloat34.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1937,7 +1937,7 @@ BOOST_AUTO_TEST_CASE(setFloatToDecFloat)
 {
 	const auto database = getTempFile("Statement-setFloatToDecFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1954,7 +1954,7 @@ BOOST_AUTO_TEST_CASE(setInt32ToDecFloat)
 {
 	const auto database = getTempFile("Statement-setInt32ToDecFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1971,7 +1971,7 @@ BOOST_AUTO_TEST_CASE(setInt64ToDecFloat)
 {
 	const auto database = getTempFile("Statement-setInt64ToDecFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -1988,7 +1988,7 @@ BOOST_AUTO_TEST_CASE(getDoubleFromDecFloat)
 {
 	const auto database = getTempFile("Statement-getDoubleFromDecFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2004,7 +2004,7 @@ BOOST_AUTO_TEST_CASE(getFloatFromDecFloat)
 {
 	const auto database = getTempFile("Statement-getFloatFromDecFloat.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2020,7 +2020,7 @@ BOOST_AUTO_TEST_CASE(setBoostDecFloat16ToDecFloat34)
 {
 	const auto database = getTempFile("Statement-setBoostDecFloat16ToDecFloat34.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2039,7 +2039,7 @@ BOOST_AUTO_TEST_CASE(setBoostDecFloat34ToDecFloat16)
 {
 	const auto database = getTempFile("Statement-setBoostDecFloat34ToDecFloat16.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2065,7 +2065,7 @@ BOOST_AUTO_TEST_CASE(setOpaqueDateToDate)
 {
 	const auto database = getTempFile("Statement-setOpaqueDateToDate.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2090,7 +2090,7 @@ BOOST_AUTO_TEST_CASE(getOpaqueDateFromDate)
 {
 	const auto database = getTempFile("Statement-getOpaqueDateFromDate.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2111,7 +2111,7 @@ BOOST_AUTO_TEST_CASE(opaqueDateRoundTrip)
 {
 	const auto database = getTempFile("Statement-opaqueDateRoundTrip.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2133,7 +2133,7 @@ BOOST_AUTO_TEST_CASE(opaqueDateNullHandling)
 {
 	const auto database = getTempFile("Statement-opaqueDateNullHandling.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2154,7 +2154,7 @@ BOOST_AUTO_TEST_CASE(setOpaqueTimeToTime)
 {
 	const auto database = getTempFile("Statement-setOpaqueTimeToTime.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2178,7 +2178,7 @@ BOOST_AUTO_TEST_CASE(getOpaqueTimeFromTime)
 {
 	const auto database = getTempFile("Statement-getOpaqueTimeFromTime.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2199,7 +2199,7 @@ BOOST_AUTO_TEST_CASE(opaqueTimeRoundTrip)
 {
 	const auto database = getTempFile("Statement-opaqueTimeRoundTrip.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2221,7 +2221,7 @@ BOOST_AUTO_TEST_CASE(opaqueTimeNullHandling)
 {
 	const auto database = getTempFile("Statement-opaqueTimeNullHandling.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2242,7 +2242,7 @@ BOOST_AUTO_TEST_CASE(setOpaqueTimestampToTimestamp)
 {
 	const auto database = getTempFile("Statement-setOpaqueTimestampToTimestamp.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2267,7 +2267,7 @@ BOOST_AUTO_TEST_CASE(getOpaqueTimestampFromTimestamp)
 {
 	const auto database = getTempFile("Statement-getOpaqueTimestampFromTimestamp.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2288,7 +2288,7 @@ BOOST_AUTO_TEST_CASE(opaqueTimestampRoundTrip)
 {
 	const auto database = getTempFile("Statement-opaqueTimestampRoundTrip.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2310,7 +2310,7 @@ BOOST_AUTO_TEST_CASE(opaqueTimestampNullHandling)
 {
 	const auto database = getTempFile("Statement-opaqueTimestampNullHandling.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2331,7 +2331,7 @@ BOOST_AUTO_TEST_CASE(setOpaqueTimeTzToTimeTz)
 {
 	const auto database = getTempFile("Statement-setOpaqueTimeTzToTimeTz.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2355,7 +2355,7 @@ BOOST_AUTO_TEST_CASE(getOpaqueTimeTzFromTimeTz)
 {
 	const auto database = getTempFile("Statement-getOpaqueTimeTzFromTimeTz.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2377,7 +2377,7 @@ BOOST_AUTO_TEST_CASE(opaqueTimeTzRoundTrip)
 {
 	const auto database = getTempFile("Statement-opaqueTimeTzRoundTrip.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2399,7 +2399,7 @@ BOOST_AUTO_TEST_CASE(opaqueTimeTzNullHandling)
 {
 	const auto database = getTempFile("Statement-opaqueTimeTzNullHandling.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2420,7 +2420,7 @@ BOOST_AUTO_TEST_CASE(setOpaqueTimestampTzToTimestampTz)
 {
 	const auto database = getTempFile("Statement-setOpaqueTimestampTzToTimestampTz.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2445,7 +2445,7 @@ BOOST_AUTO_TEST_CASE(getOpaqueTimestampTzFromTimestampTz)
 {
 	const auto database = getTempFile("Statement-getOpaqueTimestampTzFromTimestampTz.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2466,7 +2466,7 @@ BOOST_AUTO_TEST_CASE(opaqueTimestampTzRoundTrip)
 {
 	const auto database = getTempFile("Statement-opaqueTimestampTzRoundTrip.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2488,7 +2488,7 @@ BOOST_AUTO_TEST_CASE(opaqueTimestampTzNullHandling)
 {
 	const auto database = getTempFile("Statement-opaqueTimestampTzNullHandling.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2509,7 +2509,7 @@ BOOST_AUTO_TEST_CASE(setOpaqueInt128ToInt128)
 {
 	const auto database = getTempFile("Statement-setOpaqueInt128ToInt128.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2531,7 +2531,7 @@ BOOST_AUTO_TEST_CASE(getScaledOpaqueInt128FromInt128)
 {
 	const auto database = getTempFile("Statement-getScaledOpaqueInt128FromInt128.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2547,7 +2547,7 @@ BOOST_AUTO_TEST_CASE(opaqueInt128RoundTrip)
 {
 	const auto database = getTempFile("Statement-opaqueInt128RoundTrip.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2568,7 +2568,7 @@ BOOST_AUTO_TEST_CASE(opaqueInt128NullHandling)
 {
 	const auto database = getTempFile("Statement-opaqueInt128NullHandling.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2589,7 +2589,7 @@ BOOST_AUTO_TEST_CASE(setOpaqueDecFloat16ToDecFloat16)
 {
 	const auto database = getTempFile("Statement-setOpaqueDecFloat16ToDecFloat16.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2611,7 +2611,7 @@ BOOST_AUTO_TEST_CASE(getOpaqueDecFloat16FromDecFloat16)
 {
 	const auto database = getTempFile("Statement-getOpaqueDecFloat16FromDecFloat16.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2626,7 +2626,7 @@ BOOST_AUTO_TEST_CASE(opaqueDecFloat16RoundTrip)
 {
 	const auto database = getTempFile("Statement-opaqueDecFloat16RoundTrip.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2647,7 +2647,7 @@ BOOST_AUTO_TEST_CASE(opaqueDecFloat16NullHandling)
 {
 	const auto database = getTempFile("Statement-opaqueDecFloat16NullHandling.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2668,7 +2668,7 @@ BOOST_AUTO_TEST_CASE(setOpaqueDecFloat34ToDecFloat34)
 {
 	const auto database = getTempFile("Statement-setOpaqueDecFloat34ToDecFloat34.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2691,7 +2691,7 @@ BOOST_AUTO_TEST_CASE(getOpaqueDecFloat34FromDecFloat34)
 {
 	const auto database = getTempFile("Statement-getOpaqueDecFloat34FromDecFloat34.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2707,7 +2707,7 @@ BOOST_AUTO_TEST_CASE(opaqueDecFloat34RoundTrip)
 {
 	const auto database = getTempFile("Statement-opaqueDecFloat34RoundTrip.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2729,7 +2729,7 @@ BOOST_AUTO_TEST_CASE(opaqueDecFloat34NullHandling)
 {
 	const auto database = getTempFile("Statement-opaqueDecFloat34NullHandling.fdb");
 
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2756,7 +2756,7 @@ BOOST_AUTO_TEST_CASE(getStructRetrievesAllColumns)
 	};
 
 	const auto database = getTempFile("Statement-getStructRetrievesAllColumns.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2781,7 +2781,7 @@ BOOST_AUTO_TEST_CASE(setStructSetsAllParameters)
 	};
 
 	const auto database = getTempFile("Statement-setStructSetsAllParameters.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2804,7 +2804,7 @@ BOOST_AUTO_TEST_CASE(getStructFieldCountMismatchThrows)
 	};
 
 	const auto database = getTempFile("Statement-getStructFieldCountMismatchThrows.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2824,7 +2824,7 @@ BOOST_AUTO_TEST_CASE(setStructFieldCountMismatchThrows)
 	};
 
 	const auto database = getTempFile("Statement-setStructFieldCountMismatchThrows.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2842,7 +2842,7 @@ BOOST_AUTO_TEST_CASE(nullForNonOptionalFieldThrows)
 	};
 
 	const auto database = getTempFile("Statement-nullForNonOptionalFieldThrows.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2861,7 +2861,7 @@ BOOST_AUTO_TEST_CASE(mixedOptionalAndNonOptionalFields)
 	};
 
 	const auto database = getTempFile("Statement-mixedOptionalAndNonOptionalFields.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2882,7 +2882,7 @@ BOOST_AUTO_TEST_CASE(structWithDateTimeFields)
 	};
 
 	const auto database = getTempFile("Statement-structWithDateTimeFields.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2909,7 +2909,7 @@ BOOST_AUTO_TEST_CASE(setStructWithOptionalNull)
 	};
 
 	const auto database = getTempFile("Statement-setStructWithOptionalNull.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2933,7 +2933,7 @@ BOOST_AUTO_TEST_CASE(getTupleRetrievesAllColumns)
 	using ResultTuple = std::tuple<std::optional<std::int32_t>, std::optional<std::string>, std::optional<double>>;
 
 	const auto database = getTempFile("Statement-getTupleRetrievesAllColumns.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2954,7 +2954,7 @@ BOOST_AUTO_TEST_CASE(setTupleSetsAllParameters)
 	using ParamTuple = std::tuple<std::int32_t, std::string_view>;
 
 	const auto database = getTempFile("Statement-setTupleSetsAllParameters.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2972,7 +2972,7 @@ BOOST_AUTO_TEST_CASE(getTupleElementCountMismatchThrows)
 	using WrongTuple = std::tuple<std::optional<std::int32_t>, std::optional<std::int32_t>>;
 
 	const auto database = getTempFile("Statement-getTupleElementCountMismatchThrows.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -2987,7 +2987,7 @@ BOOST_AUTO_TEST_CASE(setTupleElementCountMismatchThrows)
 	using WrongTuple = std::tuple<std::int32_t, std::int32_t, std::int32_t>;
 
 	const auto database = getTempFile("Statement-setTupleElementCountMismatchThrows.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3001,7 +3001,7 @@ BOOST_AUTO_TEST_CASE(nullForNonOptionalTupleElementThrows)
 	using NonOptionalTuple = std::tuple<std::int32_t>;
 
 	const auto database = getTempFile("Statement-nullForNonOptionalTupleElementThrows.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3016,7 +3016,7 @@ BOOST_AUTO_TEST_CASE(pairAsResultType)
 	using ResultPair = std::pair<std::optional<std::int32_t>, std::optional<std::string>>;
 
 	const auto database = getTempFile("Statement-pairAsResultType.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3035,7 +3035,7 @@ BOOST_AUTO_TEST_CASE(setTupleWithOptionalNull)
 	using ParamTuple = std::tuple<std::int32_t, std::optional<std::string_view>>;
 
 	const auto database = getTempFile("Statement-setTupleWithOptionalNull.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3058,7 +3058,7 @@ BOOST_AUTO_TEST_CASE(getVariantNullReturnsMonostate)
 	using MyVariant = std::variant<std::monostate, std::int32_t>;
 
 	const auto database = getTempFile("Statement-getVariantNullReturnsMonostate.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3074,7 +3074,7 @@ BOOST_AUTO_TEST_CASE(getVariantNullWithoutMonostateThrows)
 	using MyVariant = std::variant<std::int32_t, std::string>;
 
 	const auto database = getTempFile("Statement-getVariantNullWithoutMonostateThrows.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3089,7 +3089,7 @@ BOOST_AUTO_TEST_CASE(getVariantExactMatchInt32)
 	using MyVariant = std::variant<std::monostate, std::int32_t, double>;
 
 	const auto database = getTempFile("Statement-getVariantExactMatchInt32.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3106,7 +3106,7 @@ BOOST_AUTO_TEST_CASE(getVariantExactMatchFloat)
 	using MyVariant = std::variant<std::monostate, float, double>;
 
 	const auto database = getTempFile("Statement-getVariantExactMatchFloat.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3123,7 +3123,7 @@ BOOST_AUTO_TEST_CASE(getVariantExactMatchString)
 	using MyVariant = std::variant<std::monostate, std::int32_t, std::string>;
 
 	const auto database = getTempFile("Statement-getVariantExactMatchString.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3140,7 +3140,7 @@ BOOST_AUTO_TEST_CASE(getVariantScaledIntPreferred)
 	using MyVariant = std::variant<std::monostate, ScaledInt32, std::int32_t>;
 
 	const auto database = getTempFile("Statement-getVariantScaledIntPreferred.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3159,7 +3159,7 @@ BOOST_AUTO_TEST_CASE(getVariantScaledIntFallback)
 	using MyVariant = std::variant<std::monostate, std::int32_t>;
 
 	const auto database = getTempFile("Statement-getVariantScaledIntFallback.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3180,7 +3180,7 @@ BOOST_AUTO_TEST_CASE(getVariantScaledToLargerScaled)
 	using MyVariant = std::variant<std::monostate, ScaledInt64, std::int32_t>;
 
 	const auto database = getTempFile("Statement-getVariantScaledToLargerScaled.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3199,7 +3199,7 @@ BOOST_AUTO_TEST_CASE(getVariantScaledToDouble)
 	using MyVariant = std::variant<std::monostate, double>;
 
 	const auto database = getTempFile("Statement-getVariantScaledToDouble.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3216,7 +3216,7 @@ BOOST_AUTO_TEST_CASE(getVariantFallbackToDouble)
 	using MyVariant = std::variant<std::monostate, double>;
 
 	const auto database = getTempFile("Statement-getVariantFallbackToDouble.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3233,7 +3233,7 @@ BOOST_AUTO_TEST_CASE(getVariantFallbackOrder)
 	using MyVariant = std::variant<std::monostate, std::int64_t, std::int32_t>;
 
 	const auto database = getTempFile("Statement-getVariantFallbackOrder.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3251,7 +3251,7 @@ BOOST_AUTO_TEST_CASE(setVariantValue)
 	using MyVariant = std::variant<std::monostate, std::int32_t, std::string>;
 
 	const auto database = getTempFile("Statement-setVariantValue.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3273,7 +3273,7 @@ BOOST_AUTO_TEST_CASE(setVariantMonostate)
 	using MyVariant = std::variant<std::monostate, std::int32_t>;
 
 	const auto database = getTempFile("Statement-setVariantMonostate.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3293,7 +3293,7 @@ BOOST_AUTO_TEST_CASE(getTupleWithVariant)
 	using ResultTuple = std::tuple<std::int32_t, MyVariant>;
 
 	const auto database = getTempFile("Statement-getTupleWithVariant.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3317,7 +3317,7 @@ BOOST_AUTO_TEST_CASE(getStructWithVariant)
 	};
 
 	const auto database = getTempFile("Statement-getStructWithVariant.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3336,7 +3336,7 @@ BOOST_AUTO_TEST_CASE(setTupleWithVariant)
 	using ParamTuple = std::tuple<std::int32_t, MyVariant>;
 
 	const auto database = getTempFile("Statement-setTupleWithVariant.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3362,7 +3362,7 @@ BOOST_AUTO_TEST_CASE(setStructWithVariant)
 	};
 
 	const auto database = getTempFile("Statement-setStructWithVariant.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3385,7 +3385,7 @@ BOOST_AUTO_TEST_CASE(getVariantScaledOpaqueInt128Preferred)
 	using MyVariant = std::variant<std::monostate, ScaledOpaqueInt128, ScaledBoostInt128>;
 
 	const auto database = getTempFile("Statement-getVariantScaledOpaqueInt128Preferred.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3405,7 +3405,7 @@ BOOST_AUTO_TEST_CASE(getVariantOpaqueDecFloat16Preferred)
 	using MyVariant = std::variant<std::monostate, OpaqueDecFloat16, BoostDecFloat16>;
 
 	const auto database = getTempFile("Statement-getVariantOpaqueDecFloat16Preferred.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3423,7 +3423,7 @@ BOOST_AUTO_TEST_CASE(getVariantOpaqueDecFloat34Preferred)
 	using MyVariant = std::variant<std::monostate, OpaqueDecFloat34, BoostDecFloat34>;
 
 	const auto database = getTempFile("Statement-getVariantOpaqueDecFloat34Preferred.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3443,7 +3443,7 @@ BOOST_AUTO_TEST_CASE(getVariantOpaqueDatePreferred)
 	using MyVariant = std::variant<std::monostate, OpaqueDate, Date>;
 
 	const auto database = getTempFile("Statement-getVariantOpaqueDatePreferred.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3461,7 +3461,7 @@ BOOST_AUTO_TEST_CASE(getVariantOpaqueTimePreferred)
 	using MyVariant = std::variant<std::monostate, OpaqueTime, Time>;
 
 	const auto database = getTempFile("Statement-getVariantOpaqueTimePreferred.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3479,7 +3479,7 @@ BOOST_AUTO_TEST_CASE(getVariantOpaqueTimestampPreferred)
 	using MyVariant = std::variant<std::monostate, OpaqueTimestamp, Timestamp>;
 
 	const auto database = getTempFile("Statement-getVariantOpaqueTimestampPreferred.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3497,7 +3497,7 @@ BOOST_AUTO_TEST_CASE(getVariantOpaqueTimeTzPreferred)
 	using MyVariant = std::variant<std::monostate, OpaqueTimeTz, TimeTz>;
 
 	const auto database = getTempFile("Statement-getVariantOpaqueTimeTzPreferred.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};
@@ -3515,7 +3515,7 @@ BOOST_AUTO_TEST_CASE(getVariantOpaqueTimestampTzPreferred)
 	using MyVariant = std::variant<std::monostate, OpaqueTimestampTz, TimestampTz>;
 
 	const auto database = getTempFile("Statement-getVariantOpaqueTimestampTzPreferred.fdb");
-	Attachment attachment{CLIENT, database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
 	FbDropDatabase attachmentDrop{attachment};
 
 	Transaction transaction{attachment};

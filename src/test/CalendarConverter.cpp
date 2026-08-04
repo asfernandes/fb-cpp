@@ -109,7 +109,7 @@ static const std::initializer_list<DateCase> DATE_CASES{
 
 BOOST_DATA_TEST_CASE(dateConversion, data::make(DATE_CASES), dateCase)
 {
-	impl::CalendarConverter converter{CLIENT};
+	impl::CalendarConverter converter{getClient()};
 
 	const auto& date = dateCase.date;
 	const std::string outputText{dateCase.outputText};
@@ -135,7 +135,7 @@ static const std::initializer_list<TimeCase> TIME_CASES{
 
 BOOST_DATA_TEST_CASE(timeConversion, data::make(TIME_CASES), timeCase)
 {
-	impl::CalendarConverter converter{CLIENT};
+	impl::CalendarConverter converter{getClient()};
 
 	const Time time{timeCase.time};
 	const std::string outputText{timeCase.outputText};
@@ -162,7 +162,7 @@ static const std::initializer_list<TimestampCase> TIMESTAMP_CASES{
 
 BOOST_DATA_TEST_CASE(timestampConversion, data::make(TIMESTAMP_CASES), timestampCase)
 {
-	impl::CalendarConverter converter{CLIENT};
+	impl::CalendarConverter converter{getClient()};
 
 	const auto timestamp = timestampCase.timestamp;
 	const std::string outputText{timestampCase.outputText};
@@ -189,9 +189,9 @@ static const std::initializer_list<TimeTzCase> TIME_TZ_CASES{
 
 BOOST_DATA_TEST_CASE(timeTzConversion, data::make(TIME_TZ_CASES), timeTzCase)
 {
-	impl::StatusWrapper statusWrapper{CLIENT};
+	impl::StatusWrapper statusWrapper{getClient()};
 
-	impl::CalendarConverter converter{CLIENT};
+	impl::CalendarConverter converter{getClient()};
 
 	const TimeTz& timeTz = timeTzCase.timeTz;
 	const std::string outputText{timeTzCase.outputText};
@@ -217,9 +217,9 @@ static const std::initializer_list<TimeTzOffsetCase> TIME_TZ_OFFSET_CASES{
 
 BOOST_DATA_TEST_CASE(timeTzOffsetConversion, data::make(TIME_TZ_OFFSET_CASES), timeTzOffsetCase)
 {
-	impl::StatusWrapper statusWrapper{CLIENT};
+	impl::StatusWrapper statusWrapper{getClient()};
 
-	impl::CalendarConverter converter{CLIENT};
+	impl::CalendarConverter converter{getClient()};
 
 	const std::string outputText{timeTzOffsetCase.outputText};
 	const std::string inputText{timeTzOffsetCase.inputText.value_or(outputText)};
@@ -241,9 +241,9 @@ static const std::initializer_list<TimestampTzCase> TIMESTAMP_TZ_CASES{
 
 BOOST_DATA_TEST_CASE(timestampTzConversion, data::make(TIMESTAMP_TZ_CASES), timestampTzCase)
 {
-	impl::StatusWrapper statusWrapper{CLIENT};
+	impl::StatusWrapper statusWrapper{getClient()};
 
-	impl::CalendarConverter converter{CLIENT};
+	impl::CalendarConverter converter{getClient()};
 
 	const TimestampTz& timestampTz = timestampTzCase.timestampTz;
 	const std::string outputText{timestampTzCase.outputText};
@@ -269,9 +269,9 @@ static const std::initializer_list<TimestampTzOffsetCase> TIMESTAMP_TZ_OFFSET_CA
 
 BOOST_DATA_TEST_CASE(timestampTzOffsetConversion, data::make(TIMESTAMP_TZ_OFFSET_CASES), timestampTzOffsetCase)
 {
-	impl::StatusWrapper statusWrapper{CLIENT};
+	impl::StatusWrapper statusWrapper{getClient()};
 
-	impl::CalendarConverter converter{CLIENT};
+	impl::CalendarConverter converter{getClient()};
 
 	const std::string outputText{timestampTzOffsetCase.outputText};
 	const std::string inputText{timestampTzOffsetCase.inputText.value_or(outputText)};
