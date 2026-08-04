@@ -152,7 +152,7 @@ jobs:
           cmake --build --preset default --target docs
 
       - name: Upload documentation artifact
-        if: matrix.variant.name == 'static'
+        if: matrix.variant.name == 'dynamic'
         uses: actions/upload-pages-artifact@v4
         with:
           path: build/Debug/doc/docs/html
