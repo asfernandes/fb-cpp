@@ -8,8 +8,7 @@
     {
       "kind": "git",
       "repository": "https://github.com/asfernandes/firebird-vcpkg-registry.git",
-      "reference": "work/fbclient-static",
-      "baseline": "875fbbd3307714c0b47feed751b9bfbf0f641225",
+      "baseline": "f5edbf04333b9fb694c862ef03863871e88636e9",
       "packages": [ "firebird" ]
     }
   ],
