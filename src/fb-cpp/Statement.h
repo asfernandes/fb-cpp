@@ -61,6 +61,10 @@
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+#include <boost/decimal.hpp>
+#endif
+
 ///
 /// fb-cpp namespace.
 ///
@@ -678,6 +682,36 @@ namespace fbcpp
 		}
 #endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+		///
+		/// @brief Binds a 7-digit decimal floating-point value using Boost.Decimal or null.
+		///
+		void setBoostDecimal32(unsigned index, std::optional<BoostDecimal32> optValue)
+		{
+			if (!optValue.has_value())
+			{
+				setNull(index);
+				return;
+			}
+
+			setNumber(index, DescriptorAdjustedType::DECFLOAT16, optValue.value(), 0, "BoostDecimal32");
+		}
+
+		///
+		/// @brief Binds a 16-digit decimal floating-point value using Boost.Decimal or null.
+		///
+		void setBoostDecimal64(unsigned index, std::optional<BoostDecimal64> optValue)
+		{
+			if (!optValue.has_value())
+			{
+				setNull(index);
+				return;
+			}
+
+			setNumber(index, DescriptorAdjustedType::DECFLOAT16, optValue.value(), 0, "BoostDecimal64");
+		}
+#endif
+
 		///
 		/// @brief Binds a 34-digit decimal floating-point value in Firebird's representation or null.
 		///
@@ -721,6 +755,22 @@ namespace fbcpp
 			}
 
 			setNumber(index, DescriptorAdjustedType::DECFLOAT34, optValue.value(), 0, "BoostDecFloat34");
+		}
+#endif
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+		///
+		/// @brief Binds a 34-digit decimal floating-point value using Boost.Decimal or null.
+		///
+		void setBoostDecimal128(unsigned index, std::optional<BoostDecimal128> optValue)
+		{
+			if (!optValue.has_value())
+			{
+				setNull(index);
+				return;
+			}
+
+			setNumber(index, DescriptorAdjustedType::DECFLOAT34, optValue.value(), 0, "BoostDecimal128");
 		}
 #endif
 
@@ -1363,6 +1413,24 @@ namespace fbcpp
 		}
 #endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+		///
+		/// @brief Convenience overload that binds a Boost.Decimal 7-digit decimal floating-point value.
+		///
+		void set(unsigned index, BoostDecimal32 value)
+		{
+			setBoostDecimal32(index, value);
+		}
+
+		///
+		/// @brief Convenience overload that binds a Boost.Decimal 16-digit decimal floating-point value.
+		///
+		void set(unsigned index, BoostDecimal64 value)
+		{
+			setBoostDecimal64(index, value);
+		}
+#endif
+
 		///
 		/// @brief Convenience overload that binds a Firebird 34-digit decimal floating-point value.
 		///
@@ -1378,6 +1446,16 @@ namespace fbcpp
 		void set(unsigned index, BoostDecFloat34 value)
 		{
 			setBoostDecFloat34(index, value);
+		}
+#endif
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+		///
+		/// @brief Convenience overload that binds a Boost.Decimal 34-digit decimal floating-point value.
+		///
+		void set(unsigned index, BoostDecimal128 value)
+		{
+			setBoostDecimal128(index, value);
 		}
 #endif
 
@@ -1628,6 +1706,26 @@ namespace fbcpp
 		}
 #endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+		///
+		/// @brief Reads a Boost.Decimal 7-digit decimal floating-point column.
+		///
+		std::optional<BoostDecimal32> getBoostDecimal32(unsigned index)
+		{
+			assert(isValid());
+			return outRow->getBoostDecimal32(index);
+		}
+
+		///
+		/// @brief Reads a Boost.Decimal 16-digit decimal floating-point column.
+		///
+		std::optional<BoostDecimal64> getBoostDecimal64(unsigned index)
+		{
+			assert(isValid());
+			return outRow->getBoostDecimal64(index);
+		}
+#endif
+
 		///
 		/// @brief Reads a Firebird 34-digit decimal floating-point column.
 		///
@@ -1645,6 +1743,17 @@ namespace fbcpp
 		{
 			assert(isValid());
 			return outRow->getBoostDecFloat34(index);
+		}
+#endif
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+		///
+		/// @brief Reads a Boost.Decimal 34-digit decimal floating-point column.
+		///
+		std::optional<BoostDecimal128> getBoostDecimal128(unsigned index)
+		{
+			assert(isValid());
+			return outRow->getBoostDecimal128(index);
 		}
 #endif
 
@@ -1917,6 +2026,72 @@ namespace fbcpp
 			(set(static_cast<unsigned>(Is), std::get<Is>(value)), ...);
 		}
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+		template <typename T>
+		void setDecimalNumber(unsigned index, T value, std::optional<int>& descriptorScale, const char* typeName)
+		{
+			const auto& descriptor = getInDescriptor(index);
+			auto* const message = inMessage.data();
+			const auto descriptorData = &message[descriptor.offset];
+
+			switch (descriptor.adjustedType)
+			{
+				case DescriptorAdjustedType::INT16:
+					*reinterpret_cast<std::int16_t*>(descriptorData) =
+						numericConverter.numberToNumber<std::int16_t>(value, descriptorScale.value());
+					break;
+
+				case DescriptorAdjustedType::INT32:
+					*reinterpret_cast<std::int32_t*>(descriptorData) =
+						numericConverter.numberToNumber<std::int32_t>(value, descriptorScale.value());
+					break;
+
+				case DescriptorAdjustedType::INT64:
+					*reinterpret_cast<std::int64_t*>(descriptorData) =
+						numericConverter.numberToNumber<std::int64_t>(value, descriptorScale.value());
+					break;
+
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+				case DescriptorAdjustedType::INT128:
+				{
+					const auto int128Value =
+						numericConverter.numberToNumber<BoostInt128>(value, descriptorScale.value());
+					*reinterpret_cast<OpaqueInt128*>(descriptorData) =
+						numericConverter.boostInt128ToOpaqueInt128(&statusWrapper, int128Value);
+					break;
+				}
+#endif
+
+				case DescriptorAdjustedType::FLOAT:
+					*reinterpret_cast<float*>(descriptorData) = numericConverter.numberToNumber<float>(value);
+					break;
+
+				case DescriptorAdjustedType::DOUBLE:
+					*reinterpret_cast<double*>(descriptorData) = numericConverter.numberToNumber<double>(value);
+					break;
+
+				case DescriptorAdjustedType::DECFLOAT16:
+				{
+					const auto decimalValue = numericConverter.numberToNumber<BoostDecimal64>(value);
+					*reinterpret_cast<OpaqueDecFloat16*>(descriptorData) =
+						numericConverter.boostDecimal64ToOpaqueDecFloat16(&statusWrapper, decimalValue);
+					break;
+				}
+
+				case DescriptorAdjustedType::DECFLOAT34:
+				{
+					const auto decimalValue = numericConverter.numberToNumber<BoostDecimal128>(value);
+					*reinterpret_cast<OpaqueDecFloat34*>(descriptorData) =
+						numericConverter.boostDecimal128ToOpaqueDecFloat34(&statusWrapper, decimalValue);
+					break;
+				}
+
+				default:
+					throwInvalidType(typeName, descriptor.adjustedType);
+			}
+		}
+#endif
+
 		///
 		/// @brief Converts and writes numeric parameter values following descriptor rules.
 		///
@@ -1930,6 +2105,16 @@ namespace fbcpp
 
 			const auto descriptorData = &message[descriptor.offset];
 			std::optional<int> descriptorScale{descriptor.scale};
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+			if constexpr (std::is_same_v<T, BoostDecimal32> || std::is_same_v<T, BoostDecimal64> ||
+				std::is_same_v<T, BoostDecimal128>)
+			{
+				setDecimalNumber(index, value, descriptorScale, typeName);
+				*reinterpret_cast<std::int16_t*>(&message[descriptor.nullOffset]) = FB_FALSE;
+				return;
+			}
+#endif
 
 			Descriptor valueDescriptor;
 			valueDescriptor.adjustedType = valueType;
@@ -2192,6 +2377,20 @@ namespace fbcpp
 	}
 #endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+	template <>
+	inline std::optional<BoostDecimal32> Statement::get<std::optional<BoostDecimal32>>(unsigned index)
+	{
+		return getBoostDecimal32(index);
+	}
+
+	template <>
+	inline std::optional<BoostDecimal64> Statement::get<std::optional<BoostDecimal64>>(unsigned index)
+	{
+		return getBoostDecimal64(index);
+	}
+#endif
+
 	template <>
 	inline std::optional<OpaqueDecFloat34> Statement::get<std::optional<OpaqueDecFloat34>>(unsigned index)
 	{
@@ -2203,6 +2402,14 @@ namespace fbcpp
 	inline std::optional<BoostDecFloat34> Statement::get<std::optional<BoostDecFloat34>>(unsigned index)
 	{
 		return getBoostDecFloat34(index);
+	}
+#endif
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+	template <>
+	inline std::optional<BoostDecimal128> Statement::get<std::optional<BoostDecimal128>>(unsigned index)
+	{
+		return getBoostDecimal128(index);
 	}
 #endif
 

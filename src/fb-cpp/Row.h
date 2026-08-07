@@ -49,6 +49,10 @@
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+#include <boost/decimal.hpp>
+#endif
+
 
 ///
 /// fb-cpp namespace.
@@ -266,6 +270,26 @@ namespace fbcpp
 		}
 #endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+		///
+		/// @brief Reads a Boost.Decimal 7-digit decimal floating-point column.
+		///
+		std::optional<BoostDecimal32> getBoostDecimal32(unsigned index)
+		{
+			std::optional<int> scale{0};
+			return getNumber<BoostDecimal32>(index, scale, "BoostDecimal32");
+		}
+
+		///
+		/// @brief Reads a Boost.Decimal 16-digit decimal floating-point column.
+		///
+		std::optional<BoostDecimal64> getBoostDecimal64(unsigned index)
+		{
+			std::optional<int> scale{0};
+			return getNumber<BoostDecimal64>(index, scale, "BoostDecimal64");
+		}
+#endif
+
 		///
 		/// @brief Reads a Firebird 34-digit decimal floating-point column.
 		///
@@ -294,6 +318,17 @@ namespace fbcpp
 		{
 			std::optional<int> scale{0};
 			return getNumber<BoostDecFloat34>(index, scale, "BoostDecFloat34");
+		}
+#endif
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+		///
+		/// @brief Reads a Boost.Decimal 34-digit decimal floating-point column.
+		///
+		std::optional<BoostDecimal128> getBoostDecimal128(unsigned index)
+		{
+			std::optional<int> scale{0};
+			return getNumber<BoostDecimal128>(index, scale, "BoostDecimal128");
 		}
 #endif
 
@@ -816,6 +851,10 @@ namespace fbcpp
 					else if constexpr (variantContainsV<BoostDecFloat16, V>)
 						return V{get<std::optional<BoostDecFloat16>>(index).value()};
 #endif
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+					else if constexpr (variantContainsV<BoostDecimal64, V>)
+						return V{get<std::optional<BoostDecimal64>>(index).value()};
+#endif
 					break;
 
 				case DescriptorAdjustedType::DECFLOAT34:
@@ -824,6 +863,10 @@ namespace fbcpp
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 					else if constexpr (variantContainsV<BoostDecFloat34, V>)
 						return V{get<std::optional<BoostDecFloat34>>(index).value()};
+#endif
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+					else if constexpr (variantContainsV<BoostDecimal128, V>)
+						return V{get<std::optional<BoostDecimal128>>(index).value()};
 #endif
 					break;
 
@@ -917,6 +960,11 @@ namespace fbcpp
 			auto data = &message[descriptor.offset];
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 			std::optional<BoostInt128> boostInt128;
+#endif
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+			std::optional<BoostDecimal64> boostDecimal64;
+			std::optional<BoostDecimal128> boostDecimal128;
+#elif FB_CPP_USE_BOOST_MULTIPRECISION != 0
 			std::optional<BoostDecFloat16> boostDecFloat16;
 			std::optional<BoostDecFloat34> boostDecFloat34;
 #endif
@@ -930,7 +978,21 @@ namespace fbcpp
 						&statusWrapper, *reinterpret_cast<const OpaqueInt128*>(data)));
 					data = reinterpret_cast<const std::byte*>(&boostInt128.value());
 					break;
+#endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+				case DescriptorAdjustedType::DECFLOAT16:
+					boostDecimal64.emplace(numericConverter.opaqueDecFloat16ToBoostDecimal64(
+						&statusWrapper, *reinterpret_cast<const OpaqueDecFloat16*>(data)));
+					data = reinterpret_cast<const std::byte*>(&boostDecimal64.value());
+					break;
+
+				case DescriptorAdjustedType::DECFLOAT34:
+					boostDecimal128.emplace(numericConverter.opaqueDecFloat34ToBoostDecimal128(
+						&statusWrapper, *reinterpret_cast<const OpaqueDecFloat34*>(data)));
+					data = reinterpret_cast<const std::byte*>(&boostDecimal128.value());
+					break;
+#elif FB_CPP_USE_BOOST_MULTIPRECISION != 0
 				case DescriptorAdjustedType::DECFLOAT16:
 					boostDecFloat16.emplace(numericConverter.opaqueDecFloat16ToBoostDecFloat16(
 						&statusWrapper, *reinterpret_cast<const OpaqueDecFloat16*>(data)));
@@ -997,7 +1059,17 @@ namespace fbcpp
 					return numericConverter.numberToNumber<T>(
 						ScaledBoostInt128{*reinterpret_cast<const BoostInt128*>(data), descriptor.scale},
 						toScale.value());
+#endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+				case DescriptorAdjustedType::DECFLOAT16:
+					return numericConverter.numberToNumber<T>(
+						*reinterpret_cast<const BoostDecimal64*>(data), toScale.value());
+
+				case DescriptorAdjustedType::DECFLOAT34:
+					return numericConverter.numberToNumber<T>(
+						*reinterpret_cast<const BoostDecimal128*>(data), toScale.value());
+#elif FB_CPP_USE_BOOST_MULTIPRECISION != 0
 				case DescriptorAdjustedType::DECFLOAT16:
 					return numericConverter.numberToNumber<T>(
 						*reinterpret_cast<const BoostDecFloat16*>(data), toScale.value());
@@ -1126,6 +1198,20 @@ namespace fbcpp
 	}
 #endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+	template <>
+	inline std::optional<BoostDecimal32> Row::get<std::optional<BoostDecimal32>>(unsigned index)
+	{
+		return getBoostDecimal32(index);
+	}
+
+	template <>
+	inline std::optional<BoostDecimal64> Row::get<std::optional<BoostDecimal64>>(unsigned index)
+	{
+		return getBoostDecimal64(index);
+	}
+#endif
+
 	template <>
 	inline std::optional<OpaqueDecFloat34> Row::get<std::optional<OpaqueDecFloat34>>(unsigned index)
 	{
@@ -1137,6 +1223,14 @@ namespace fbcpp
 	inline std::optional<BoostDecFloat34> Row::get<std::optional<BoostDecFloat34>>(unsigned index)
 	{
 		return getBoostDecFloat34(index);
+	}
+#endif
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+	template <>
+	inline std::optional<BoostDecimal128> Row::get<std::optional<BoostDecimal128>>(unsigned index)
+	{
+		return getBoostDecimal128(index);
 	}
 #endif
 

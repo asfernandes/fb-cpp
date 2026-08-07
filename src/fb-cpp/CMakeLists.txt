@@ -22,6 +22,16 @@ option(FB_CPP_USE_BOOST_MULTIPRECISION "Enable Boost.Multiprecision helpers for 
 	${_fb_cpp_use_boost_multiprecision_default})
 unset(_fb_cpp_use_boost_multiprecision_default)
 
+set(_fb_cpp_use_boost_decimal_default ON)
+if(DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
+	if(NOT EXISTS "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/boost-decimal")
+		set(_fb_cpp_use_boost_decimal_default OFF)
+	endif()
+endif()
+option(FB_CPP_USE_BOOST_DECIMAL "Enable Boost.Decimal helpers for DECFLOAT types"
+	${_fb_cpp_use_boost_decimal_default})
+unset(_fb_cpp_use_boost_decimal_default)
+
 file(GLOB_RECURSE SRC
 	"*.h"
 	"*.cpp"
@@ -33,6 +43,9 @@ if(FB_CPP_USE_BOOST_DLL)
 endif()
 if(FB_CPP_USE_BOOST_MULTIPRECISION)
 	list(APPEND _fb_cpp_boost_components multiprecision)
+endif()
+if(FB_CPP_USE_BOOST_DECIMAL)
+	list(APPEND _fb_cpp_boost_components decimal)
 endif()
 
 if(_fb_cpp_boost_components)
@@ -77,10 +90,19 @@ if(NOT DEFINED FB_CPP_USE_BOOST_MULTIPRECISION_VALUE)
 	endif()
 endif()
 
+if(NOT DEFINED FB_CPP_USE_BOOST_DECIMAL_VALUE)
+	if(FB_CPP_USE_BOOST_DECIMAL)
+		set(FB_CPP_USE_BOOST_DECIMAL_VALUE 1)
+	else()
+		set(FB_CPP_USE_BOOST_DECIMAL_VALUE 0)
+	endif()
+endif()
+
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
 		FB_CPP_USE_BOOST_DLL=${FB_CPP_USE_BOOST_DLL_VALUE}
 		FB_CPP_USE_BOOST_MULTIPRECISION=${FB_CPP_USE_BOOST_MULTIPRECISION_VALUE}
+		FB_CPP_USE_BOOST_DECIMAL=${FB_CPP_USE_BOOST_DECIMAL_VALUE}
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -97,6 +119,12 @@ endif()
 if(FB_CPP_USE_BOOST_MULTIPRECISION)
 	target_link_libraries(${PROJECT_NAME}
 		PUBLIC Boost::multiprecision
+	)
+endif()
+
+if(FB_CPP_USE_BOOST_DECIMAL)
+	target_link_libraries(${PROJECT_NAME}
+		PUBLIC Boost::decimal
 	)
 endif()
 

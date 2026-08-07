@@ -18,7 +18,8 @@ It wraps the Firebird C++ API with RAII principles, smart pointers, and modern C
 - **RAII**: Automatic resource management with smart pointers
 - **Type Safety**: Strong typing for database operations
 - **Exception Safety**: Proper error handling with exceptions
-- **Boost Integration**: Optional Boost.DLL for loading fbclient and Boost.Multiprecision support for large numbers
+- **Boost Integration**: Optional Boost.DLL for loading fbclient, Boost.Multiprecision support for large numbers, and
+  Boost.Decimal support for decimal floating-point values
 
 ## Quick Start
 
@@ -102,6 +103,7 @@ Or add it to your `vcpkg.json` manifest:
 The default features are:
 - `boost-dll`: Enable Boost.DLL support for runtime dynamic loading of Firebird client library
 - `boost-multiprecision`: Enable Boost.Multiprecision support for INT128 and DECFLOAT types
+- `boost-decimal`: Enable Boost.Decimal support for DECFLOAT types
 
 ## Building
 

@@ -37,4 +37,10 @@
 #endif
 #endif
 
+#if !defined(FB_CPP_USE_BOOST_DECIMAL)
+#if __has_include(<boost/decimal.hpp>)
+#define FB_CPP_USE_BOOST_DECIMAL 1
+#endif
+#endif
+
 #endif  // FBCPP_CONFIG_H

@@ -68,6 +68,11 @@ if(FB_CPP_USE_BOOST_MULTIPRECISION)
 	set(FB_CPP_USE_BOOST_MULTIPRECISION_VALUE 1)
 endif()
 
+set(FB_CPP_USE_BOOST_DECIMAL_VALUE 0)
+if(FB_CPP_USE_BOOST_DECIMAL)
+	set(FB_CPP_USE_BOOST_DECIMAL_VALUE 1)
+endif()
+
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
