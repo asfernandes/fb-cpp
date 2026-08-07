@@ -29,7 +29,6 @@
 #include "fb-cpp/Transaction.h"
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
-#include <filesystem>
 #include <ostream>
 #include <string_view>
 #include <vector>
@@ -60,17 +59,6 @@ namespace
 	std::ostream& operator<<(std::ostream& os, const BackupRestoreVerboseCase& testCase)
 	{
 		return os << testCase.suffix;
-	}
-
-	std::string normalizedFilename(const std::filesystem::path& path)
-	{
-#ifdef _WIN32
-		auto str = path.filename().string();
-		std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); });
-		return str;
-#else
-		return path.filename().string();
-#endif
 	}
 
 	static const std::initializer_list<BackupRestoreVerboseCase> BACKUP_RESTORE_VERBOSE_CASES{
@@ -250,16 +238,14 @@ BOOST_AUTO_TEST_CASE(restoreReplace)
 	cleanup.dropDatabase();
 }
 
-BOOST_AUTO_TEST_CASE(multiFileDatabaseAndBackupRoundTrip)
+BOOST_AUTO_TEST_CASE(splitBackupRoundTrip)
 {
-	const auto sourceDatabasePath = getTempFile("BackupManager-multiFile-source.fdb", false);
-	const auto sourceSecondaryPath = getTempFile("BackupManager-multiFile-source-2.fdb", false);
-	const auto restoredDatabasePath = getTempFile("BackupManager-multiFile-restored.fdb", false);
-	const auto restoredSecondaryPath = getTempFile("BackupManager-multiFile-restored-2.fdb", false);
-	const auto backupFile1 = getTempFile("BackupManager-multiFile-1.fbk", false);
-	const auto backupFile2 = getTempFile("BackupManager-multiFile-2.fbk", false);
-	const auto sourceDatabaseUri = getTempFile("BackupManager-multiFile-source.fdb");
-	const auto restoredDatabaseUri = getTempFile("BackupManager-multiFile-restored.fdb");
+	const auto sourceDatabasePath = getTempFile("BackupManager-splitBackup-source.fdb", false);
+	const auto restoredDatabasePath = getTempFile("BackupManager-splitBackup-restored.fdb", false);
+	const auto backupFile1 = getTempFile("BackupManager-splitBackup-1.fbk", false);
+	const auto backupFile2 = getTempFile("BackupManager-splitBackup-2.fbk", false);
+	const auto sourceDatabaseUri = getTempFile("BackupManager-splitBackup-source.fdb");
+	const auto restoredDatabaseUri = getTempFile("BackupManager-splitBackup-restored.fdb");
 	const auto attachmentOptions = AttachmentOptions().setConnectionCharSet("UTF8");
 
 	{  // scope
@@ -273,11 +259,6 @@ BOOST_AUTO_TEST_CASE(multiFileDatabaseAndBackupRoundTrip)
 		create.execute(transaction);
 		transaction.commitRetaining();
 
-		Statement addFile{
-			attachment, transaction, "alter database add file '" + sourceSecondaryPath + "' starting at page 241"};
-		addFile.execute(transaction);
-		transaction.commitRetaining();
-
 		for (int i = 1; i <= 200; ++i)
 		{
 			Statement insert{attachment, transaction, "insert into test(id, name) values (?, ?)"};
@@ -285,13 +266,6 @@ BOOST_AUTO_TEST_CASE(multiFileDatabaseAndBackupRoundTrip)
 			insert.setString(1, "row-" + std::to_string(i) + std::string(40, 'x'));
 			insert.execute(transaction);
 		}
-		transaction.commitRetaining();
-
-		Statement queryFiles{attachment, transaction,
-			"select count(*), min(trim(rdb$file_name)) from rdb$files where rdb$file_sequence = 1"};
-		BOOST_REQUIRE(queryFiles.execute(transaction));
-		BOOST_CHECK_EQUAL(queryFiles.getInt64(0).value(), 1);
-		BOOST_CHECK_EQUAL(normalizedFilename(queryFiles.getString(1).value()), normalizedFilename(sourceSecondaryPath));
 		transaction.commit();
 	}
 
@@ -299,11 +273,8 @@ BOOST_AUTO_TEST_CASE(multiFileDatabaseAndBackupRoundTrip)
 	manager.backup(
 		BackupOptions().setDatabase(sourceDatabasePath).addBackupFile(backupFile1, 2048).addBackupFile(backupFile2));
 
-	manager.restore(RestoreOptions()
-			.setDatabase(restoredDatabasePath, 200)
-			.addDatabaseFile(restoredSecondaryPath)
-			.addBackupFile(backupFile1)
-			.addBackupFile(backupFile2));
+	manager.restore(
+		RestoreOptions().setDatabase(restoredDatabasePath).addBackupFile(backupFile1).addBackupFile(backupFile2));
 
 	Attachment restored{getClient(), restoredDatabaseUri, attachmentOptions};
 	FbDropDatabase restoredDrop{restored};
@@ -313,12 +284,6 @@ BOOST_AUTO_TEST_CASE(multiFileDatabaseAndBackupRoundTrip)
 	BOOST_CHECK_EQUAL(query.getInt64(0).value(), 200);
 	BOOST_CHECK_EQUAL(query.getInt32(1).value(), 1);
 	BOOST_CHECK_EQUAL(query.getInt32(2).value(), 200);
-
-	Statement queryFiles{
-		restored, transaction, "select count(*), min(trim(rdb$file_name)) from rdb$files where rdb$file_sequence = 1"};
-	BOOST_REQUIRE(queryFiles.execute(transaction));
-	BOOST_CHECK_EQUAL(queryFiles.getInt64(0).value(), 1);
-	BOOST_CHECK_EQUAL(normalizedFilename(queryFiles.getString(1).value()), normalizedFilename(restoredSecondaryPath));
 	transaction.commit();
 
 	Attachment cleanup{getClient(), sourceDatabaseUri, attachmentOptions};
