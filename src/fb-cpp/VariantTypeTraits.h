@@ -159,6 +159,7 @@ namespace fbcpp::impl::reflection
 	struct IsSupportedVariantType<BoostDecFloat34> : std::true_type
 	{
 	};
+#endif
 
 	// Opaque multiprecision types
 	template <>
@@ -173,7 +174,6 @@ namespace fbcpp::impl::reflection
 	struct IsSupportedVariantType<OpaqueDecFloat34> : std::true_type
 	{
 	};
-#endif
 
 	// std::monostate is always allowed for NULL representation
 	template <>

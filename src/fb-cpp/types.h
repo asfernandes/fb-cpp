@@ -32,6 +32,7 @@
 #include <format>
 #include <iostream>
 #include <string>
+#include <type_traits>
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 #include <boost/multiprecision/cpp_int.hpp>
@@ -50,7 +51,16 @@ namespace fbcpp
 	template <typename T>
 	struct ScaledNumber final
 	{
-		bool operator==(const ScaledNumber&) const noexcept = default;
+		bool operator==(const ScaledNumber& o) const noexcept
+		{
+			if constexpr (std::is_same_v<T, FB_I128>)
+			{
+				return value.fb_data[0] == o.value.fb_data[0] && value.fb_data[1] == o.value.fb_data[1] &&
+					scale == o.scale;
+			}
+			else
+				return value == o.value && scale == o.scale;
+		}
 
 		///
 		/// Unscaled numeric value.
@@ -324,8 +334,8 @@ struct std::formatter<fbcpp::ScaledNumber<T>> : std::formatter<T>
 	template <typename FormatContext>
 	auto format(const fbcpp::ScaledNumber<T>& scaledNumber, FormatContext& ctx) const
 	{
-		return std::format_to(
-			ctx.out(), "{}e{}", std::formatter<T>::format(scaledNumber.value, ctx), scaledNumber.scale);
+		const auto valueEnd = std::formatter<T>::format(scaledNumber.value, ctx);
+		return std::format_to(valueEnd, "e{}", scaledNumber.scale);
 	}
 };
 

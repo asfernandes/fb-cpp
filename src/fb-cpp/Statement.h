@@ -533,6 +533,46 @@ namespace fbcpp
 			*reinterpret_cast<std::int16_t*>(&message[descriptor.nullOffset]) = FB_FALSE;
 		}
 
+		///
+		/// @brief Binds a scaled 128-bit integer in Firebird's representation or null.
+		///
+		void setScaledOpaqueInt128(unsigned index, std::optional<ScaledOpaqueInt128> optValue)
+		{
+			if (!optValue.has_value())
+			{
+				setNull(index);
+				return;
+			}
+
+			assert(isValid());
+
+			const auto& value = optValue.value();
+			const auto& descriptor = getInDescriptor(index);
+			auto* const message = inMessage.data();
+
+			switch (descriptor.adjustedType)
+			{
+				case DescriptorAdjustedType::INT128:
+					if (value.scale == descriptor.scale)
+						*reinterpret_cast<OpaqueInt128*>(&message[descriptor.offset]) = value.value;
+					else
+					{
+						const auto valueString =
+							numericConverter.opaqueInt128ToString(&statusWrapper, value.value, value.scale);
+						getClient()
+							.getInt128Util(&statusWrapper)
+							->fromString(&statusWrapper, descriptor.scale, valueString.c_str(),
+								reinterpret_cast<OpaqueInt128*>(&message[descriptor.offset]));
+					}
+					break;
+
+				default:
+					throwInvalidType("ScaledOpaqueInt128", descriptor.adjustedType);
+			}
+
+			*reinterpret_cast<std::int16_t*>(&message[descriptor.nullOffset]) = FB_FALSE;
+		}
+
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 		///
 		/// @brief Binds a 128-bit integer value expressed with Boost.Multiprecision or null.
@@ -1106,7 +1146,6 @@ namespace fbcpp
 						calendarConverter.stringToOpaqueTimestampTz(&statusWrapper, value);
 					break;
 
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 				case DescriptorAdjustedType::DECFLOAT16:
 				{
 					std::string strValue{value};
@@ -1122,7 +1161,6 @@ namespace fbcpp
 						->fromString(&statusWrapper, strValue.c_str(), reinterpret_cast<OpaqueDecFloat34*>(data));
 					break;
 				}
-#endif
 
 				case DescriptorAdjustedType::STRING:
 					if (value.length() > descriptor.length)
@@ -1263,6 +1301,14 @@ namespace fbcpp
 		void set(unsigned index, OpaqueInt128 value)
 		{
 			setOpaqueInt128(index, value);
+		}
+
+		///
+		/// @brief Convenience overload that binds a scaled Firebird 128-bit integer.
+		///
+		void set(unsigned index, ScaledOpaqueInt128 value)
+		{
+			setScaledOpaqueInt128(index, value);
 		}
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
@@ -1914,7 +1960,7 @@ namespace fbcpp
 					const auto boostInt128 =
 						convertNumber<BoostInt128>(valueDescriptor, valueAddress, descriptorScale, "BoostInt128");
 					*reinterpret_cast<OpaqueInt128*>(descriptorData) =
-						numericConverter.boostInt128ToOpaqueInt128(boostInt128);
+						numericConverter.boostInt128ToOpaqueInt128(&statusWrapper, boostInt128);
 					break;
 				}
 #endif
