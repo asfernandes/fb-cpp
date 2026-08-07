@@ -155,7 +155,9 @@ namespace fbcpp::impl
 		[[noreturn]] void throwNumericOutOfRange()
 		{
 			static constexpr std::intptr_t STATUS_NUMERIC_OUT_OF_RANGE[] = {
+				isc_arg_gds,
 				isc_arith_except,
+				isc_arg_gds,
 				isc_numeric_out_of_range,
 				isc_arg_end,
 			};
@@ -166,7 +168,9 @@ namespace fbcpp::impl
 		[[noreturn]] void throwConversionErrorFromString(const std::string& str)
 		{
 			const std::intptr_t STATUS_CONVERSION_ERROR_FROM_STRING[] = {
+				isc_arg_gds,
 				isc_convert_error,
+				isc_arg_string,
 				reinterpret_cast<std::intptr_t>(str.c_str()),
 				isc_arg_end,
 			};
@@ -209,14 +213,21 @@ namespace fbcpp::impl
 				if (std::isnan(from) || std::isinf(from))
 					throwNumericOutOfRange();
 			}
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+			else if constexpr (std::same_as<From, BoostDecFloat16> || std::same_as<From, BoostDecFloat34>)
+			{
+				if ((boost::multiprecision::isnan) (from) || (boost::multiprecision::isinf) (from))
+					throwNumericOutOfRange();
+			}
+#endif
 
 			ComputeType value{from};
 			const ComputeType eps = conversionEpsilon<ComputeType>();
 
 			if (toScale > 0)
-				value /= powerOfTen(toScale);
+				value /= powerOfTen<ComputeType>(toScale);
 			else if (toScale < 0)
-				value *= powerOfTen(-toScale);
+				value *= powerOfTen<ComputeType>(-toScale);
 
 			if (value > 0)
 				value += 0.5f + eps;
@@ -258,9 +269,9 @@ namespace fbcpp::impl
 					throwNumericOutOfRange();
 
 				if (from.scale > 0)
-					value *= powerOfTen(from.scale);
+					value *= powerOfTen<ComputeType>(from.scale);
 				else if (from.scale < 0)
-					value /= powerOfTen(-from.scale);
+					value /= powerOfTen<ComputeType>(-from.scale);
 			}
 
 			return static_cast<To>(value);
@@ -271,10 +282,15 @@ namespace fbcpp::impl
 		{
 			assert(toScale == 0);
 
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+			if constexpr (std::same_as<To, BoostDecFloat16> && std::same_as<From, BoostDecFloat34>)
+				return boostDecFloat34ToBoostDecFloat16(from);
+#endif
+
 			if constexpr (std::is_floating_point_v<From> && !std::is_floating_point_v<To>)
 				return To{std::format("{:.16e}", from)};
-			else
-				return static_cast<To>(from);
+
+			return static_cast<To>(from);
 		}
 
 		template <IntegralNumber From>
@@ -349,6 +365,16 @@ namespace fbcpp::impl
 					return from > 0 ? "Infinity" : "-Infinity";
 				return std::to_string(from);
 			}
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+			else if constexpr (std::same_as<From, BoostDecFloat16> || std::same_as<From, BoostDecFloat34>)
+			{
+				if ((boost::multiprecision::isnan) (from))
+					return "NaN";
+				if ((boost::multiprecision::isinf) (from))
+					return from > 0 ? "Infinity" : "-Infinity";
+				return from.str();
+			}
+#endif
 			else
 				return from.str();
 		}
@@ -378,24 +404,32 @@ namespace fbcpp::impl
 		}
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-		OpaqueInt128 boostInt128ToOpaqueInt128(const BoostInt128& boostInt128)
+		OpaqueInt128 boostInt128ToOpaqueInt128(StatusWrapper* statusWrapper, const BoostInt128& boostInt128)
 		{
-			const boost::multiprecision::uint128_t boostUInt128{boostInt128};
+			validateFirebirdInt128(boostInt128);
 
 			OpaqueInt128 opaqueInt128;
-			opaqueInt128.fb_data[0] = static_cast<std::uint64_t>(boostUInt128 & 0xFFFFFFFFFFFFFFFFULL);
-			opaqueInt128.fb_data[1] = static_cast<std::uint64_t>(boostUInt128 >> 64);
+			const auto value = boostInt128.str();
+			client->getInt128Util(statusWrapper)->fromString(statusWrapper, 0, value.c_str(), &opaqueInt128);
 
 			return opaqueInt128;
 		}
 
+		OpaqueInt128 boostInt128ToOpaqueInt128(const BoostInt128& boostInt128)
+		{
+			StatusWrapper status{*client};
+			return boostInt128ToOpaqueInt128(&status, boostInt128);
+		}
+
+		BoostInt128 opaqueInt128ToBoostInt128(StatusWrapper* statusWrapper, const OpaqueInt128& opaqueInt128)
+		{
+			return BoostInt128{opaqueInt128ToString(statusWrapper, opaqueInt128, 0)};
+		}
+
 		BoostInt128 opaqueInt128ToBoostInt128(const OpaqueInt128& opaqueInt128)
 		{
-			const auto high = static_cast<std::int64_t>(opaqueInt128.fb_data[1]);
-			BoostInt128 boostInt128 = static_cast<BoostInt128>(high);
-			boostInt128 <<= 64;
-			boostInt128 += static_cast<BoostInt128>(opaqueInt128.fb_data[0]);
-			return boostInt128;
+			StatusWrapper status{*client};
+			return opaqueInt128ToBoostInt128(&status, opaqueInt128);
 		}
 
 		OpaqueDecFloat16 boostDecFloat16ToOpaqueDecFloat16(
@@ -403,14 +437,31 @@ namespace fbcpp::impl
 		{
 			const auto decFloat16Util = client->getDecFloat16Util(statusWrapper);
 			OpaqueDecFloat16 opaqueDecFloat16;
-			decFloat16Util->fromString(statusWrapper, boostDecFloat16.str().c_str(), &opaqueDecFloat16);
+			const auto value = numberToString(boostDecFloat16);
+			decFloat16Util->fromString(statusWrapper, value.c_str(), &opaqueDecFloat16);
 			return opaqueDecFloat16;
 		}
 
 		BoostDecFloat16 opaqueDecFloat16ToBoostDecFloat16(
 			StatusWrapper* statusWrapper, const OpaqueDecFloat16& opaqueDecFloat16)
 		{
-			return BoostDecFloat16{opaqueDecFloat16ToString(statusWrapper, opaqueDecFloat16)};
+			const auto value = opaqueDecFloat16ToString(statusWrapper, opaqueDecFloat16);
+
+			if (isSignalingNaN(value))
+				throw FbCppException("BoostDecFloat16 cannot represent a signaling NaN");
+			else if (value == "Infinity")
+				return std::numeric_limits<BoostDecFloat16>::infinity();
+			else if (value == "-Infinity")
+				return -std::numeric_limits<BoostDecFloat16>::infinity();
+
+			try
+			{
+				return BoostDecFloat16{value};
+			}
+			catch (const std::exception&)
+			{
+				throwConversionErrorFromString(value);
+			}
 		}
 
 		OpaqueDecFloat34 boostDecFloat34ToOpaqueDecFloat34(
@@ -418,14 +469,40 @@ namespace fbcpp::impl
 		{
 			const auto decFloat34Util = client->getDecFloat34Util(statusWrapper);
 			OpaqueDecFloat34 opaqueDecFloat34;
-			decFloat34Util->fromString(statusWrapper, boostDecFloat34.str().c_str(), &opaqueDecFloat34);
+			const auto value = numberToString(boostDecFloat34);
+			decFloat34Util->fromString(statusWrapper, value.c_str(), &opaqueDecFloat34);
 			return opaqueDecFloat34;
 		}
 
 		BoostDecFloat34 opaqueDecFloat34ToBoostDecFloat34(
 			StatusWrapper* statusWrapper, const OpaqueDecFloat34& opaqueDecFloat34)
 		{
-			return BoostDecFloat34{opaqueDecFloat34ToString(statusWrapper, opaqueDecFloat34)};
+			const auto value = opaqueDecFloat34ToString(statusWrapper, opaqueDecFloat34);
+
+			if (isSignalingNaN(value))
+				throw FbCppException("BoostDecFloat34 cannot represent a signaling NaN; use OpaqueDecFloat34");
+			else if (value == "Infinity")
+				return std::numeric_limits<BoostDecFloat34>::infinity();
+			else if (value == "-Infinity")
+				return -std::numeric_limits<BoostDecFloat34>::infinity();
+
+			try
+			{
+				return BoostDecFloat34{value};
+			}
+			catch (const std::exception&)
+			{
+				throwConversionErrorFromString(value);
+			}
+		}
+
+		BoostDecFloat16 boostDecFloat34ToBoostDecFloat16(const BoostDecFloat34& boostDecFloat34)
+		{
+			StatusWrapper status{*client};
+			OpaqueDecFloat16 opaqueDecFloat16;
+			const auto value = numberToString(boostDecFloat34);
+			client->getDecFloat16Util(&status)->fromString(&status, value.c_str(), &opaqueDecFloat16);
+			return opaqueDecFloat16ToBoostDecFloat16(&status, opaqueDecFloat16);
 		}
 #endif
 
@@ -453,15 +530,8 @@ namespace fbcpp::impl
 		}
 
 	private:
-		double powerOfTen(int scale) noexcept  // FIXME: only for double?
+		double powerOfTenDouble(int scale) noexcept
 		{
-			/* FIXME:
-			BoostDecFloat34 powerOfTenDecInternal(unsigned scale)
-			{
-			    return boost::multiprecision::pow(BoostDecFloat34{10}, scale);
-			}
-			*/
-
 			static constexpr double UPPER_PART[] = {
 				1.e000,
 				1.e032,
@@ -517,6 +587,47 @@ namespace fbcpp::impl
 
 			return upper * lower;
 		}
+
+		template <typename T>
+		T powerOfTen(int scale)
+		{
+			assert((scale >= 0) && (scale < 320));
+
+			if constexpr (std::same_as<T, float> || std::same_as<T, double>)
+				return static_cast<T>(powerOfTenDouble(scale));
+			else
+			{
+				T result{1};
+
+				for (int i = 0; i < scale; ++i)
+					result *= 10;
+
+				return result;
+			}
+		}
+
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+		void validateFirebirdInt128(const BoostInt128& value)
+		{
+			constexpr BoostInt128 FB_MAX_INT128 = (BoostInt128{1} << 127) - 1;
+			constexpr BoostInt128 FB_MIN_INT128 = -(BoostInt128{1} << 127);
+
+			if (value < FB_MIN_INT128 || value > FB_MAX_INT128)
+				throwNumericOutOfRange();
+		}
+
+		static bool isSignalingNaN(std::string_view value)
+		{
+			std::string normalized{value};
+			if (!normalized.empty() && (normalized.front() == '+' || normalized.front() == '-'))
+				normalized.erase(0, 1);
+
+			std::transform(normalized.begin(), normalized.end(), normalized.begin(),
+				[](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+
+			return normalized.starts_with("snan");
+		}
+#endif
 
 		template <typename T>
 		void adjustScale(T& val, int scale, const T minLimit, const T maxLimit)

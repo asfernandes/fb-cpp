@@ -1706,6 +1706,33 @@ BOOST_AUTO_TEST_CASE(setBoostInt128ToInt128)
 	BOOST_CHECK(result.value() == testValue);
 }
 
+BOOST_AUTO_TEST_CASE(boostInt128BoundaryValues)
+{
+	const auto database = getTempFile("Statement-boostInt128BoundaryValues.fdb");
+
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+
+	const BoostInt128 firebirdMax{"170141183460469231731687303715884105727"};
+	const BoostInt128 firebirdMin{"-170141183460469231731687303715884105728"};
+
+	Statement minValue{attachment, transaction, "select cast(? as int128) from rdb$database"};
+	minValue.setBoostInt128(0, firebirdMin);
+	BOOST_REQUIRE(minValue.execute(transaction));
+	BOOST_CHECK_EQUAL(minValue.getBoostInt128(0).value(), firebirdMin);
+
+	Statement maxValue{attachment, transaction, "select cast(? as int128) from rdb$database"};
+	maxValue.setBoostInt128(0, firebirdMax);
+	BOOST_REQUIRE(maxValue.execute(transaction));
+	BOOST_CHECK_EQUAL(maxValue.getBoostInt128(0).value(), firebirdMax);
+
+	Statement outOfRange{attachment, transaction, "select cast(? as int128) from rdb$database"};
+	BOOST_CHECK_THROW(outOfRange.setBoostInt128(0, firebirdMax + 1), DatabaseException);
+	BOOST_CHECK_THROW(outOfRange.setBoostInt128(0, firebirdMin - 1), DatabaseException);
+}
+
 BOOST_AUTO_TEST_CASE(getBoostInt128FromInt128)
 {
 	const auto database = getTempFile("Statement-getBoostInt128FromInt128.fdb");
@@ -2052,6 +2079,56 @@ BOOST_AUTO_TEST_CASE(setBoostDecFloat34ToDecFloat16)
 	auto result = select.getBoostDecFloat16(0);
 	BOOST_REQUIRE(result.has_value());
 	BOOST_CHECK(result.value() == BoostDecFloat16{"123456.789"});
+}
+
+BOOST_AUTO_TEST_CASE(decFloatRoundingAndSpecialValues)
+{
+	const auto database = getTempFile("Statement-decFloatRoundingAndSpecialValues.fdb");
+
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+
+	Statement rounded{attachment, transaction, "select cast(? as decfloat(16)) from rdb$database"};
+	rounded.setBoostDecFloat34(0, BoostDecFloat34{"12345678901234565"});
+	BOOST_REQUIRE(rounded.execute(transaction));
+	BOOST_CHECK_EQUAL(rounded.getBoostDecFloat16(0).value(), BoostDecFloat16{"12345678901234570"});
+
+	Statement positiveInfinity{attachment, transaction, "select cast(? as decfloat(16)) from rdb$database"};
+	positiveInfinity.setBoostDecFloat16(0, std::numeric_limits<BoostDecFloat16>::infinity());
+	BOOST_REQUIRE(positiveInfinity.execute(transaction));
+	const auto positiveInfinityValue = positiveInfinity.getBoostDecFloat16(0);
+	BOOST_REQUIRE(positiveInfinityValue.has_value());
+	BOOST_CHECK((boost::multiprecision::isinf) (positiveInfinityValue.value()));
+	BOOST_CHECK(positiveInfinityValue.value() > 0);
+
+	Statement negativeInfinity{attachment, transaction, "select cast(? as decfloat(34)) from rdb$database"};
+	negativeInfinity.setBoostDecFloat34(0, -std::numeric_limits<BoostDecFloat34>::infinity());
+	BOOST_REQUIRE(negativeInfinity.execute(transaction));
+	const auto negativeInfinityValue = negativeInfinity.getBoostDecFloat34(0);
+	BOOST_REQUIRE(negativeInfinityValue.has_value());
+	BOOST_CHECK((boost::multiprecision::isinf) (negativeInfinityValue.value()));
+	BOOST_CHECK(negativeInfinityValue.value() < 0);
+
+	Statement quietNaN{attachment, transaction, "select cast(? as decfloat(16)) from rdb$database"};
+	quietNaN.setBoostDecFloat16(0, BoostDecFloat16{"NaN"});
+	BOOST_REQUIRE(quietNaN.execute(transaction));
+	BOOST_CHECK_EQUAL(quietNaN.getString(0).value(), "NaN");
+
+	Statement signalingNaN{attachment, transaction, "select cast(? as decfloat(16)) from rdb$database"};
+	signalingNaN.setString(0, "sNaN");
+	BOOST_REQUIRE(signalingNaN.execute(transaction));
+	BOOST_CHECK_THROW(signalingNaN.getBoostDecFloat16(0), FbCppException);
+	const auto rawSignalingNaN = signalingNaN.getOpaqueDecFloat16(0);
+	BOOST_REQUIRE(rawSignalingNaN.has_value());
+
+	Statement rawRoundTrip{attachment, transaction, "select cast(? as decfloat(16)) from rdb$database"};
+	rawRoundTrip.setOpaqueDecFloat16(0, rawSignalingNaN.value());
+	BOOST_REQUIRE(rawRoundTrip.execute(transaction));
+	const auto rawRoundTripValue = rawRoundTrip.getOpaqueDecFloat16(0);
+	BOOST_REQUIRE(rawRoundTripValue.has_value());
+	BOOST_CHECK_EQUAL(rawRoundTripValue->fb_data[0], rawSignalingNaN->fb_data[0]);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -2562,6 +2639,35 @@ BOOST_AUTO_TEST_CASE(opaqueInt128RoundTrip)
 	select.setOpaqueInt128(0, originalOpaque->value);
 	BOOST_REQUIRE(select.execute(transaction));
 	BOOST_CHECK_EQUAL(select.getString(0).value(), "170141183460469231731687303715884105727");
+}
+
+BOOST_AUTO_TEST_CASE(scaledOpaqueInt128BindingPreservesAndConvertsScale)
+{
+	const auto database = getTempFile("Statement-scaledOpaqueInt128BindingPreservesAndConvertsScale.fdb");
+
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+
+	Statement known{attachment, transaction, "select cast(12345.6789 as numeric(38, 4)) from rdb$database"};
+	BOOST_REQUIRE(known.execute(transaction));
+	const auto original = known.getScaledOpaqueInt128(0);
+	BOOST_REQUIRE(original.has_value());
+
+	Statement sameScale{attachment, transaction, "select cast(? as numeric(38, 4)) from rdb$database"};
+	sameScale.setScaledOpaqueInt128(0, original);
+	BOOST_REQUIRE(sameScale.execute(transaction));
+	const auto sameScaleResult = sameScale.getScaledOpaqueInt128(0);
+	BOOST_REQUIRE(sameScaleResult.has_value());
+	BOOST_CHECK_EQUAL(sameScaleResult->scale, -4);
+	BOOST_CHECK_EQUAL(sameScaleResult->value.fb_data[0], original->value.fb_data[0]);
+	BOOST_CHECK_EQUAL(sameScaleResult->value.fb_data[1], original->value.fb_data[1]);
+
+	Statement convertedScale{attachment, transaction, "select cast(? as numeric(38, 2)) from rdb$database"};
+	convertedScale.set(0, original.value());
+	BOOST_REQUIRE(convertedScale.execute(transaction));
+	BOOST_CHECK_EQUAL(convertedScale.getString(0).value(), "12345.68");
 }
 
 BOOST_AUTO_TEST_CASE(opaqueInt128NullHandling)
@@ -3436,6 +3542,37 @@ BOOST_AUTO_TEST_CASE(getVariantOpaqueDecFloat34Preferred)
 }
 
 #endif
+
+BOOST_AUTO_TEST_CASE(rawNumericVariantsWorkWithoutBoostHelpers)
+{
+	using NumericVariant = std::variant<std::monostate, ScaledOpaqueInt128, OpaqueDecFloat16>;
+
+	const auto database = getTempFile("Statement-rawNumericVariantsWorkWithoutBoostHelpers.fdb");
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+
+	Statement numeric{attachment, transaction, "select cast(123.45 as numeric(38, 2)) from rdb$database"};
+	BOOST_REQUIRE(numeric.execute(transaction));
+	const auto numericValue = numeric.get<NumericVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<ScaledOpaqueInt128>(numericValue));
+
+	Statement numericCopy{attachment, transaction, "select cast(? as numeric(38, 2)) from rdb$database"};
+	numericCopy.set(0, NumericVariant{std::get<ScaledOpaqueInt128>(numericValue)});
+	BOOST_REQUIRE(numericCopy.execute(transaction));
+	BOOST_CHECK_EQUAL(numericCopy.getString(0).value(), "123.45");
+
+	Statement decFloat{attachment, transaction, "select cast(123.45 as decfloat(16)) from rdb$database"};
+	BOOST_REQUIRE(decFloat.execute(transaction));
+	const auto decFloatValue = decFloat.get<NumericVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<OpaqueDecFloat16>(decFloatValue));
+
+	Statement decFloatCopy{attachment, transaction, "select cast(? as decfloat(16)) from rdb$database"};
+	decFloatCopy.set(0, NumericVariant{std::get<OpaqueDecFloat16>(decFloatValue)});
+	BOOST_REQUIRE(decFloatCopy.execute(transaction));
+	BOOST_CHECK_EQUAL(decFloatCopy.getString(0).value(), "123.45");
+}
 
 BOOST_AUTO_TEST_CASE(getVariantOpaqueDatePreferred)
 {

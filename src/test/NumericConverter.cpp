@@ -799,6 +799,43 @@ BOOST_AUTO_TEST_CASE(convertDecFloat34)
 	BOOST_CHECK_EQUAL(converter.numberToString(BoostDecFloat34{"-3.2768"}), "-3.2768");
 }
 
+BOOST_AUTO_TEST_CASE(firebirdPrecisionAndSpecialValueBoundaries)
+{
+	impl::NumericConverter converter{getClient()};
+
+	const BoostInt128 firebirdMax{"170141183460469231731687303715884105727"};
+	const BoostInt128 firebirdMin{"-170141183460469231731687303715884105728"};
+
+	BOOST_CHECK_EQUAL(
+		converter.opaqueInt128ToBoostInt128(converter.boostInt128ToOpaqueInt128(firebirdMax)), firebirdMax);
+	BOOST_CHECK_EQUAL(
+		converter.opaqueInt128ToBoostInt128(converter.boostInt128ToOpaqueInt128(firebirdMin)), firebirdMin);
+
+	const auto checkNumericOutOfRange = [&converter](const BoostInt128& value)
+	{
+		try
+		{
+			converter.boostInt128ToOpaqueInt128(value);
+		}
+		catch (const DatabaseException& exception)
+		{
+			return exception.getErrorCode() == isc_arith_except;
+		}
+
+		return false;
+	};
+
+	BOOST_CHECK(checkNumericOutOfRange(firebirdMax + 1));
+	BOOST_CHECK(checkNumericOutOfRange(firebirdMin - 1));
+
+	BOOST_CHECK_EQUAL(converter.numberToNumber<BoostDecFloat16>(BoostDecFloat34{"12345678901234565"}),
+		BoostDecFloat16{"12345678901234570"});
+	BOOST_CHECK_THROW(converter.numberToNumber<std::int64_t>(std::numeric_limits<BoostDecFloat16>::quiet_NaN(), 0),
+		DatabaseException);
+	BOOST_CHECK_THROW(
+		converter.numberToNumber<std::int64_t>(std::numeric_limits<BoostDecFloat16>::infinity(), 0), DatabaseException);
+}
+
 BOOST_AUTO_TEST_CASE(decFloat16NumberLimits)
 {
 	impl::NumericConverter converter{getClient()};

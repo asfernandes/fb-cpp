@@ -785,10 +785,10 @@ namespace fbcpp
 						return V{get<std::optional<std::int64_t>>(index).value()};
 					break;
 
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 				case DescriptorAdjustedType::INT128:
 					if constexpr (variantContainsV<ScaledOpaqueInt128, V>)
 						return V{get<std::optional<ScaledOpaqueInt128>>(index).value()};
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 					else if (descriptor.scale != 0)
 					{
 						if constexpr (variantContainsV<ScaledBoostInt128, V>)
@@ -796,8 +796,8 @@ namespace fbcpp
 					}
 					else if constexpr (variantContainsV<BoostInt128, V>)
 						return V{get<std::optional<BoostInt128>>(index).value()};
-					break;
 #endif
+					break;
 
 				case DescriptorAdjustedType::FLOAT:
 					if constexpr (variantContainsV<float, V>)
@@ -809,21 +809,23 @@ namespace fbcpp
 						return V{get<std::optional<double>>(index).value()};
 					break;
 
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 				case DescriptorAdjustedType::DECFLOAT16:
 					if constexpr (variantContainsV<OpaqueDecFloat16, V>)
 						return V{get<std::optional<OpaqueDecFloat16>>(index).value()};
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 					else if constexpr (variantContainsV<BoostDecFloat16, V>)
 						return V{get<std::optional<BoostDecFloat16>>(index).value()};
+#endif
 					break;
 
 				case DescriptorAdjustedType::DECFLOAT34:
 					if constexpr (variantContainsV<OpaqueDecFloat34, V>)
 						return V{get<std::optional<OpaqueDecFloat34>>(index).value()};
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 					else if constexpr (variantContainsV<BoostDecFloat34, V>)
 						return V{get<std::optional<BoostDecFloat34>>(index).value()};
-					break;
 #endif
+					break;
 
 				case DescriptorAdjustedType::STRING:
 					if constexpr (variantContainsV<std::string, V>)
@@ -924,8 +926,8 @@ namespace fbcpp
 			{
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 				case DescriptorAdjustedType::INT128:
-					boostInt128.emplace(
-						numericConverter.opaqueInt128ToBoostInt128(*reinterpret_cast<const OpaqueInt128*>(data)));
+					boostInt128.emplace(numericConverter.opaqueInt128ToBoostInt128(
+						&statusWrapper, *reinterpret_cast<const OpaqueInt128*>(data)));
 					data = reinterpret_cast<const std::byte*>(&boostInt128.value());
 					break;
 
