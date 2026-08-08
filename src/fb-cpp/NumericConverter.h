@@ -55,13 +55,33 @@ namespace fbcpp::impl
 	template <>
 	struct NumberTypePriority<BoostDecFloat34>
 	{
-		static constexpr int value = 8;
+		static constexpr int value = 7;
 	};
 
 	template <>
 	struct NumberTypePriority<BoostDecFloat16>
 	{
-		static constexpr int value = 7;
+		static constexpr int value = 6;
+	};
+#endif
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+	template <>
+	struct NumberTypePriority<BoostDecimal128>
+	{
+		static constexpr int value = 10;
+	};
+
+	template <>
+	struct NumberTypePriority<BoostDecimal64>
+	{
+		static constexpr int value = 9;
+	};
+
+	template <>
+	struct NumberTypePriority<BoostDecimal32>
+	{
+		static constexpr int value = 8;
 	};
 #endif
 
@@ -114,6 +134,9 @@ namespace fbcpp::impl
 	inline constexpr bool IsFloatingNumber = std::is_floating_point_v<T>
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 		|| std::same_as<T, BoostDecFloat16> || std::same_as<T, BoostDecFloat34>
+#endif
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+		|| std::same_as<T, BoostDecimal32> || std::same_as<T, BoostDecimal64> || std::same_as<T, BoostDecimal128>
 #endif
 		;
 
@@ -208,21 +231,12 @@ namespace fbcpp::impl
 		{
 			using ComputeType = GreaterNumberType<double, From>;
 
-			if constexpr (std::is_floating_point_v<From>)
-			{
-				if (std::isnan(from) || std::isinf(from))
-					throwNumericOutOfRange();
-			}
-#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
-			else if constexpr (std::same_as<From, BoostDecFloat16> || std::same_as<From, BoostDecFloat34>)
-			{
-				if ((boost::multiprecision::isnan) (from) || (boost::multiprecision::isinf) (from))
-					throwNumericOutOfRange();
-			}
-#endif
+			if (isNonFinite(from))
+				throwNumericOutOfRange();
 
-			ComputeType value{from};
+			ComputeType value = convertFloatingValue<ComputeType>(from);
 			const ComputeType eps = conversionEpsilon<ComputeType>();
+			const ComputeType half{0.5};
 
 			if (toScale > 0)
 				value /= powerOfTen<ComputeType>(toScale);
@@ -230,28 +244,28 @@ namespace fbcpp::impl
 				value *= powerOfTen<ComputeType>(-toScale);
 
 			if (value > 0)
-				value += 0.5f + eps;
+				value += half + eps;
 			else
-				value -= 0.5f + eps;
+				value -= half + eps;
 
-			static const auto minLimit = static_cast<ComputeType>(std::numeric_limits<To>::min());
-			static const auto maxLimit = static_cast<ComputeType>(std::numeric_limits<To>::max());
+			static const auto minLimit = convertFloatingValue<ComputeType>(std::numeric_limits<To>::min());
+			static const auto maxLimit = convertFloatingValue<ComputeType>(std::numeric_limits<To>::max());
 
 			if (value < minLimit)
 			{
-				if (value > minLimit - 1.0f)
+				if (value > minLimit - ComputeType{1})
 					return std::numeric_limits<To>::min();
 				throwNumericOutOfRange();
 			}
 
 			if (value > maxLimit)
 			{
-				if (value < maxLimit + 1.0f)
+				if (value < maxLimit + ComputeType{1})
 					return std::numeric_limits<To>::max();
 				throwNumericOutOfRange();
 			}
 
-			return static_cast<To>(value);
+			return convertIntegralValue<To>(value);
 		}
 
 		template <FloatingNumber To, typename From>
@@ -261,7 +275,7 @@ namespace fbcpp::impl
 
 			using ComputeType = GreaterNumberType<double, To>;
 
-			ComputeType value = static_cast<ComputeType>(from.value);  // FIXME: decfloat
+			ComputeType value = convertFloatingValue<ComputeType>(from.value);
 
 			if (from.scale != 0)
 			{
@@ -287,10 +301,7 @@ namespace fbcpp::impl
 				return boostDecFloat34ToBoostDecFloat16(from);
 #endif
 
-			if constexpr (std::is_floating_point_v<From> && !std::is_floating_point_v<To>)
-				return To{std::format("{:.16e}", from)};
-
-			return static_cast<To>(from);
+			return convertFloatingValue<To>(from);
 		}
 
 		template <IntegralNumber From>
@@ -373,6 +384,17 @@ namespace fbcpp::impl
 				if ((boost::multiprecision::isinf) (from))
 					return from > 0 ? "Infinity" : "-Infinity";
 				return from.str();
+			}
+#endif
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+			else if constexpr (std::same_as<From, BoostDecimal32> || std::same_as<From, BoostDecimal64> ||
+				std::same_as<From, BoostDecimal128>)
+			{
+				if ((boost::decimal::isnan) (from))
+					return "NaN";
+				if ((boost::decimal::isinf) (from))
+					return from > 0 ? "Infinity" : "-Infinity";
+				return boost::decimal::to_string(from);
 			}
 #endif
 			else
@@ -506,6 +528,74 @@ namespace fbcpp::impl
 		}
 #endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+		BoostDecimal32 opaqueDecFloat16ToBoostDecimal32(
+			StatusWrapper* statusWrapper, const OpaqueDecFloat16& opaqueDecFloat16)
+		{
+			return stringToBoostDecimal<BoostDecimal32>(opaqueDecFloat16ToString(statusWrapper, opaqueDecFloat16));
+		}
+
+		BoostDecimal64 opaqueDecFloat16ToBoostDecimal64(
+			StatusWrapper* statusWrapper, const OpaqueDecFloat16& opaqueDecFloat16)
+		{
+			return stringToBoostDecimal<BoostDecimal64>(opaqueDecFloat16ToString(statusWrapper, opaqueDecFloat16));
+		}
+
+		BoostDecimal128 opaqueDecFloat16ToBoostDecimal128(
+			StatusWrapper* statusWrapper, const OpaqueDecFloat16& opaqueDecFloat16)
+		{
+			return stringToBoostDecimal<BoostDecimal128>(opaqueDecFloat16ToString(statusWrapper, opaqueDecFloat16));
+		}
+
+		BoostDecimal32 opaqueDecFloat34ToBoostDecimal32(
+			StatusWrapper* statusWrapper, const OpaqueDecFloat34& opaqueDecFloat34)
+		{
+			return stringToBoostDecimal<BoostDecimal32>(opaqueDecFloat34ToString(statusWrapper, opaqueDecFloat34));
+		}
+
+		BoostDecimal64 opaqueDecFloat34ToBoostDecimal64(
+			StatusWrapper* statusWrapper, const OpaqueDecFloat34& opaqueDecFloat34)
+		{
+			return stringToBoostDecimal<BoostDecimal64>(opaqueDecFloat34ToString(statusWrapper, opaqueDecFloat34));
+		}
+
+		BoostDecimal128 opaqueDecFloat34ToBoostDecimal128(
+			StatusWrapper* statusWrapper, const OpaqueDecFloat34& opaqueDecFloat34)
+		{
+			return stringToBoostDecimal<BoostDecimal128>(opaqueDecFloat34ToString(statusWrapper, opaqueDecFloat34));
+		}
+
+		OpaqueDecFloat16 boostDecimal32ToOpaqueDecFloat16(StatusWrapper* statusWrapper, const BoostDecimal32& value)
+		{
+			return boostDecimalToOpaqueDecFloat16(statusWrapper, value);
+		}
+
+		OpaqueDecFloat16 boostDecimal64ToOpaqueDecFloat16(StatusWrapper* statusWrapper, const BoostDecimal64& value)
+		{
+			return boostDecimalToOpaqueDecFloat16(statusWrapper, value);
+		}
+
+		OpaqueDecFloat16 boostDecimal128ToOpaqueDecFloat16(StatusWrapper* statusWrapper, const BoostDecimal128& value)
+		{
+			return boostDecimalToOpaqueDecFloat16(statusWrapper, value);
+		}
+
+		OpaqueDecFloat34 boostDecimal32ToOpaqueDecFloat34(StatusWrapper* statusWrapper, const BoostDecimal32& value)
+		{
+			return boostDecimalToOpaqueDecFloat34(statusWrapper, value);
+		}
+
+		OpaqueDecFloat34 boostDecimal64ToOpaqueDecFloat34(StatusWrapper* statusWrapper, const BoostDecimal64& value)
+		{
+			return boostDecimalToOpaqueDecFloat34(statusWrapper, value);
+		}
+
+		OpaqueDecFloat34 boostDecimal128ToOpaqueDecFloat34(StatusWrapper* statusWrapper, const BoostDecimal128& value)
+		{
+			return boostDecimalToOpaqueDecFloat34(statusWrapper, value);
+		}
+#endif
+
 		// FIXME: move
 		std::byte stringToBoolean(std::string_view value)
 		{
@@ -530,6 +620,200 @@ namespace fbcpp::impl
 		}
 
 	private:
+		template <typename T>
+		static bool isNonFinite(const T& value)
+		{
+			using ValueType = std::remove_cvref_t<T>;
+
+			if constexpr (std::is_floating_point_v<ValueType>)
+				return std::isnan(value) || std::isinf(value);
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+			else if constexpr (std::same_as<ValueType, BoostDecFloat16> || std::same_as<ValueType, BoostDecFloat34>)
+				return (boost::multiprecision::isnan) (value) || (boost::multiprecision::isinf) (value);
+#endif
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+			else if constexpr (std::same_as<ValueType, BoostDecimal32> || std::same_as<ValueType, BoostDecimal64> ||
+				std::same_as<ValueType, BoostDecimal128>)
+				return (boost::decimal::isnan) (value) || (boost::decimal::isinf) (value);
+#endif
+			else
+				return false;
+		}
+
+		template <typename T>
+		static bool isSignalingNaNValue(const T& value)
+		{
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0 || FB_CPP_USE_BOOST_DECIMAL != 0
+			using ValueType = std::remove_cvref_t<T>;
+#endif
+
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+			if constexpr (std::same_as<ValueType, BoostDecFloat16> || std::same_as<ValueType, BoostDecFloat34>)
+				return (boost::multiprecision::isnan) (value) && isSignalingNaN(value.str());
+#endif
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+			if constexpr (std::same_as<ValueType, BoostDecimal32> || std::same_as<ValueType, BoostDecimal64> ||
+				std::same_as<ValueType, BoostDecimal128>)
+				return (boost::decimal::issignaling) (value);
+#endif
+			return false;
+		}
+
+		template <typename To, typename From>
+		To convertFloatingValue(const From& from)
+		{
+			using ToType = std::remove_cvref_t<To>;
+			using FromType = std::remove_cvref_t<From>;
+
+			if constexpr (std::same_as<ToType, FromType>)
+				return from;
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+			else if constexpr (std::same_as<ToType, BoostDecimal32> || std::same_as<ToType, BoostDecimal64> ||
+				std::same_as<ToType, BoostDecimal128>)
+			{
+				if (isSignalingNaNValue(from))
+					return std::numeric_limits<ToType>::signaling_NaN();
+				if constexpr (std::is_floating_point_v<FromType>)
+					return ToType{std::format("{:.16e}", from)};
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+				else if constexpr (std::same_as<FromType, BoostDecFloat16> || std::same_as<FromType, BoostDecFloat34>)
+				{
+					if ((boost::multiprecision::isnan) (from))
+						return std::numeric_limits<ToType>::quiet_NaN();
+					if ((boost::multiprecision::isinf) (from))
+					{
+						return from > 0 ? std::numeric_limits<ToType>::infinity()
+										: -std::numeric_limits<ToType>::infinity();
+					}
+					return ToType{from.str()};
+				}
+				else if constexpr (std::same_as<FromType, BoostInt128>)
+					return ToType{from.str()};
+#endif
+				else
+					return static_cast<ToType>(from);
+			}
+#endif
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0 && FB_CPP_USE_BOOST_DECIMAL != 0
+			else if constexpr ((std::same_as<ToType, BoostDecFloat16> || std::same_as<ToType, BoostDecFloat34>) &&
+				(std::same_as<FromType, BoostDecimal32> || std::same_as<FromType, BoostDecimal64> ||
+					std::same_as<FromType, BoostDecimal128>) )
+			{
+				if (isSignalingNaNValue(from))
+					throw FbCppException("Boost.Multiprecision cannot represent a signaling NaN");
+				if ((boost::decimal::isnan) (from))
+					return ToType{"NaN"};
+				if ((boost::decimal::isinf) (from))
+				{
+					return from > 0 ? std::numeric_limits<ToType>::infinity()
+									: -std::numeric_limits<ToType>::infinity();
+				}
+				return ToType{boost::decimal::to_string(from)};
+			}
+#endif
+			else
+				return static_cast<ToType>(from);
+		}
+
+		template <typename To, typename From>
+		To convertIntegralValue(const From& from)
+		{
+			using ToType = std::remove_cvref_t<To>;
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+			using FromType = std::remove_cvref_t<From>;
+
+			if constexpr (std::same_as<FromType, BoostDecimal32> || std::same_as<FromType, BoostDecimal64> ||
+				std::same_as<FromType, BoostDecimal128>)
+			{
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+				if constexpr (std::same_as<ToType, BoostInt128>)
+				{
+					char buffer[64];
+					const auto result = boost::decimal::to_chars(
+						buffer, buffer + sizeof(buffer), from, boost::decimal::chars_format::fixed);
+
+					if (result.ec != std::errc{})
+						throwNumericOutOfRange();
+
+					std::string value{buffer, result.ptr};
+					if (const auto decimalPoint = value.find('.'); decimalPoint != std::string::npos)
+						value.erase(decimalPoint);
+
+					return ToType{value};
+				}
+#endif
+
+				if constexpr (std::same_as<ToType, bool>)
+					return static_cast<ToType>(static_cast<bool>(from));
+				else if constexpr (std::is_signed_v<ToType>)
+					return static_cast<ToType>(static_cast<long long>(from));
+				else
+					return static_cast<ToType>(static_cast<unsigned long long>(from));
+			}
+			else
+#endif
+				return static_cast<ToType>(from);
+		}
+
+		static bool isSignalingNaN(std::string_view value)
+		{
+			std::string normalized{value};
+			if (!normalized.empty() && (normalized.front() == '+' || normalized.front() == '-'))
+				normalized.erase(0, 1);
+
+			std::transform(normalized.begin(), normalized.end(), normalized.begin(),
+				[](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+
+			return normalized.starts_with("snan");
+		}
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+		template <typename T>
+		T stringToBoostDecimal(const std::string& value)
+		{
+			if (isSignalingNaN(value))
+				return std::numeric_limits<T>::signaling_NaN();
+			else if (value == "Infinity")
+				return std::numeric_limits<T>::infinity();
+			else if (value == "-Infinity")
+				return -std::numeric_limits<T>::infinity();
+
+			try
+			{
+				return T{value};
+			}
+			catch (const std::exception&)
+			{
+				throwConversionErrorFromString(value);
+			}
+		}
+
+		template <typename T>
+		OpaqueDecFloat16 boostDecimalToOpaqueDecFloat16(StatusWrapper* statusWrapper, const T& value)
+		{
+			if (isSignalingNaNValue(value))
+				throw FbCppException("Boost.Decimal cannot represent a signaling NaN; use OpaqueDecFloat16");
+
+			OpaqueDecFloat16 result;
+			const auto stringValue = numberToString(value);
+			client->getDecFloat16Util(statusWrapper)->fromString(statusWrapper, stringValue.c_str(), &result);
+			return result;
+		}
+
+		template <typename T>
+		OpaqueDecFloat34 boostDecimalToOpaqueDecFloat34(StatusWrapper* statusWrapper, const T& value)
+		{
+			if (isSignalingNaNValue(value))
+				throw FbCppException("Boost.Decimal cannot represent a signaling NaN; use OpaqueDecFloat34");
+
+			OpaqueDecFloat34 result;
+			const auto stringValue = numberToString(value);
+			client->getDecFloat34Util(statusWrapper)->fromString(statusWrapper, stringValue.c_str(), &result);
+			return result;
+		}
+#endif
+
 		double powerOfTenDouble(int scale) noexcept
 		{
 			static constexpr double UPPER_PART[] = {
@@ -616,17 +900,6 @@ namespace fbcpp::impl
 				throwNumericOutOfRange();
 		}
 
-		static bool isSignalingNaN(std::string_view value)
-		{
-			std::string normalized{value};
-			if (!normalized.empty() && (normalized.front() == '+' || normalized.front() == '-'))
-				normalized.erase(0, 1);
-
-			std::transform(normalized.begin(), normalized.end(), normalized.begin(),
-				[](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
-
-			return normalized.starts_with("snan");
-		}
 #endif
 
 		template <typename T>
@@ -680,6 +953,14 @@ namespace fbcpp::impl
 			{
 				const auto epsilon = std::numeric_limits<T>::epsilon();
 				return static_cast<T>(epsilon * static_cast<T>(10));
+			}
+#endif
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+			else if constexpr (std::same_as<T, BoostDecimal32> || std::same_as<T, BoostDecimal64> ||
+				std::same_as<T, BoostDecimal128>)
+			{
+				const auto epsilon = std::numeric_limits<T>::epsilon();
+				return epsilon * static_cast<T>(10);
 			}
 #endif
 			else

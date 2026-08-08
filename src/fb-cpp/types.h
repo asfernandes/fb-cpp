@@ -39,6 +39,10 @@
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+#include <boost/decimal.hpp>
+#endif
+
 
 ///
 /// fb-cpp namespace.
@@ -110,6 +114,23 @@ namespace fbcpp
 	/// 34-digit decimal floating point using Boost.Multiprecision.
 	///
 	using BoostDecFloat34 = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<34>>;
+#endif
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+	///
+	/// 7-digit decimal floating point using Boost.Decimal.
+	///
+	using BoostDecimal32 = boost::decimal::decimal32_t;
+
+	///
+	/// 16-digit decimal floating point using Boost.Decimal.
+	///
+	using BoostDecimal64 = boost::decimal::decimal64_t;
+
+	///
+	/// 34-digit decimal floating point using Boost.Decimal.
+	///
+	using BoostDecimal128 = boost::decimal::decimal128_t;
 #endif
 
 	///

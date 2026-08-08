@@ -34,6 +34,10 @@
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+#include <boost/decimal.hpp>
+#endif
+
 
 namespace fbcpp::impl::reflection
 {
@@ -157,6 +161,22 @@ namespace fbcpp::impl::reflection
 	};
 	template <>
 	struct IsSupportedVariantType<BoostDecFloat34> : std::true_type
+	{
+	};
+#endif
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+	// Boost.Decimal types
+	template <>
+	struct IsSupportedVariantType<BoostDecimal32> : std::true_type
+	{
+	};
+	template <>
+	struct IsSupportedVariantType<BoostDecimal64> : std::true_type
+	{
+	};
+	template <>
+	struct IsSupportedVariantType<BoostDecimal128> : std::true_type
 	{
 	};
 #endif

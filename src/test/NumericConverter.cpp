@@ -884,4 +884,32 @@ BOOST_AUTO_TEST_CASE(decFloat34NumberLimits)
 
 #endif
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+
+BOOST_AUTO_TEST_CASE(convertBoostDecimal)
+{
+	impl::NumericConverter converter{getClient()};
+
+	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int16_t>(BoostDecimal32{"12.3"}, -2), 12'30);
+	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int16_t>(BoostDecimal64{"3276.7"}, 0), 3'277);
+	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int32_t>(BoostDecimal128{"3.2767"}, 0), 3);
+	BOOST_CHECK_EQUAL(converter.numberToNumber<std::int64_t>(BoostDecimal64{"-3276.8"}, -1), -3'276'8);
+
+#if FB_CPP_USE_BOOST_MULTIPRECISION != 0
+	BOOST_CHECK_EQUAL(converter.numberToNumber<BoostInt128>(BoostDecimal128{"123456789012345678901234567890.5727"}, 0),
+		BoostInt128{"123456789012345678901234567891"});
+#endif
+
+	BOOST_CHECK_CLOSE(converter.numberToNumber<double>(BoostDecimal64{"12.3"}), 12.3, doubleTolerance);
+	BOOST_CHECK_EQUAL(converter.numberToNumber<BoostDecimal128>(BoostDecimal64{"12.3"}), BoostDecimal128{"12.3"});
+	BOOST_CHECK_EQUAL(converter.numberToString(BoostDecimal64{"12.3"}), "12.3");
+
+	BOOST_CHECK_THROW(
+		converter.numberToNumber<std::int32_t>(std::numeric_limits<BoostDecimal64>::quiet_NaN(), 0), DatabaseException);
+	BOOST_CHECK_THROW(
+		converter.numberToNumber<std::int32_t>(std::numeric_limits<BoostDecimal64>::infinity(), 0), DatabaseException);
+}
+
+#endif
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -13,6 +13,7 @@
       "name": "boost-dll",
       "platform": "!static"
     },
+    "boost-decimal",
     "boost-multiprecision",
     "boost-test",
     "firebird",
@@ -21,23 +22,28 @@
   "overrides": [
     {
       "name": "boost-dll",
-      "version": "1.90.0",
-      "port-version": 1
+      "version": "1.91.0",
+      "port-version": 0
+    },
+    {
+      "name": "boost-decimal",
+      "version": "1.91.0",
+      "port-version": 0
     },
     {
       "name": "boost-multiprecision",
-      "version": "1.90.0",
-      "port-version": 1
+      "version": "1.91.0",
+      "port-version": 0
     },
     {
       "name": "boost-test",
-      "version": "1.90.0",
-      "port-version": 1
+      "version": "1.91.0",
+      "port-version": 0
     },
     {
       "name": "firebird",
       "version": "5.0.4",
-      "port-version": 4
+      "port-version": 6
     },
     {
       "name": "icu",

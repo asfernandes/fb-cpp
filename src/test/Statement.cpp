@@ -2135,6 +2135,78 @@ BOOST_AUTO_TEST_SUITE_END()
 
 #endif  // FB_CPP_USE_BOOST_MULTIPRECISION
 
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+
+BOOST_AUTO_TEST_SUITE(StatementBoostDecimalSuite)
+
+BOOST_AUTO_TEST_CASE(boostDecimalRoundTrips)
+{
+	const auto database = getTempFile("Statement-boostDecimalRoundTrips.fdb");
+
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+
+	const BoostDecimal32 decimal32Value{"1234567"};
+	Statement decimal32Statement{attachment, transaction, "select cast(? as decfloat(16)) from rdb$database"};
+	decimal32Statement.setBoostDecimal32(0, decimal32Value);
+	BOOST_REQUIRE(decimal32Statement.execute(transaction));
+	BOOST_CHECK_EQUAL(decimal32Statement.getBoostDecimal32(0).value(), decimal32Value);
+	BOOST_CHECK_EQUAL(decimal32Statement.getBoostDecimal64(0).value(), BoostDecimal64{"1234567"});
+
+	const BoostDecimal64 decimal64Value{"1234567890123456"};
+	Statement decimal64Statement{attachment, transaction, "select cast(? as decfloat(34)) from rdb$database"};
+	decimal64Statement.setBoostDecimal64(0, decimal64Value);
+	BOOST_REQUIRE(decimal64Statement.execute(transaction));
+	BOOST_CHECK_EQUAL(decimal64Statement.getBoostDecimal64(0).value(), decimal64Value);
+	BOOST_CHECK_EQUAL(decimal64Statement.getBoostDecimal128(0).value(), BoostDecimal128{"1234567890123456"});
+
+	const BoostDecimal128 decimal128Value{"1234567890123456789012345678901234"};
+	Statement decimal128Statement{attachment, transaction, "select cast(? as decfloat(34)) from rdb$database"};
+	decimal128Statement.setBoostDecimal128(0, decimal128Value);
+	BOOST_REQUIRE(decimal128Statement.execute(transaction));
+	BOOST_CHECK_EQUAL(decimal128Statement.getBoostDecimal128(0).value(), decimal128Value);
+}
+
+BOOST_AUTO_TEST_CASE(boostDecimalNullAndSpecialValues)
+{
+	const auto database = getTempFile("Statement-boostDecimalNullAndSpecialValues.fdb");
+
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+
+	Statement nullValue{attachment, transaction, "select cast(? as decfloat(16)) from rdb$database"};
+	nullValue.setBoostDecimal64(0, std::nullopt);
+	BOOST_REQUIRE(nullValue.execute(transaction));
+	BOOST_CHECK(!nullValue.getBoostDecimal64(0).has_value());
+
+	Statement positiveInfinity{attachment, transaction, "select cast(? as decfloat(16)) from rdb$database"};
+	positiveInfinity.setBoostDecimal64(0, std::numeric_limits<BoostDecimal64>::infinity());
+	BOOST_REQUIRE(positiveInfinity.execute(transaction));
+	const auto positiveInfinityValue = positiveInfinity.getBoostDecimal64(0);
+	BOOST_REQUIRE(positiveInfinityValue.has_value());
+	BOOST_CHECK((boost::decimal::isinf) (positiveInfinityValue.value()));
+	BOOST_CHECK(positiveInfinityValue.value() > 0);
+
+	Statement quietNaN{attachment, transaction, "select cast(? as decfloat(16)) from rdb$database"};
+	quietNaN.setBoostDecimal64(0, std::numeric_limits<BoostDecimal64>::quiet_NaN());
+	BOOST_REQUIRE(quietNaN.execute(transaction));
+	const auto quietNaNValue = quietNaN.getBoostDecimal64(0);
+	BOOST_REQUIRE(quietNaNValue.has_value());
+	BOOST_CHECK((boost::decimal::isnan) (quietNaNValue.value()));
+
+	Statement signalingNaN{attachment, transaction, "select cast(? as decfloat(16)) from rdb$database"};
+	BOOST_CHECK_THROW(
+		signalingNaN.setBoostDecimal64(0, std::numeric_limits<BoostDecimal64>::signaling_NaN()), FbCppException);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+#endif  // FB_CPP_USE_BOOST_DECIMAL
+
 
 BOOST_AUTO_TEST_SUITE(StatementOpaqueDateSuite)
 
@@ -3542,6 +3614,38 @@ BOOST_AUTO_TEST_CASE(getVariantOpaqueDecFloat34Preferred)
 }
 
 #endif
+
+#if FB_CPP_USE_BOOST_DECIMAL != 0
+
+BOOST_AUTO_TEST_CASE(boostDecimalVariant)
+{
+	using MyVariant = std::variant<std::monostate, BoostDecimal64, BoostDecimal128>;
+
+	const auto database = getTempFile("Statement-boostDecimalVariant.fdb");
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+
+	Statement decFloat16{attachment, transaction, "select cast(123.456 as decfloat(16)) from rdb$database"};
+	BOOST_REQUIRE(decFloat16.execute(transaction));
+	const auto decFloat16Value = decFloat16.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<BoostDecimal64>(decFloat16Value));
+	BOOST_CHECK_EQUAL(std::get<BoostDecimal64>(decFloat16Value), BoostDecimal64{"123.456"});
+
+	Statement decFloat34{attachment, transaction, "select cast(123.456 as decfloat(34)) from rdb$database"};
+	BOOST_REQUIRE(decFloat34.execute(transaction));
+	const auto decFloat34Value = decFloat34.get<MyVariant>(0);
+	BOOST_REQUIRE(std::holds_alternative<BoostDecimal128>(decFloat34Value));
+	BOOST_CHECK_EQUAL(std::get<BoostDecimal128>(decFloat34Value), BoostDecimal128{"123.456"});
+
+	Statement setValue{attachment, transaction, "select cast(? as decfloat(16)) from rdb$database"};
+	setValue.set(0, MyVariant{BoostDecimal64{"987.654"}});
+	BOOST_REQUIRE(setValue.execute(transaction));
+	BOOST_CHECK_EQUAL(setValue.getBoostDecimal64(0).value(), BoostDecimal64{"987.654"});
+}
+
+#endif  // FB_CPP_USE_BOOST_DECIMAL
 
 BOOST_AUTO_TEST_CASE(rawNumericVariantsWorkWithoutBoostHelpers)
 {
