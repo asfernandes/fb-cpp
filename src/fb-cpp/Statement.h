@@ -141,6 +141,8 @@ namespace fbcpp
 	///
 	class FB_CPP_EXPORT Statement final
 	{
+		friend class RowSet;
+
 	public:
 		///
 		/// Prepares an SQL statement.
@@ -207,6 +209,17 @@ namespace fbcpp
 		bool isValid() noexcept
 		{
 			return statementHandle != nullptr;
+		}
+
+		///
+		/// Returns whether the statement is positioned on a current output row.
+		///
+		/// A current row is present after a successful `execute()` or fetch that produced
+		/// output, until the row is consumed by `RowSet` or replaced by a later fetch.
+		///
+		bool hasCurrentRow() const noexcept
+		{
+			return currentRow;
 		}
 
 		///
@@ -2260,6 +2273,11 @@ namespace fbcpp
 	private:
 		Client& getClient() noexcept;
 
+		void clearCurrentRow() noexcept
+		{
+			currentRow = false;
+		}
+
 	private:
 		Attachment* attachment;
 		impl::StatusWrapper statusWrapper;
@@ -2276,6 +2294,7 @@ namespace fbcpp
 		std::unique_ptr<Row> outRow;
 		StatementType type;
 		unsigned cursorFlags = 0;
+		bool currentRow = false;
 	};
 
 	///

@@ -196,9 +196,11 @@ Statement::Statement(Statement&& o) noexcept
 	  outMessage{std::move(o.outMessage)},
 	  outRow{std::make_unique<Row>(attachment->getClient(), outDescriptors, std::span{outMessage})},
 	  type{o.type},
-	  cursorFlags{o.cursorFlags}
+	  cursorFlags{o.cursorFlags},
+	  currentRow{o.currentRow}
 {
 	o.outRow.reset();
+	o.currentRow = false;
 }
 
 Statement& Statement::operator=(Statement&& o) noexcept
@@ -220,8 +222,10 @@ Statement& Statement::operator=(Statement&& o) noexcept
 		outRow = std::make_unique<Row>(attachment->getClient(), outDescriptors, std::span{outMessage});
 		type = o.type;
 		cursorFlags = o.cursorFlags;
+		currentRow = o.currentRow;
 
 		o.outRow.reset();
+		o.currentRow = false;
 	}
 
 	return *this;
@@ -237,6 +241,7 @@ void Statement::free()
 		resultSetHandle.reset();
 	}
 
+	currentRow = false;
 	statementHandle->free(&statusWrapper);
 	statementHandle.reset();
 }
@@ -266,6 +271,8 @@ bool Statement::execute(Transaction& transaction)
 		resultSetHandle.reset();
 	}
 
+	currentRow = false;
+
 	const auto outMessageData = outMessage.data();
 
 	if (outMessageData)
@@ -280,11 +287,13 @@ bool Statement::execute(Transaction& transaction)
 		case StatementType::SELECT_FOR_UPDATE:
 			resultSetHandle.reset(statementHandle->openCursor(&statusWrapper, transaction.getHandle().get(),
 				inMetadata.get(), inMessage.data(), outMetadata.get(), cursorFlags));
-			return resultSetHandle->fetchNext(&statusWrapper, outMessageData) == fb::IStatus::RESULT_OK;
+			currentRow = resultSetHandle->fetchNext(&statusWrapper, outMessageData) == fb::IStatus::RESULT_OK;
+			return currentRow;
 
 		default:
 			statementHandle->execute(&statusWrapper, transaction.getHandle().get(), inMetadata.get(), inMessage.data(),
 				outMetadata.get(), outMessageData);
+			currentRow = !outDescriptors.empty();
 			return true;
 	}
 }
@@ -298,43 +307,53 @@ bool Statement::fetchNext()
 {
 	assert(isValid());
 
-	return resultSetHandle && resultSetHandle->fetchNext(&statusWrapper, outMessage.data()) == fb::IStatus::RESULT_OK;
+	currentRow =
+		resultSetHandle && resultSetHandle->fetchNext(&statusWrapper, outMessage.data()) == fb::IStatus::RESULT_OK;
+	return currentRow;
 }
 
 bool Statement::fetchPrior()
 {
 	assert(isValid());
 
-	return resultSetHandle && resultSetHandle->fetchPrior(&statusWrapper, outMessage.data()) == fb::IStatus::RESULT_OK;
+	currentRow =
+		resultSetHandle && resultSetHandle->fetchPrior(&statusWrapper, outMessage.data()) == fb::IStatus::RESULT_OK;
+	return currentRow;
 }
 
 bool Statement::fetchFirst()
 {
 	assert(isValid());
 
-	return resultSetHandle && resultSetHandle->fetchFirst(&statusWrapper, outMessage.data()) == fb::IStatus::RESULT_OK;
+	currentRow =
+		resultSetHandle && resultSetHandle->fetchFirst(&statusWrapper, outMessage.data()) == fb::IStatus::RESULT_OK;
+	return currentRow;
 }
 
 bool Statement::fetchLast()
 {
 	assert(isValid());
 
-	return resultSetHandle && resultSetHandle->fetchLast(&statusWrapper, outMessage.data()) == fb::IStatus::RESULT_OK;
+	currentRow =
+		resultSetHandle && resultSetHandle->fetchLast(&statusWrapper, outMessage.data()) == fb::IStatus::RESULT_OK;
+	return currentRow;
 }
 
 bool Statement::fetchAbsolute(unsigned position)
 {
 	assert(isValid());
 
-	return resultSetHandle &&
+	currentRow = resultSetHandle &&
 		resultSetHandle->fetchAbsolute(&statusWrapper, static_cast<int>(position), outMessage.data()) ==
-		fb::IStatus::RESULT_OK;
+			fb::IStatus::RESULT_OK;
+	return currentRow;
 }
 
 bool Statement::fetchRelative(int offset)
 {
 	assert(isValid());
 
-	return resultSetHandle &&
+	currentRow = resultSetHandle &&
 		resultSetHandle->fetchRelative(&statusWrapper, offset, outMessage.data()) == fb::IStatus::RESULT_OK;
+	return currentRow;
 }
