@@ -147,7 +147,8 @@ RowSet Attachment::queryPreparedRowSet(Statement& statement, Transaction& transa
 			throw FbCppException("Cannot use non-query SQL with Attachment::queryRowSet");
 	}
 
-	const auto hasRow = statement.execute(transaction);
+	statement.execute(transaction);
 	const auto effectiveMaxRows = statement.getType() == StatementType::EXEC_PROCEDURE ? 1u : maxRows;
-	return RowSet{statement, hasRow ? effectiveMaxRows : 0u, hasRow};
+
+	return RowSet{statement, effectiveMaxRows};
 }

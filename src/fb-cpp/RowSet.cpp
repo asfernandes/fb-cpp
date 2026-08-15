@@ -33,18 +33,13 @@ using namespace fbcpp::impl;
 
 
 RowSet::RowSet(Statement& statement, unsigned maxRows)
-	: RowSet{statement, maxRows, false}
-{
-}
-
-RowSet::RowSet(Statement& statement, unsigned maxRows, bool includeCurrentRow)
 	: client{&statement.getAttachment().getClient()},
 	  statusWrapper{statement.getAttachment().getClient()},
 	  numericConverter{statement.getAttachment().getClient()},
 	  calendarConverter{statement.getAttachment().getClient()}
 {
 	assert(statement.isValid());
-	assert(includeCurrentRow || statement.getResultSetHandle());
+	assert(statement.hasCurrentRow() || statement.getResultSetHandle());
 
 	descriptors = statement.getOutputDescriptors();
 
@@ -56,13 +51,14 @@ RowSet::RowSet(Statement& statement, unsigned maxRows, bool includeCurrentRow)
 	auto resultSet = statement.getResultSetHandle();
 	auto* dest = buffer.data();
 
-	if (includeCurrentRow && maxRows > 0u)
+	if (statement.hasCurrentRow() && maxRows > 0u)
 	{
 		auto& currentRow = statement.getOutputMessage();
 		assert(currentRow.size() == messageLength);
 		std::copy(currentRow.begin(), currentRow.end(), dest);
 		dest += messageLength;
 		++count;
+		statement.clearCurrentRow();
 	}
 
 	if (!resultSet)

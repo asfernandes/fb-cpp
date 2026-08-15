@@ -58,25 +58,17 @@ namespace fbcpp
 
 	public:
 		///
-		/// @brief Fetches up to `maxRows` rows from the current result set of
-		/// `statement`.
+		/// @brief Fetches up to `maxRows` rows from `statement`.
 		///
-		/// The statement must have an open result set (i.e. `execute()` was
-		/// called and it is a SELECT-type statement). Rows are fetched via
-		/// `IResultSet::fetchNext()` directly into the internal buffer.
+		/// If `statement` is positioned on a current row (typically the row already
+		/// fetched by `execute()` or a later fetch), that row is copied first and then
+		/// consumed so a subsequent `RowSet` does not duplicate it. Remaining rows are
+		/// fetched via `IResultSet::fetchNext()` directly into the internal buffer.
 		///
-		/// @param statement The statement with an open result set.
+		/// @param statement The statement with a current row and/or an open result set.
 		/// @param maxRows Maximum number of rows to fetch.
 		///
 		explicit RowSet(Statement& statement, unsigned maxRows);
-
-		///
-		/// @brief Fetches up to `maxRows` rows from the current result set of `statement`.
-		///
-		/// When `includeCurrentRow` is true, the current output message already fetched by `statement.execute()` is
-		/// copied as the first row before fetching the remaining rows from the result set.
-		///
-		explicit RowSet(Statement& statement, unsigned maxRows, bool includeCurrentRow);
 
 		RowSet(RowSet&& o) noexcept
 			: client{o.client},
