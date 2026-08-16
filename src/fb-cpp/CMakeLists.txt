@@ -61,6 +61,13 @@ add_library(${PROJECT_NAME}
 	${SRC}
 )
 
+if(FB_CPP_USE_BOOST_DECIMAL)
+	target_compile_options(${PROJECT_NAME}
+		PUBLIC
+			$<$<CXX_COMPILER_ID:GNU>:-Wno-psabi>
+	)
+endif()
+
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME}
 	BASE_NAME FB_CPP
