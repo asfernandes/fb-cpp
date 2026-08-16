@@ -635,6 +635,31 @@ namespace fbcpp
 		}
 
 		///
+		/// @brief Reads a text or varying column as its raw bytes.
+		///
+		std::optional<std::vector<std::byte>> getBytes(unsigned index)
+		{
+			const auto& descriptor = getDescriptor(index);
+
+			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+				return std::nullopt;
+
+			const auto data = &message[descriptor.offset];
+
+			switch (descriptor.adjustedType)
+			{
+				case DescriptorAdjustedType::STRING:
+				{
+					const auto length = *reinterpret_cast<const std::uint16_t*>(data);
+					return std::vector<std::byte>{data + sizeof(std::uint16_t), data + sizeof(std::uint16_t) + length};
+				}
+
+				default:
+					throwInvalidType("std::vector<std::byte>", descriptor.adjustedType);
+			}
+		}
+
+		///
 		/// @}
 		///
 
@@ -871,8 +896,20 @@ namespace fbcpp
 					break;
 
 				case DescriptorAdjustedType::STRING:
-					if constexpr (variantContainsV<std::string, V>)
-						return V{get<std::optional<std::string>>(index).value()};
+					if (descriptor.charSetId == octetsCharSetId)
+					{
+						if constexpr (variantContainsV<std::vector<std::byte>, V>)
+							return V{get<std::optional<std::vector<std::byte>>>(index).value()};
+						if constexpr (variantContainsV<std::string, V>)
+							return V{get<std::optional<std::string>>(index).value()};
+					}
+					else
+					{
+						if constexpr (variantContainsV<std::string, V>)
+							return V{get<std::optional<std::string>>(index).value()};
+						if constexpr (variantContainsV<std::vector<std::byte>, V>)
+							return V{get<std::optional<std::vector<std::byte>>>(index).value()};
+					}
 					break;
 
 				case DescriptorAdjustedType::DATE:
@@ -1298,6 +1335,12 @@ namespace fbcpp
 	inline std::optional<std::string> Row::get<std::optional<std::string>>(unsigned index)
 	{
 		return getString(index);
+	}
+
+	template <>
+	inline std::optional<std::vector<std::byte>> Row::get<std::optional<std::vector<std::byte>>>(unsigned index)
+	{
+		return getBytes(index);
 	}
 
 	///

@@ -28,7 +28,9 @@
 #include "fb-cpp/RowSet.h"
 #include "fb-cpp/Statement.h"
 #include "fb-cpp/Transaction.h"
+#include <cstddef>
 #include <exception>
+#include <vector>
 
 
 BOOST_AUTO_TEST_SUITE(AttachmentSuite)
@@ -264,6 +266,39 @@ BOOST_AUTO_TEST_CASE(queryScalarReturnsFirstColumnOfFirstRow)
 	BOOST_CHECK_EQUAL(*value, "one");
 
 	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(queryScalarReturnsBytes)
+{
+	const auto database = getTempFile("Attachment-queryScalarReturnsBytes.fdb");
+	Attachment attachment{
+		getClient(), database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	const auto value = attachment.queryScalar<std::vector<std::byte>>(
+		transaction, "select cast('attachment bytes' as varchar(32) character set octets) from rdb$database");
+
+	const std::vector<std::byte> expected{
+		std::byte{'a'},
+		std::byte{'t'},
+		std::byte{'t'},
+		std::byte{'a'},
+		std::byte{'c'},
+		std::byte{'h'},
+		std::byte{'m'},
+		std::byte{'e'},
+		std::byte{'n'},
+		std::byte{'t'},
+		std::byte{' '},
+		std::byte{'b'},
+		std::byte{'y'},
+		std::byte{'t'},
+		std::byte{'e'},
+		std::byte{'s'},
+	};
+	BOOST_REQUIRE(value.has_value());
+	BOOST_CHECK(*value == expected);
 }
 
 BOOST_AUTO_TEST_CASE(queryScalarReturnsNulloptForNoRows)

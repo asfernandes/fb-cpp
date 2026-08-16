@@ -28,8 +28,10 @@
 #include "fb-cpp/Statement.h"
 #include "fb-cpp/Transaction.h"
 #include <chrono>
+#include <cstddef>
 #include <cmath>
 #include <limits>
+#include <vector>
 
 
 BOOST_AUTO_TEST_SUITE(StatementLifecycleSuite)
@@ -1197,6 +1199,81 @@ BOOST_AUTO_TEST_CASE(stringTruncationThrows)
 
 	Statement stmt{attachment, transaction, "select cast(? as varchar(3)) from rdb$database"};
 	BOOST_CHECK_THROW(stmt.setString(0, "This is too long"), DatabaseException);
+}
+
+BOOST_AUTO_TEST_CASE(bytesRoundTripForTextAndVarying)
+{
+	const auto database = getTempFile("Statement-bytesRoundTripForTextAndVarying.fdb");
+
+	Attachment attachment{getClient(), database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	const std::vector<std::byte> expected{
+		std::byte{0x00},
+		std::byte{0x01},
+		std::byte{0x7f},
+		std::byte{0x80},
+		std::byte{0xfe},
+		std::byte{0xff},
+	};
+
+	Statement varying{attachment, transaction, "select cast(? as varchar(6) character set octets) from rdb$database"};
+	varying.setBytes(0, expected);
+	BOOST_REQUIRE(varying.execute(transaction));
+	const auto varyingResult = varying.getBytes(0);
+	BOOST_REQUIRE(varyingResult.has_value());
+	BOOST_CHECK(*varyingResult == expected);
+
+	Statement text{attachment, transaction, "select cast(? as char(6) character set octets) from rdb$database"};
+	text.set(0, expected);
+	BOOST_REQUIRE(text.execute(transaction));
+	const auto textResult = text.get<std::optional<std::vector<std::byte>>>(0);
+	BOOST_REQUIRE(textResult.has_value());
+	BOOST_CHECK(*textResult == expected);
+}
+
+BOOST_AUTO_TEST_CASE(bytesDistinguishEmptyAndNull)
+{
+	const auto database = getTempFile("Statement-bytesDistinguishEmptyAndNull.fdb");
+
+	Attachment attachment{getClient(), database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement stmt{attachment, transaction, "select cast(? as varchar(6) character set none) from rdb$database"};
+
+	stmt.setBytes(0, std::vector<std::byte>{});
+	BOOST_REQUIRE(stmt.execute(transaction));
+	BOOST_CHECK(!stmt.isNull(0));
+	const auto emptyResult = stmt.getBytes(0);
+	BOOST_REQUIRE(emptyResult.has_value());
+	BOOST_CHECK(emptyResult->empty());
+
+	stmt.setBytes(0, std::nullopt);
+	BOOST_REQUIRE(stmt.execute(transaction));
+	BOOST_CHECK(stmt.isNull(0));
+	BOOST_CHECK(!stmt.getBytes(0).has_value());
+}
+
+BOOST_AUTO_TEST_CASE(bytesValidateTypeAndLength)
+{
+	const auto database = getTempFile("Statement-bytesValidateTypeAndLength.fdb");
+
+	Attachment attachment{getClient(), database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	const std::vector<std::byte> value(16, std::byte{0x01});
+
+	Statement truncating{attachment, transaction, "select cast(? as varchar(3)) from rdb$database"};
+	BOOST_CHECK_THROW(truncating.setBytes(0, value), DatabaseException);
+
+	Statement wrongType{attachment, transaction, "select cast(? as integer) from rdb$database"};
+	BOOST_CHECK_THROW(wrongType.setBytes(0, value), FbCppException);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -3101,6 +3178,50 @@ BOOST_AUTO_TEST_CASE(setStructWithOptionalNull)
 	BOOST_CHECK(!stmt.getString(1).has_value());
 }
 
+BOOST_AUTO_TEST_CASE(bytesSupportInStructAndTupleBinding)
+{
+	using ByteVector = std::vector<std::byte>;
+
+	struct Params
+	{
+		ByteVector first;
+		ByteVector second;
+	};
+
+	struct Result
+	{
+		ByteVector first;
+		std::optional<ByteVector> second;
+	};
+
+	using ResultTuple = std::tuple<ByteVector, ByteVector>;
+
+	const auto database = getTempFile("Statement-bytesSupportInStructAndTupleBinding.fdb");
+	Attachment attachment{getClient(), database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	const ByteVector first{std::byte{0x00}, std::byte{0x11}, std::byte{0xff}};
+	const ByteVector second{std::byte{0x22}, std::byte{0x33}};
+	Statement stmt{attachment, transaction,
+		"select cast(? as varchar(8) character set octets), cast(? as varchar(8) character set octets) from "
+		"rdb$database"};
+
+	stmt.set(Params{first, second});
+	BOOST_REQUIRE(stmt.execute(transaction));
+	const auto structResult = stmt.get<Result>();
+	BOOST_CHECK(structResult.first == first);
+	BOOST_REQUIRE(structResult.second.has_value());
+	BOOST_CHECK(*structResult.second == second);
+
+	stmt.set(std::tuple{first, second});
+	BOOST_REQUIRE(stmt.execute(transaction));
+	const auto tupleResult = stmt.get<ResultTuple>();
+	BOOST_CHECK(std::get<0>(tupleResult) == first);
+	BOOST_CHECK(std::get<1>(tupleResult) == second);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
@@ -3311,6 +3432,49 @@ BOOST_AUTO_TEST_CASE(getVariantExactMatchString)
 	const auto result = stmt.get<MyVariant>(0);
 	BOOST_REQUIRE(std::holds_alternative<std::string>(result));
 	BOOST_CHECK_EQUAL(std::get<std::string>(result), "hello");
+}
+
+BOOST_AUTO_TEST_CASE(getVariantPrefersBytesForOctets)
+{
+	using ByteVector = std::vector<std::byte>;
+	using Both = std::variant<std::string, ByteVector>;
+
+	const auto database = getTempFile("Statement-getVariantPrefersBytesForOctets.fdb");
+	Attachment attachment{getClient(), database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement octets{
+		attachment, transaction, "select cast('octets' as varchar(10) character set octets) from rdb$database"};
+	BOOST_REQUIRE(octets.execute(transaction));
+	const auto octetsResult = octets.get<Both>(0);
+	BOOST_REQUIRE(std::holds_alternative<ByteVector>(octetsResult));
+	const ByteVector expected{
+		std::byte{'o'},
+		std::byte{'c'},
+		std::byte{'t'},
+		std::byte{'e'},
+		std::byte{'t'},
+		std::byte{'s'},
+	};
+	BOOST_CHECK(std::get<ByteVector>(octetsResult) == expected);
+
+	Statement ordinary{
+		attachment, transaction, "select cast('text' as varchar(10) character set none) from rdb$database"};
+	BOOST_REQUIRE(ordinary.execute(transaction));
+	const auto ordinaryResult = ordinary.get<Both>(0);
+	BOOST_REQUIRE(std::holds_alternative<std::string>(ordinaryResult));
+	BOOST_CHECK_EQUAL(std::get<std::string>(ordinaryResult), "text");
+
+	Statement byteParameter{
+		attachment, transaction, "select cast(? as varchar(10) character set none) from rdb$database"};
+	const ByteVector parameterValue{std::byte{0x00}, std::byte{0x01}};
+	byteParameter.set(0, std::variant<std::monostate, ByteVector>{parameterValue});
+	BOOST_REQUIRE(byteParameter.execute(transaction));
+	const auto parameterResult = byteParameter.get<std::optional<ByteVector>>(0);
+	BOOST_REQUIRE(parameterResult.has_value());
+	BOOST_CHECK(*parameterResult == parameterValue);
 }
 
 BOOST_AUTO_TEST_CASE(getVariantScaledIntPreferred)

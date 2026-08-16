@@ -47,6 +47,7 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
+#include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -1250,6 +1251,72 @@ namespace fbcpp
 		}
 
 		///
+		/// @brief Binds raw bytes to a text or varying parameter.
+		///
+		void setBytes(unsigned index, std::span<const std::byte> value)
+		{
+			assert(isValid());
+
+			const auto& descriptor = getInDescriptor(index);
+			auto* const message = inMessage.data();
+
+			switch (descriptor.adjustedType)
+			{
+				case DescriptorAdjustedType::STRING:
+					if (value.size() > descriptor.length)
+					{
+						static constexpr std::intptr_t STATUS_STRING_TRUNCATION[] = {
+							isc_arith_except,
+							isc_string_truncation,
+							isc_arg_end,
+						};
+
+						throw DatabaseException(getClient(), STATUS_STRING_TRUNCATION);
+					}
+
+					*reinterpret_cast<std::uint16_t*>(&message[descriptor.offset]) =
+						static_cast<std::uint16_t>(value.size());
+					std::copy(value.begin(), value.end(), &message[descriptor.offset + sizeof(std::uint16_t)]);
+					break;
+
+				default:
+					throwInvalidType("std::span<const std::byte>", descriptor.adjustedType);
+			}
+
+			*reinterpret_cast<std::int16_t*>(&message[descriptor.nullOffset]) = FB_FALSE;
+		}
+
+		///
+		/// @brief Binds a vector of raw bytes to a text or varying parameter.
+		///
+		void setBytes(unsigned index, const std::vector<std::byte>& value)
+		{
+			setBytes(index, std::span<const std::byte>{value});
+		}
+
+		///
+		/// @brief Binds an optional vector of raw bytes to a text or varying parameter.
+		///
+		void setBytes(unsigned index, std::optional<std::vector<std::byte>> optValue)
+		{
+			if (!optValue.has_value())
+			{
+				setNull(index);
+				return;
+			}
+
+			setBytes(index, std::span<const std::byte>{optValue.value()});
+		}
+
+		///
+		/// @brief Binds a null byte value.
+		///
+		void setBytes(unsigned index, std::nullopt_t)
+		{
+			setNull(index);
+		}
+
+		///
 		/// @brief Binds a blob identifier to the specified parameter or null.
 		///
 		void setBlobId(unsigned index, std::optional<BlobId> optValue)
@@ -1558,6 +1625,22 @@ namespace fbcpp
 		void set(unsigned index, std::string_view value)
 		{
 			setString(index, value);
+		}
+
+		///
+		/// @brief Convenience overload that binds a vector of raw bytes.
+		///
+		void set(unsigned index, const std::vector<std::byte>& value)
+		{
+			setBytes(index, value);
+		}
+
+		///
+		/// @brief Convenience overload that binds a span of raw bytes.
+		///
+		void set(unsigned index, std::span<const std::byte> value)
+		{
+			setBytes(index, value);
 		}
 
 		///
@@ -1876,6 +1959,15 @@ namespace fbcpp
 		{
 			assert(isValid());
 			return outRow->getString(index);
+		}
+
+		///
+		/// @brief Reads a text or varying column as its raw bytes.
+		///
+		std::optional<std::vector<std::byte>> getBytes(unsigned index)
+		{
+			assert(isValid());
+			return outRow->getBytes(index);
 		}
 
 		///
@@ -2496,6 +2588,12 @@ namespace fbcpp
 	inline std::optional<std::string> Statement::get<std::optional<std::string>>(unsigned index)
 	{
 		return getString(index);
+	}
+
+	template <>
+	inline std::optional<std::vector<std::byte>> Statement::get<std::optional<std::vector<std::byte>>>(unsigned index)
+	{
+		return getBytes(index);
 	}
 
 	///
