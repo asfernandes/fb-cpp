@@ -26,6 +26,8 @@
 #include "fb-cpp/RowSet.h"
 #include "fb-cpp/Statement.h"
 #include "fb-cpp/Transaction.h"
+#include <cstddef>
+#include <vector>
 
 
 BOOST_AUTO_TEST_SUITE(RowSetSuite)
@@ -335,6 +337,41 @@ BOOST_AUTO_TEST_CASE(includesCurrentRowAndDoesNotDuplicateAcrossUses)
 	BOOST_CHECK(!procedure.hasCurrentRow());
 	BOOST_REQUIRE_EQUAL(procedureRowSet.getCount(), 1u);
 	BOOST_CHECK_EQUAL(procedureRowSet.getRow(0).getInt32(0).value(), 42);
+}
+
+BOOST_AUTO_TEST_CASE(readBytesFromDisconnectedRowSet)
+{
+	const auto database = getTempFile("RowSet-readBytesFromDisconnectedRowSet.fdb");
+
+	Attachment attachment{
+		getClient(), database, AttachmentOptions().setCreateDatabase(true).setConnectionCharSet("UTF8")};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	Statement select{
+		attachment, transaction, "select cast('row bytes' as varchar(16) character set octets) from rdb$database"};
+	BOOST_REQUIRE(select.execute(transaction));
+
+	RowSet rowSet{select, 1u};
+	select.free();
+
+	const std::vector<std::byte> expected{
+		std::byte{'r'},
+		std::byte{'o'},
+		std::byte{'w'},
+		std::byte{' '},
+		std::byte{'b'},
+		std::byte{'y'},
+		std::byte{'t'},
+		std::byte{'e'},
+		std::byte{'s'},
+	};
+	const auto result = rowSet.getRow(0).getBytes(0);
+	BOOST_REQUIRE(result.has_value());
+	BOOST_CHECK(*result == expected);
+	const auto typedResult = rowSet.getRow(0).get<std::optional<std::vector<std::byte>>>(0);
+	BOOST_REQUIRE(typedResult.has_value());
+	BOOST_CHECK(*typedResult == expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

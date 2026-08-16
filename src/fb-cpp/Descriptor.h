@@ -35,6 +35,11 @@
 namespace fbcpp
 {
 	///
+	/// Firebird character set identifier for OCTETS.
+	///
+	inline constexpr unsigned octetsCharSetId = 1u;
+
+	///
 	/// Descriptor original type.
 	///
 	enum class DescriptorOriginalType : unsigned

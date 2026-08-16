@@ -28,6 +28,8 @@
 #include "config.h"
 #include "types.h"
 #include "StructBinding.h"
+#include <cstddef>
+#include <vector>
 
 #if FB_CPP_USE_BOOST_MULTIPRECISION != 0
 #include <boost/multiprecision/cpp_int.hpp>
@@ -92,6 +94,12 @@ namespace fbcpp::impl::reflection
 	// String
 	template <>
 	struct IsSupportedVariantType<std::string> : std::true_type
+	{
+	};
+
+	// Bytes
+	template <>
+	struct IsSupportedVariantType<std::vector<std::byte>> : std::true_type
 	{
 	};
 
@@ -265,6 +273,11 @@ namespace fbcpp::impl::reflection
 
 	template <>
 	struct IsOpaqueType<OpaqueTimestampTz> : std::true_type
+	{
+	};
+
+	template <>
+	struct IsOpaqueType<std::vector<std::byte>> : std::true_type
 	{
 	};
 }  // namespace fbcpp::impl::reflection
