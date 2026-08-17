@@ -896,7 +896,7 @@ namespace fbcpp
 					break;
 
 				case DescriptorAdjustedType::STRING:
-					if (descriptor.charSetId == octetsCharSetId)
+					if (descriptor.charSetId == impl::CHARSET_OCTETS)
 					{
 						if constexpr (variantContainsV<std::vector<std::byte>, V>)
 							return V{get<std::optional<std::vector<std::byte>>>(index).value()};

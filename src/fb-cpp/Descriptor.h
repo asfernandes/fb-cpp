@@ -29,15 +29,19 @@
 #include <string>
 
 
+namespace fbcpp::impl
+{
+	///
+	/// Firebird character set identifier for OCTETS.
+	///
+	inline constexpr unsigned CHARSET_OCTETS = 1u;
+}  // namespace fbcpp::impl
+
 ///
 /// fb-cpp namespace.
 ///
 namespace fbcpp
 {
-	///
-	/// Firebird character set identifier for OCTETS.
-	///
-	inline constexpr unsigned octetsCharSetId = 1u;
 
 	///
 	/// Descriptor original type.
