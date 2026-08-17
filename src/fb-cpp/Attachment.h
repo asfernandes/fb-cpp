@@ -27,6 +27,7 @@
 
 #include "fb-cpp-export.h"
 #include "fb-api.h"
+#include "Blob.h"
 #include "RowSet.h"
 #include "SmartPtrs.h"
 #include "StatementOptions.h"
@@ -296,6 +297,30 @@ namespace fbcpp
 		{
 			return handle;
 		}
+
+		///
+		/// Reads a blob as a string, or returns nullopt for a null identifier.
+		///
+		std::optional<std::string> blobIdToString(
+			Transaction& transaction, std::optional<BlobId> blobId, const BlobOptions& options = {});
+
+		///
+		/// Reads a blob as bytes, or returns nullopt for a null identifier.
+		///
+		std::optional<std::vector<std::byte>> blobIdToBytes(
+			Transaction& transaction, std::optional<BlobId> blobId, const BlobOptions& options = {});
+
+		///
+		/// Creates a blob from a string, or returns nullopt for a null value.
+		///
+		std::optional<BlobId> blobIdFromString(
+			Transaction& transaction, std::optional<std::string_view> value, const BlobOptions& options = {});
+
+		///
+		/// Creates a blob from bytes, or returns nullopt for a null value.
+		///
+		std::optional<BlobId> blobIdFromBytes(
+			Transaction& transaction, std::optional<std::span<const std::byte>> value, const BlobOptions& options = {});
 
 		///
 		/// Disconnects from the database.

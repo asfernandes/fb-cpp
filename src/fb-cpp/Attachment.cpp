@@ -116,6 +116,86 @@ void Attachment::resetSession()
 		&statusWrapper, nullptr, 0, "alter session reset", SQL_DIALECT_V6, nullptr, nullptr, nullptr, nullptr);
 }
 
+std::optional<std::string> Attachment::blobIdToString(
+	Transaction& transaction, std::optional<BlobId> blobId, const BlobOptions& options)
+{
+	if (!blobId.has_value())
+		return std::nullopt;
+
+	Blob reader{*this, transaction, blobId.value(), options};
+	const auto lengthHint = reader.getLength();
+	std::string value;
+	value.reserve(lengthHint);
+	std::vector<char> buffer(std::numeric_limits<std::uint16_t>::max());
+
+	for (;;)
+	{
+		const auto read = reader.readSegment(buffer);
+
+		if (read == 0u)
+			break;
+
+		value.append(buffer.data(), read);
+	}
+
+	reader.close();
+
+	return value;
+}
+
+std::optional<std::vector<std::byte>> Attachment::blobIdToBytes(
+	Transaction& transaction, std::optional<BlobId> blobId, const BlobOptions& options)
+{
+	if (!blobId.has_value())
+		return std::nullopt;
+
+	Blob reader{*this, transaction, blobId.value(), options};
+	const auto lengthHint = reader.getLength();
+	std::vector<std::byte> value;
+	value.reserve(lengthHint);
+	std::vector<std::byte> buffer(std::numeric_limits<std::uint16_t>::max());
+
+	for (;;)
+	{
+		const auto read = reader.readSegment(buffer);
+
+		if (read == 0u)
+			break;
+
+		value.insert(value.end(), buffer.data(), buffer.data() + read);
+	}
+
+	reader.close();
+
+	return value;
+}
+
+std::optional<BlobId> Attachment::blobIdFromString(
+	Transaction& transaction, std::optional<std::string_view> value, const BlobOptions& options)
+{
+	if (!value.has_value())
+		return std::nullopt;
+
+	Blob writer{*this, transaction, options};
+	writer.write(std::span<const char>{value->data(), value->size()});
+	writer.close();
+
+	return writer.getId();
+}
+
+std::optional<BlobId> Attachment::blobIdFromBytes(
+	Transaction& transaction, std::optional<std::span<const std::byte>> value, const BlobOptions& options)
+{
+	if (!value.has_value())
+		return std::nullopt;
+
+	Blob writer{*this, transaction, options};
+	writer.write(value.value());
+	writer.close();
+
+	return writer.getId();
+}
+
 bool Attachment::execute(Transaction& transaction, std::string_view sql, const StatementOptions& options)
 {
 	Statement statement{*this, transaction, sql, options};
