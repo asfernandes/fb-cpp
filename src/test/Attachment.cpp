@@ -30,6 +30,8 @@
 #include "fb-cpp/Transaction.h"
 #include <cstddef>
 #include <exception>
+#include <limits>
+#include <string>
 #include <vector>
 
 
@@ -93,6 +95,63 @@ BOOST_AUTO_TEST_CASE(createDatabaseWithForcedWritesOff)
 	BOOST_REQUIRE(stmt.getInt32(0).has_value());
 	BOOST_CHECK_EQUAL(*stmt.getInt32(0), 0);
 	transaction.commit();
+}
+
+BOOST_AUTO_TEST_CASE(blobIdConversions)
+{
+	const auto database = getTempFile("Attachment-blobIdConversions.fdb");
+
+	Attachment attachment{getClient(), database,
+		AttachmentOptions().setCreateDatabase(true).setForcedWrites(false).setConnectionCharSet("UTF8")};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+	const auto streamOptions = BlobOptions().setType(BlobType::STREAM);
+	const auto multiSegmentSize =
+		static_cast<std::size_t>(std::numeric_limits<std::uint16_t>::max()) + std::size_t{1024};
+
+	std::string text(multiSegmentSize, '\0');
+	for (std::size_t i = 0; i < text.size(); ++i)
+		text[i] = static_cast<char>(i % 251);
+
+	const auto textBlobId = attachment.blobIdFromString(transaction, text, streamOptions);
+	BOOST_REQUIRE(textBlobId.has_value());
+	BOOST_CHECK(textBlobId->isEmpty() == false);
+
+	const auto textResult = attachment.blobIdToString(transaction, textBlobId, streamOptions);
+	BOOST_REQUIRE(textResult.has_value());
+	BOOST_CHECK_EQUAL(*textResult, text);
+
+	std::vector<std::byte> bytes(multiSegmentSize);
+	for (std::size_t i = 0; i < bytes.size(); ++i)
+		bytes[i] = static_cast<std::byte>(i % 251);
+
+	const auto bytesBlobId = attachment.blobIdFromBytes(transaction, bytes, streamOptions);
+	BOOST_REQUIRE(bytesBlobId.has_value());
+	BOOST_CHECK(bytesBlobId->isEmpty() == false);
+
+	const auto bytesResult = attachment.blobIdToBytes(transaction, bytesBlobId, streamOptions);
+	BOOST_REQUIRE(bytesResult.has_value());
+	BOOST_CHECK(*bytesResult == bytes);
+
+	std::string emptyText;
+	const auto emptyTextBlobId = attachment.blobIdFromString(transaction, emptyText, streamOptions);
+	BOOST_REQUIRE(emptyTextBlobId.has_value());
+	const auto emptyTextResult = attachment.blobIdToString(transaction, emptyTextBlobId, streamOptions);
+	BOOST_REQUIRE(emptyTextResult.has_value());
+	BOOST_CHECK(emptyTextResult->empty());
+
+	std::vector<std::byte> emptyBytes;
+	const auto emptyBytesBlobId = attachment.blobIdFromBytes(transaction, emptyBytes, streamOptions);
+	BOOST_REQUIRE(emptyBytesBlobId.has_value());
+	const auto emptyBytesResult = attachment.blobIdToBytes(transaction, emptyBytesBlobId, streamOptions);
+	BOOST_REQUIRE(emptyBytesResult.has_value());
+	BOOST_CHECK(emptyBytesResult->empty());
+
+	BOOST_CHECK(!attachment.blobIdFromString(transaction, std::nullopt, streamOptions).has_value());
+	BOOST_CHECK(!attachment.blobIdFromBytes(transaction, std::nullopt, streamOptions).has_value());
+	BOOST_CHECK(!attachment.blobIdToString(transaction, std::nullopt, streamOptions).has_value());
+	BOOST_CHECK(!attachment.blobIdToBytes(transaction, std::nullopt, streamOptions).has_value());
 }
 
 BOOST_AUTO_TEST_CASE(executePreparesAndExecutesStatement)
