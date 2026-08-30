@@ -37,6 +37,7 @@
 #include "request/Request.h"
 #include "Batch.h"
 #include "Blob.h"
+#include "Array.h"
 #include "EventListener.h"
 #include "ServiceManager.h"
 #include "BackupManager.h"

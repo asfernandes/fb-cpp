@@ -28,6 +28,7 @@
 #include "../config.h"
 #include "../fb-api.h"
 #include "../Blob.h"
+#include "../Array.h"
 #include "../CalendarConverter.h"
 #include "../Client.h"
 #include "../Descriptor.h"
@@ -756,6 +757,15 @@ namespace fbcpp::impl
 		}
 
 		///
+		/// Binds an array identifier to the specified parameter or null.
+		///
+		void setArrayId(unsigned index, std::optional<ArrayId> optValue)
+		{
+			setExact(index, optValue, DescriptorAdjustedType::ARRAY, "ArrayId",
+				[](std::byte* data, const ArrayId& value) { *reinterpret_cast<ISC_QUAD*>(data) = value.id; });
+		}
+
+		///
 		/// @name Convenience overloads
 		/// @{
 
@@ -781,6 +791,22 @@ namespace fbcpp::impl
 		void set(unsigned index, std::optional<BlobId> value)
 		{
 			setBlobId(index, value);
+		}
+
+		///
+		/// Convenience overload that binds an array identifier.
+		///
+		void set(unsigned index, ArrayId value)
+		{
+			setArrayId(index, value);
+		}
+
+		///
+		/// Convenience overload that binds an optional array identifier.
+		///
+		void set(unsigned index, std::optional<ArrayId> value)
+		{
+			setArrayId(index, value);
 		}
 
 		///
