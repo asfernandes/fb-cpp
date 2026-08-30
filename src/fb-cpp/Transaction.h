@@ -36,6 +36,7 @@
 #include <string_view>
 #include <vector>
 #include <cstddef>
+#include <cstdint>
 
 
 ///
