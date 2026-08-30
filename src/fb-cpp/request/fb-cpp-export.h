@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Adriano dos Santos Fernandes
+ * Copyright (c) 2026 Adriano dos Santos Fernandes
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,24 +22,9 @@
  * SOFTWARE.
  */
 
-#ifndef FBCPP_H
-#define FBCPP_H
+#ifndef FBCPP_REQUEST_FB_CPP_EXPORT_H
+#define FBCPP_REQUEST_FB_CPP_EXPORT_H
 
-#include "Client.h"
-#include "Attachment.h"
-#include "AttachmentPool.h"
-#include "Transaction.h"
-#include "Descriptor.h"
-#include "Statement.h"
-#include "RowSet.h"
-#include "request/RequestMessageFormat.h"
-#include "request/RequestMessage.h"
-#include "request/Request.h"
-#include "Batch.h"
-#include "Blob.h"
-#include "EventListener.h"
-#include "ServiceManager.h"
-#include "BackupManager.h"
-#include "DatabaseManager.h"
+#include "../fb-cpp-export.h"
 
-#endif  // FBCPP_H
+#endif  // FBCPP_REQUEST_FB_CPP_EXPORT_H

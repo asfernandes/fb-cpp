@@ -71,7 +71,7 @@ endif()
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME}
 	BASE_NAME FB_CPP
-	EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/fb-cpp-export.h"
+	EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/fb-cpp-export.generated.h"
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -156,7 +156,7 @@ foreach(HEADER_FILE ${HEADER_FILES})
 	endif()
 endforeach()
 
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/fb-cpp-export.h"
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/fb-cpp-export.generated.h"
 	DESTINATION include/fb-cpp
 )
 

@@ -97,7 +97,7 @@ namespace fbcpp
 		bool isNull(unsigned index)
 		{
 			const auto& descriptor = getDescriptor(index);
-			return *reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE;
+			return readNullFlag(descriptor);
 		}
 
 		///
@@ -107,7 +107,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -184,7 +184,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -246,7 +246,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -297,7 +297,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -339,7 +339,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -360,7 +360,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -380,7 +380,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -401,7 +401,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -421,7 +421,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -442,7 +442,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -462,7 +462,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -483,7 +483,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -503,7 +503,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -524,7 +524,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -544,7 +544,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			switch (descriptor.adjustedType)
@@ -568,7 +568,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			const auto data = &message[descriptor.offset];
@@ -641,7 +641,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			const auto data = &message[descriptor.offset];
@@ -991,7 +991,7 @@ namespace fbcpp
 		{
 			const auto& descriptor = getDescriptor(index);
 
-			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+			if (readNullFlag(descriptor))
 				return std::nullopt;
 
 			auto data = &message[descriptor.offset];
@@ -1125,6 +1125,19 @@ namespace fbcpp
 				default:
 					throwInvalidType(toTypeName, descriptor.adjustedType);
 			}
+		}
+
+	private:
+		///
+		/// @brief Reads the null indicator of a column.
+		/// Columns declared as non-nullable have no indicator in the buffer and are never null.
+		///
+		bool readNullFlag(const Descriptor& descriptor)
+		{
+			if (!descriptor.isNullable)
+				return false;
+
+			return *reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE;
 		}
 
 	private:
