@@ -27,6 +27,7 @@
 
 #include "config.h"
 #include "types.h"
+#include "Array.h"
 #include "StructBinding.h"
 #include <cstddef>
 #include <vector>
@@ -150,6 +151,12 @@ namespace fbcpp::impl::reflection
 	// Blob
 	template <>
 	struct IsSupportedVariantType<BlobId> : std::true_type
+	{
+	};
+
+	// Array
+	template <>
+	struct IsSupportedVariantType<ArrayId> : std::true_type
 	{
 	};
 

@@ -94,6 +94,11 @@ namespace fbcpp
 		BLOB = SQL_BLOB,
 
 		///
+		/// Array value represented by an array identifier.
+		///
+		ARRAY = SQL_ARRAY,
+
+		///
 		/// Time of day without time zone.
 		///
 		TIME = SQL_TYPE_TIME,
@@ -193,6 +198,11 @@ namespace fbcpp
 		/// Binary large object.
 		///
 		BLOB = SQL_BLOB,
+
+		///
+		/// Array value represented by an array identifier.
+		///
+		ARRAY = SQL_ARRAY,
 
 		///
 		/// Time of day without time zone.

@@ -30,6 +30,7 @@
 #include "fb-api.h"
 #include "types.h"
 #include "Blob.h"
+#include "Array.h"
 #include "Client.h"
 #include "Row.h"
 #include "StatementOptions.h"
@@ -379,6 +380,7 @@ namespace fbcpp
 		using impl::ParameterSetter<Statement, false>::clearParameters;
 		using impl::ParameterSetter<Statement, false>::set;
 		using impl::ParameterSetter<Statement, false>::setBlobId;
+		using impl::ParameterSetter<Statement, false>::setArrayId;
 		using impl::ParameterSetter<Statement, false>::setBool;
 		using impl::ParameterSetter<Statement, false>::setBytes;
 		using impl::ParameterSetter<Statement, false>::setDate;
@@ -717,6 +719,15 @@ namespace fbcpp
 		}
 
 		///
+		/// @brief Reads an array identifier column.
+		///
+		std::optional<ArrayId> getArrayId(unsigned index)
+		{
+			assert(isValid());
+			return outRow->getArrayId(index);
+		}
+
+		///
 		/// @brief Reads a textual column, applying number-to-string conversions when needed.
 		///
 		std::optional<std::string> getString(unsigned index)
@@ -853,6 +864,12 @@ namespace fbcpp
 	inline std::optional<BlobId> Statement::get<std::optional<BlobId>>(unsigned index)
 	{
 		return getBlobId(index);
+	}
+
+	template <>
+	inline std::optional<ArrayId> Statement::get<std::optional<ArrayId>>(unsigned index)
+	{
+		return getArrayId(index);
 	}
 
 	template <>

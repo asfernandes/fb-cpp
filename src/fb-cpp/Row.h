@@ -29,6 +29,7 @@
 #include "fb-api.h"
 #include "types.h"
 #include "Blob.h"
+#include "Array.h"
 #include "NumericConverter.h"
 #include "CalendarConverter.h"
 #include "Descriptor.h"
@@ -562,6 +563,30 @@ namespace fbcpp
 		}
 
 		///
+		/// @brief Reads an array identifier column.
+		///
+		std::optional<ArrayId> getArrayId(unsigned index)
+		{
+			const auto& descriptor = getDescriptor(index);
+
+			if (*reinterpret_cast<const std::int16_t*>(&message[descriptor.nullOffset]) != FB_FALSE)
+				return std::nullopt;
+
+			switch (descriptor.adjustedType)
+			{
+				case DescriptorAdjustedType::ARRAY:
+				{
+					ArrayId value;
+					value.id = *reinterpret_cast<const ISC_QUAD*>(&message[descriptor.offset]);
+					return value;
+				}
+
+				default:
+					throwInvalidType("ArrayId", descriptor.adjustedType);
+			}
+		}
+
+		///
 		/// @brief Reads a textual column, applying number-to-string conversions when needed.
 		///
 		std::optional<std::string> getString(unsigned index)
@@ -952,6 +977,11 @@ namespace fbcpp
 						return V{get<std::optional<BlobId>>(index).value()};
 					break;
 
+				case DescriptorAdjustedType::ARRAY:
+					if constexpr (variantContainsV<ArrayId, V>)
+						return V{get<std::optional<ArrayId>>(index).value()};
+					break;
+
 				default:
 					break;
 			}
@@ -1164,6 +1194,12 @@ namespace fbcpp
 	inline std::optional<BlobId> Row::get<std::optional<BlobId>>(unsigned index)
 	{
 		return getBlobId(index);
+	}
+
+	template <>
+	inline std::optional<ArrayId> Row::get<std::optional<ArrayId>>(unsigned index)
+	{
+		return getArrayId(index);
 	}
 
 	template <>
