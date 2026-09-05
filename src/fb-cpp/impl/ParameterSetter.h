@@ -1428,7 +1428,7 @@ namespace fbcpp::impl
 		unsigned stringCapacity(const Descriptor& descriptor) const noexcept
 		{
 			if constexpr (RequestMessageLayout)
-				return descriptor.length - sizeof(std::uint16_t);
+				return descriptor.length - static_cast<unsigned>(sizeof(std::uint16_t));
 			else
 				return descriptor.length;
 		}
