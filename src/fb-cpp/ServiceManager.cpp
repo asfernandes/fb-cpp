@@ -192,5 +192,5 @@ void ServiceManager::detachHandle()
 
 	StatusWrapper statusWrapper{*client};
 	handle->detach(&statusWrapper);
-	handle.reset();
+	handle.release();
 }

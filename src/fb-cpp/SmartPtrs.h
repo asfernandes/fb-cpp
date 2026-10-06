@@ -61,7 +61,6 @@ namespace fbcpp
 		return FbUniquePtr<T>{obj};
 	}
 
-	// FIXME: Review every usage to see if is not leaking one reference count.
 	///
 	/// Reference-counted smart pointer for Firebird objects using addRef/release semantics.
 	///
@@ -121,6 +120,18 @@ namespace fbcpp
 		void reset(T* p = nullptr) noexcept
 		{
 			assign(p, false);
+		}
+
+		///
+		/// Relinquishes ownership of the pointer without releasing it and returns it.
+		/// Used after Firebird calls that already release the interface on success, like
+		/// `ITransaction::commit()` or `IAttachment::detach()`.
+		///
+		T* release() noexcept
+		{
+			T* tmp = ptr;
+			ptr = nullptr;
+			return tmp;
 		}
 
 		FbRef& operator=(FbRef& r) noexcept

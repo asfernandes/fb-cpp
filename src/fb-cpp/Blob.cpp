@@ -238,7 +238,7 @@ void Blob::cancel()
 	assert(isValid());
 
 	handle->cancel(&statusWrapper);
-	handle.reset();
+	handle.release();
 }
 
 void Blob::close()
@@ -246,5 +246,5 @@ void Blob::close()
 	assert(isValid());
 
 	handle->close(&statusWrapper);
-	handle.reset();
+	handle.release();
 }
