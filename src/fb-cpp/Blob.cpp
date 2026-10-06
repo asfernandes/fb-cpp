@@ -66,37 +66,42 @@ Blob::Blob(Attachment& attachment, Transaction& transaction, const BlobId& blobI
 
 std::vector<std::uint8_t> Blob::prepareBpb(const BlobOptions& options)
 {
-	const auto util = attachment.getClient().getUtil();
+	// IXpbBuilder::BPB only exists since Firebird 4, so the BPB is built by hand to work with Firebird 3 clients.
 
-	auto builder = fbUnique(util->getXpbBuilder(&statusWrapper, fb::IXpbBuilder::BPB,
-		reinterpret_cast<const std::uint8_t*>(options.getBpb().data()),
-		static_cast<unsigned>(options.getBpb().size())));
+	const auto& userBpb = options.getBpb();
+	std::vector<std::uint8_t> bpb(userBpb.begin(), userBpb.end());
+
+	const auto addInt = [&](std::uint8_t tag, int value)
+	{
+		if (bpb.empty())
+			bpb.push_back(isc_bpb_version1);
+
+		const auto unsignedValue = static_cast<unsigned>(value);
+
+		bpb.push_back(tag);
+		bpb.push_back(4u);
+
+		for (unsigned shift = 0u; shift < 32u; shift += 8u)
+			bpb.push_back(static_cast<std::uint8_t>((unsignedValue >> shift) & 0xFFu));
+	};
 
 	if (const auto type = options.getType(); type.has_value())
-		builder->insertInt(&statusWrapper, isc_bpb_type, static_cast<int>(type.value()));
+		addInt(isc_bpb_type, static_cast<int>(type.value()));
 
 	if (const auto sourceType = options.getSourceType(); sourceType.has_value())
-		builder->insertInt(&statusWrapper, isc_bpb_source_type, static_cast<int>(sourceType.value()));
+		addInt(isc_bpb_source_type, static_cast<int>(sourceType.value()));
 
 	if (const auto targetType = options.getTargetType(); targetType.has_value())
-		builder->insertInt(&statusWrapper, isc_bpb_target_type, static_cast<int>(targetType.value()));
+		addInt(isc_bpb_target_type, static_cast<int>(targetType.value()));
 
 	if (const auto sourceCharSet = options.getSourceCharSet(); sourceCharSet.has_value())
-		builder->insertInt(&statusWrapper, isc_bpb_source_interp, static_cast<int>(sourceCharSet.value()));
+		addInt(isc_bpb_source_interp, static_cast<int>(sourceCharSet.value()));
 
 	if (const auto targetCharSet = options.getTargetCharSet(); targetCharSet.has_value())
-		builder->insertInt(&statusWrapper, isc_bpb_target_interp, static_cast<int>(targetCharSet.value()));
+		addInt(isc_bpb_target_interp, static_cast<int>(targetCharSet.value()));
 
 	if (const auto storage = options.getStorage(); storage.has_value())
-		builder->insertInt(&statusWrapper, isc_bpb_storage, static_cast<int>(storage.value()));
-
-	const auto buffer = builder->getBuffer(&statusWrapper);
-	const auto length = builder->getBufferLength(&statusWrapper);
-
-	std::vector<std::uint8_t> bpb(length);
-
-	if (length != 0)
-		std::memcpy(bpb.data(), buffer, length);
+		addInt(isc_bpb_storage, static_cast<int>(storage.value()));
 
 	return bpb;
 }
