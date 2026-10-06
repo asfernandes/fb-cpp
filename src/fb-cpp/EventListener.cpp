@@ -343,7 +343,7 @@ void EventListener::cancelEventsHandle()
 
 	{  // scope
 		std::lock_guard mutexGuard{mutex};
-		handle = eventsHandle;
+		handle = std::move(eventsHandle);
 	}
 
 	if (!handle)
@@ -352,4 +352,5 @@ void EventListener::cancelEventsHandle()
 	StatusWrapper statusWrapper{client};
 
 	handle->cancel(&statusWrapper);
+	handle.release();
 }

@@ -203,7 +203,7 @@ void Transaction::rollback()
 	StatusWrapper statusWrapper{client};
 
 	handle->rollback(&statusWrapper);
-	handle.reset();
+	handle.release();
 	state = TransactionState::ROLLED_BACK;
 }
 
@@ -215,7 +215,7 @@ void Transaction::commit()
 	StatusWrapper statusWrapper{client};
 
 	handle->commit(&statusWrapper);
-	handle.reset();
+	handle.release();
 	state = TransactionState::COMMITTED;
 }
 

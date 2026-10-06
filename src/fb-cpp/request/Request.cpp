@@ -93,7 +93,7 @@ namespace fbcpp::request
 		assert(isValid());
 
 		handle->free(&statusWrapper);
-		handle.reset();
+		handle.release();
 	}
 
 	void Request::start(Transaction& transaction, unsigned level)

@@ -238,12 +238,12 @@ void Statement::free()
 	if (resultSetHandle)
 	{
 		resultSetHandle->close(&statusWrapper);
-		resultSetHandle.reset();
+		resultSetHandle.release();
 	}
 
 	currentRow = false;
 	statementHandle->free(&statusWrapper);
-	statementHandle.reset();
+	statementHandle.release();
 }
 
 std::string Statement::getLegacyPlan()
@@ -268,7 +268,7 @@ bool Statement::execute(Transaction& transaction)
 	if (resultSetHandle)
 	{
 		resultSetHandle->close(&statusWrapper);
-		resultSetHandle.reset();
+		resultSetHandle.release();
 	}
 
 	currentRow = false;

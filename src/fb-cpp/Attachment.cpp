@@ -83,7 +83,7 @@ void Attachment::disconnectOrDrop(bool drop)
 	else
 		handle->detach(&statusWrapper);
 
-	handle.reset();
+	handle.release();
 }
 
 

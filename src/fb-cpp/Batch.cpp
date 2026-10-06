@@ -227,7 +227,7 @@ void Batch::close()
 {
 	assert(isValid());
 	handle->close(&statusWrapper);
-	handle.reset();
+	handle.release();
 }
 
 FbRef<fb::IMessageMetadata> Batch::getInputMetadata()
