@@ -37,6 +37,7 @@
 #include "NumericConverter.h"
 #include "CalendarConverter.h"
 #include "Descriptor.h"
+#include "MessageBuffer.h"
 #include "impl/ParameterSetter.h"
 #include "SmartPtrs.h"
 #include "Exception.h"
@@ -255,7 +256,7 @@ namespace fbcpp
 		///
 		/// @brief Provides direct access to the raw input message buffer.
 		///
-		std::vector<std::byte>& getInputMessage() noexcept
+		MessageBuffer& getInputMessage() noexcept
 		{
 			return inMessage;
 		}
@@ -271,7 +272,7 @@ namespace fbcpp
 		///
 		/// @brief Provides direct access to the raw output message buffer.
 		///
-		std::vector<std::byte>& getOutputMessage() noexcept
+		MessageBuffer& getOutputMessage() noexcept
 		{
 			return outMessage;
 		}
@@ -808,7 +809,7 @@ namespace fbcpp
 			return inDescriptors;
 		}
 
-		std::vector<std::byte>& getSetterMessage() noexcept
+		MessageBuffer& getSetterMessage() noexcept
 		{
 			return inMessage;
 		}
@@ -839,10 +840,10 @@ namespace fbcpp
 		FbRef<fb::IResultSet> resultSetHandle;
 		FbRef<fb::IMessageMetadata> inMetadata;
 		std::vector<Descriptor> inDescriptors;
-		std::vector<std::byte> inMessage;
+		MessageBuffer inMessage;
 		FbRef<fb::IMessageMetadata> outMetadata;
 		std::vector<Descriptor> outDescriptors;
-		std::vector<std::byte> outMessage;
+		MessageBuffer outMessage;
 		std::unique_ptr<Row> outRow;
 		StatementType type;
 		unsigned cursorFlags = 0;

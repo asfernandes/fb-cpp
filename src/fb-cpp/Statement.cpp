@@ -84,8 +84,8 @@ Statement::Statement(
 			break;
 	}
 
-	const auto processMetadata = [&](FbRef<fb::IMessageMetadata>& metadata, std::vector<Descriptor>& descriptors,
-									 std::vector<std::byte>& message)
+	const auto processMetadata =
+		[&](FbRef<fb::IMessageMetadata>& metadata, std::vector<Descriptor>& descriptors, MessageBuffer& message)
 	{
 		if (!metadata)
 			return;

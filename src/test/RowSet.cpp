@@ -27,6 +27,7 @@
 #include "fb-cpp/Statement.h"
 #include "fb-cpp/Transaction.h"
 #include <cstddef>
+#include <cstdint>
 #include <vector>
 
 
@@ -62,7 +63,7 @@ BOOST_AUTO_TEST_CASE(fetchRowsIntoRowSet)
 	BOOST_CHECK_EQUAL(rowSet.getCount(), 5u);
 	BOOST_CHECK(rowSet.getMessageLength() > 0);
 	BOOST_CHECK_EQUAL(
-		rowSet.getRawBuffer().size(), static_cast<std::size_t>(rowSet.getCount()) * rowSet.getMessageLength());
+		rowSet.getRawBuffer().size(), static_cast<std::size_t>(rowSet.getCount()) * rowSet.getRowStride());
 
 	// Verify row data using typed Row access. The current execute() row is included.
 	for (unsigned i = 0; i < rowSet.getCount(); ++i)
@@ -100,7 +101,51 @@ BOOST_AUTO_TEST_CASE(fetchFewerRowsThanMaxRows)
 
 	BOOST_CHECK_EQUAL(rowSet.getCount(), 3u);
 	BOOST_CHECK_EQUAL(
-		rowSet.getRawBuffer().size(), static_cast<std::size_t>(rowSet.getCount()) * rowSet.getMessageLength());
+		rowSet.getRawBuffer().size(), static_cast<std::size_t>(rowSet.getCount()) * rowSet.getRowStride());
+}
+
+BOOST_AUTO_TEST_CASE(rowsAreAligned)
+{
+	const auto database = getTempFile("RowSet-rowsAreAligned.fdb");
+
+	Attachment attachment{getClient(), database, AttachmentOptions().setCreateDatabase(true)};
+	FbDropDatabase attachmentDrop{attachment};
+
+	Transaction transaction{attachment};
+
+	const auto isAligned = [](const std::byte* ptr)
+	{ return reinterpret_cast<std::uintptr_t>(ptr) % MESSAGE_BUFFER_ALIGNMENT == 0u; };
+
+	// A message length that is not a multiple of the alignment: smallint + bigint + double + null flags.
+	Statement select{attachment, transaction,
+		"select cast(? as smallint), cast(n as bigint) * 1000000000000, cast(n as double precision) / 4 "
+		"from (select 1 n from rdb$database union all select 2 from rdb$database union all "
+		"select 3 from rdb$database)"};
+
+	BOOST_CHECK(isAligned(select.getInputMessage().data()));
+	BOOST_CHECK(isAligned(select.getOutputMessage().data()));
+
+	select.setInt16(0, 7);
+	BOOST_REQUIRE(select.execute(transaction));
+
+	RowSet rowSet{select, 10};
+
+	BOOST_REQUIRE_EQUAL(rowSet.getCount(), 3u);
+	BOOST_CHECK_NE(rowSet.getMessageLength() % MESSAGE_BUFFER_ALIGNMENT, 0u);
+	BOOST_CHECK_EQUAL(rowSet.getRowStride() % MESSAGE_BUFFER_ALIGNMENT, 0u);
+	BOOST_CHECK_GE(rowSet.getRowStride(), rowSet.getMessageLength());
+
+	for (unsigned i = 0; i < rowSet.getCount(); ++i)
+	{
+		const auto rawRow = rowSet.getRawRow(i);
+		BOOST_CHECK(isAligned(rawRow.data()));
+		BOOST_CHECK_EQUAL(rawRow.size(), rowSet.getMessageLength());
+
+		auto row = rowSet.getRow(i);
+		BOOST_CHECK_EQUAL(row.getInt16(0).value(), 7);
+		BOOST_CHECK_EQUAL(row.getInt64(1).value(), static_cast<std::int64_t>(i + 1) * 1000000000000);
+		BOOST_CHECK_EQUAL(row.getDouble(2).value(), (i + 1) / 4.0);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(rowSetIsDisconnectedFromStatement)

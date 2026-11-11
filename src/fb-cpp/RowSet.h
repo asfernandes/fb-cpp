@@ -33,6 +33,7 @@
 #include "CalendarConverter.h"
 #include "Descriptor.h"
 #include "Exception.h"
+#include "MessageBuffer.h"
 #include <cassert>
 #include <cstddef>
 #include <span>
@@ -74,6 +75,7 @@ namespace fbcpp
 			: client{o.client},
 			  count{o.count},
 			  messageLength{o.messageLength},
+			  rowStride{o.rowStride},
 			  buffer{std::move(o.buffer)},
 			  descriptors{std::move(o.descriptors)},
 			  statusWrapper{std::move(o.statusWrapper)},
@@ -82,6 +84,7 @@ namespace fbcpp
 		{
 			o.count = 0;
 			o.messageLength = 0;
+			o.rowStride = 0;
 		}
 
 		RowSet& operator=(RowSet&& o) noexcept
@@ -91,6 +94,7 @@ namespace fbcpp
 				client = o.client;
 				count = o.count;
 				messageLength = o.messageLength;
+				rowStride = o.rowStride;
 				buffer = std::move(o.buffer);
 				descriptors = std::move(o.descriptors);
 				statusWrapper = std::move(o.statusWrapper);
@@ -98,6 +102,7 @@ namespace fbcpp
 				calendarConverter = std::move(o.calendarConverter);
 				o.count = 0;
 				o.messageLength = 0;
+				o.rowStride = 0;
 			}
 
 			return *this;
@@ -124,6 +129,15 @@ namespace fbcpp
 		}
 
 		///
+		/// @brief Returns the distance (in bytes) between the starts of consecutive rows in the buffer.
+		/// It is the message length rounded up to MESSAGE_BUFFER_ALIGNMENT, so every row starts aligned.
+		///
+		unsigned getRowStride() const noexcept
+		{
+			return rowStride;
+		}
+
+		///
 		/// @brief Returns a Row view for typed access to the row at `index`.
 		/// @param index Zero-based row index (must be < getCount()).
 		///
@@ -140,14 +154,15 @@ namespace fbcpp
 		std::span<const std::byte> getRawRow(unsigned index) const
 		{
 			assert(index < count);
-			const auto* data = buffer.data() + static_cast<std::size_t>(index) * messageLength;
+			const auto* data = buffer.data() + static_cast<std::size_t>(index) * rowStride;
 			return {data, messageLength};
 		}
 
 		///
 		/// @brief Returns the entire contiguous buffer containing all fetched rows.
+		/// Row index starts at index * getRowStride().
 		///
-		const std::vector<std::byte>& getRawBuffer() const noexcept
+		const MessageBuffer& getRawBuffer() const noexcept
 		{
 			return buffer;
 		}
@@ -156,7 +171,8 @@ namespace fbcpp
 		Client* client;
 		unsigned count = 0;
 		unsigned messageLength = 0;
-		std::vector<std::byte> buffer;
+		unsigned rowStride = 0;
+		MessageBuffer buffer;
 		std::vector<Descriptor> descriptors;
 		impl::StatusWrapper statusWrapper;
 		impl::NumericConverter numericConverter;

@@ -31,6 +31,7 @@
 #include "../types.h"
 #include "../Blob.h"
 #include "../Descriptor.h"
+#include "../MessageBuffer.h"
 #include "../NumericConverter.h"
 #include "../CalendarConverter.h"
 #include "../impl/ParameterSetter.h"
@@ -185,7 +186,7 @@ namespace fbcpp::request
 			return descriptors;
 		}
 
-		std::vector<std::byte>& getSetterMessage() noexcept
+		MessageBuffer& getSetterMessage() noexcept
 		{
 			return message;
 		}
@@ -212,7 +213,7 @@ namespace fbcpp::request
 	private:
 		Client* client;
 		std::vector<Descriptor> descriptors;
-		std::vector<std::byte> message;
+		MessageBuffer message;
 		impl::StatusWrapper statusWrapper;
 		impl::NumericConverter numericConverter;
 		impl::CalendarConverter calendarConverter;
