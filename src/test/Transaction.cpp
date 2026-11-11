@@ -25,6 +25,7 @@
 #include "TestUtil.h"
 #include "fb-cpp/Transaction.h"
 #include "fb-cpp/Exception.h"
+#include "fb-cpp/Statement.h"
 #include <exception>
 
 
@@ -140,6 +141,61 @@ BOOST_AUTO_TEST_CASE(isNotValidAfterMove)
 
 	transaction2.commit();
 	BOOST_CHECK_EQUAL(transaction2.isValid(), false);
+}
+
+BOOST_AUTO_TEST_CASE(atSnapshotNumber)
+{
+	const auto database = getTempFile("Transaction-atSnapshotNumber.fdb");
+
+	Attachment attachment1{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment1};
+
+	{  // scope
+		Transaction transaction{attachment1};
+		attachment1.execute(transaction, "create table t (id integer not null primary key)");
+		transaction.commit();
+	}
+
+	{  // scope
+		Transaction transaction{attachment1};
+		attachment1.execute(transaction, "insert into t (id) values (1)");
+		transaction.commit();
+	}
+
+	const auto snapshotOptions = TransactionOptions().setIsolationLevel(TransactionIsolationLevel::SNAPSHOT);
+
+	Transaction transaction1{attachment1, snapshotOptions};
+	const auto snapshotNumber = transaction1.getSnapshotNumber();
+	BOOST_CHECK_GT(snapshotNumber, 0u);
+
+	{  // scope
+		Transaction transaction{attachment1};
+		attachment1.execute(transaction, "insert into t (id) values (2)");
+		transaction.commit();
+	}
+
+	Attachment attachment2{getClient(), database};
+
+	const auto count = [](Attachment& attachment, Transaction& transaction)
+	{
+		Statement statement{attachment, transaction, "select count(*) from t"};
+		BOOST_REQUIRE(statement.execute(transaction));
+		return statement.getInt64(0).value();
+	};
+
+	Transaction transaction2{attachment2, TransactionOptions(snapshotOptions).setAtSnapshotNumber(snapshotNumber)};
+	BOOST_CHECK_EQUAL(transaction2.getSnapshotNumber(), snapshotNumber);
+	BOOST_CHECK_EQUAL(count(attachment2, transaction2), 1);
+	BOOST_CHECK_EQUAL(count(attachment1, transaction1), 1);
+	transaction2.commit();
+
+	Transaction transaction3{attachment2, snapshotOptions};
+	BOOST_CHECK_GT(transaction3.getSnapshotNumber(), snapshotNumber);
+	BOOST_CHECK_EQUAL(count(attachment2, transaction3), 2);
+	transaction3.commit();
+
+	transaction1.commit();
+	attachment2.disconnect();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
