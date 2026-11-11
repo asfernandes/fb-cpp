@@ -219,6 +219,27 @@ namespace fbcpp
 		}
 
 		///
+		/// Returns the snapshot number the transaction will be started at.
+		///
+		const std::optional<std::uint64_t>& getAtSnapshotNumber() const
+		{
+			return atSnapshotNumber;
+		}
+
+		///
+		/// Sets the snapshot number the transaction will be started at
+		/// (`isc_tpb_at_snapshot_number`).
+		/// The transaction sees the same database state as the transaction which
+		/// returned this number from Transaction::getSnapshotNumber(), which must still
+		/// be active. Requires the SNAPSHOT isolation level and Firebird 4.0 or later.
+		///
+		TransactionOptions& setAtSnapshotNumber(std::uint64_t value)
+		{
+			atSnapshotNumber = value;
+			return *this;
+		}
+
+		///
 		/// Returns whether the transaction will not automatically undo changes in
 		/// case of a deadlock or update conflict.
 		///
@@ -294,6 +315,7 @@ namespace fbcpp
 		std::optional<TransactionReadCommittedMode> readCommittedMode;
 		std::optional<TransactionAccessMode> accessMode;
 		std::optional<TransactionWaitMode> waitMode;
+		std::optional<std::uint64_t> atSnapshotNumber;
 		bool noAutoUndo = false;
 		bool ignoreLimbo = false;
 		bool restartRequests = false;
@@ -443,6 +465,14 @@ namespace fbcpp
 		{
 			return state;
 		}
+
+		///
+		/// Returns the snapshot number of the transaction (`fb_info_tra_snapshot_number`).
+		/// It can be passed to TransactionOptions::setAtSnapshotNumber() to start other
+		/// transactions, in this or other attachments to the same database, that see
+		/// the same database state. Requires Firebird 4.0 or later.
+		///
+		std::uint64_t getSnapshotNumber();
 
 		///
 		/// Prepares the transaction for two-phase commit (2PC phase 1).

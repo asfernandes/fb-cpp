@@ -26,7 +26,9 @@
 #include "Attachment.h"
 #include "Client.h"
 #include "Exception.h"
+#include "firebird/impl/inf_pub.h"
 #include <cassert>
+#include <cstdint>
 
 using namespace fbcpp;
 using namespace fbcpp::impl;
@@ -114,6 +116,12 @@ static FbUniquePtr<fb::IXpbBuilder> buildTpb(
 				assert(false);
 				break;
 		}
+	}
+
+	if (const auto atSnapshotNumber = options.getAtSnapshotNumber())
+	{
+		tpbBuilder->insertBigInt(
+			&statusWrapper, isc_tpb_at_snapshot_number, static_cast<std::int64_t>(atSnapshotNumber.value()));
 	}
 
 	if (options.getNoAutoUndo())
@@ -237,6 +245,58 @@ void Transaction::rollbackRetaining()
 	StatusWrapper statusWrapper{client};
 
 	handle->rollbackRetaining(&statusWrapper);
+}
+
+std::uint64_t Transaction::getSnapshotNumber()
+{
+	assert(isValid());
+
+	StatusWrapper statusWrapper{client};
+
+	const std::uint8_t items[] = {fb_info_tra_snapshot_number, isc_info_end};
+	std::uint8_t buffer[32]{};
+
+	handle->getInfo(&statusWrapper, sizeof(items), items, sizeof(buffer), buffer);
+
+	const auto* ptr = buffer;
+	const auto* end = buffer + sizeof(buffer);
+
+	while (ptr < end)
+	{
+		const auto item = *ptr++;
+
+		if (item == isc_info_end)
+			break;
+
+		if (item == isc_info_truncated)
+			throw FbCppException("Transaction::getSnapshotNumber truncated response");
+
+		if (item == isc_info_error)
+			throw FbCppException("Transaction::getSnapshotNumber error response");
+
+		if (ptr + 2 > end)
+			throw FbCppException("Transaction::getSnapshotNumber malformed response");
+
+		const auto itemLength = static_cast<std::uint16_t>((ptr[0]) | (ptr[1] << 8));
+		ptr += 2;
+
+		if (ptr + itemLength > end || itemLength > sizeof(std::uint64_t))
+			throw FbCppException("Transaction::getSnapshotNumber invalid length");
+
+		if (item == fb_info_tra_snapshot_number)
+		{
+			std::uint64_t result = 0;
+
+			for (std::uint16_t i = 0; i < itemLength; ++i)
+				result |= static_cast<std::uint64_t>(ptr[i]) << (8u * i);
+
+			return result;
+		}
+
+		ptr += itemLength;
+	}
+
+	throw FbCppException("Transaction::getSnapshotNumber not supported by the server (Firebird 4.0 or later required)");
 }
 
 void Transaction::prepare()
