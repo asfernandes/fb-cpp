@@ -62,6 +62,12 @@ Attachment::Attachment(Client& client, const std::string& uri, const AttachmentO
 	if (const auto forcedWrites = options.getForcedWrites())
 		dpbBuilder->insertInt(&statusWrapper, isc_dpb_force_write, *forcedWrites ? 1 : 0);
 
+	if (const auto maxInlineBlobSize = options.getMaxInlineBlobSize())
+		dpbBuilder->insertInt(&statusWrapper, isc_dpb_max_inline_blob_size, static_cast<int>(*maxInlineBlobSize));
+
+	if (const auto maxBlobCacheSize = options.getMaxBlobCacheSize())
+		dpbBuilder->insertInt(&statusWrapper, isc_dpb_max_blob_cache_size, static_cast<int>(*maxBlobCacheSize));
+
 	auto dispatcher = fbRef(master->getDispatcher());
 	const auto dpbBuffer = dpbBuilder->getBuffer(&statusWrapper);
 	const auto dpbBufferLen = dpbBuilder->getBufferLength(&statusWrapper);

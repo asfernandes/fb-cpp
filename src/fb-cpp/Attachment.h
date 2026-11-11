@@ -200,6 +200,46 @@ namespace fbcpp
 			return *this;
 		}
 
+		///
+		/// Returns the maximum size of blobs the server may send inline with the rows
+		/// of a result set.
+		///
+		const std::optional<std::uint32_t>& getMaxInlineBlobSize() const
+		{
+			return maxInlineBlobSize;
+		}
+
+		///
+		/// Sets the maximum size of blobs the server may send inline with the rows of
+		/// a result set (`isc_dpb_max_inline_blob_size`), avoiding a round trip per blob
+		/// over remote connections. Zero disables inline blobs.
+		/// Requires Firebird 5.0.3 or later; ignored by older versions.
+		///
+		AttachmentOptions& setMaxInlineBlobSize(std::uint32_t value)
+		{
+			maxInlineBlobSize = value;
+			return *this;
+		}
+
+		///
+		/// Returns the maximum size of the client-side cache for inline blobs.
+		///
+		const std::optional<std::uint32_t>& getMaxBlobCacheSize() const
+		{
+			return maxBlobCacheSize;
+		}
+
+		///
+		/// Sets the maximum size of the client-side cache for inline blobs
+		/// (`isc_dpb_max_blob_cache_size`). Zero disables inline blobs.
+		/// Requires Firebird 5.0.3 or later; ignored by older versions.
+		///
+		AttachmentOptions& setMaxBlobCacheSize(std::uint32_t value)
+		{
+			maxBlobCacheSize = value;
+			return *this;
+		}
+
 	private:
 		std::optional<std::string> connectionCharSet;
 		std::optional<std::string> userName;
@@ -207,6 +247,8 @@ namespace fbcpp
 		std::optional<std::string> role;
 		std::optional<std::uint32_t> sqlDialect;
 		std::optional<bool> forcedWrites;
+		std::optional<std::uint32_t> maxInlineBlobSize;
+		std::optional<std::uint32_t> maxBlobCacheSize;
 		std::vector<std::uint8_t> dpb;
 		bool createDatabase = false;
 	};

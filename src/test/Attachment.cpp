@@ -860,4 +860,20 @@ BOOST_AUTO_TEST_CASE(resetSession)
 	transaction2.commit();
 }
 
+BOOST_AUTO_TEST_CASE(inlineBlobOptions)
+{
+	const auto database = getTempFile("Attachment-inlineBlobOptions.fdb");
+	Attachment attachment1{getClient(), database, AttachmentOptions().setCreateDatabase(true).setForcedWrites(false)};
+	FbDropDatabase attachmentDrop{attachment1};
+
+	Attachment attachment2{
+		getClient(), database, AttachmentOptions().setMaxInlineBlobSize(1000u).setMaxBlobCacheSize(200000u)};
+
+	impl::StatusWrapper statusWrapper{getClient()};
+	BOOST_CHECK_EQUAL(attachment2.getHandle()->getMaxInlineBlobSize(&statusWrapper), 1000u);
+	BOOST_CHECK_EQUAL(attachment2.getHandle()->getMaxBlobCacheSize(&statusWrapper), 200000u);
+
+	attachment2.disconnect();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
