@@ -45,8 +45,9 @@ RowSet::RowSet(Statement& statement, unsigned maxRows)
 
 	auto outMetadata = statement.getOutputMetadata();
 	messageLength = outMetadata->getMessageLength(&statusWrapper);
+	rowStride = alignMessageLength(messageLength);
 
-	buffer.resize(static_cast<std::size_t>(maxRows) * messageLength);
+	buffer.resize(static_cast<std::size_t>(maxRows) * rowStride);
 
 	auto resultSet = statement.getResultSetHandle();
 	auto* dest = buffer.data();
@@ -56,7 +57,7 @@ RowSet::RowSet(Statement& statement, unsigned maxRows)
 		auto& currentRow = statement.getOutputMessage();
 		assert(currentRow.size() == messageLength);
 		std::copy(currentRow.begin(), currentRow.end(), dest);
-		dest += messageLength;
+		dest += rowStride;
 		++count;
 		statement.clearCurrentRow();
 	}
@@ -72,7 +73,7 @@ RowSet::RowSet(Statement& statement, unsigned maxRows)
 		if (resultSet->fetchNext(&statusWrapper, dest) != fb::IStatus::RESULT_OK)
 			break;
 
-		dest += messageLength;
+		dest += rowStride;
 		++count;
 	}
 

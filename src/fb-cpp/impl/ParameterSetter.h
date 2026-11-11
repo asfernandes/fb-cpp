@@ -33,6 +33,7 @@
 #include "../Client.h"
 #include "../Descriptor.h"
 #include "../Exception.h"
+#include "../MessageBuffer.h"
 #include "../NumericConverter.h"
 #include "../StructBinding.h"
 #include "../types.h"
@@ -1181,7 +1182,7 @@ namespace fbcpp::impl
 			return owner().getSetterDescriptors();
 		}
 
-		std::vector<std::byte>& message() noexcept
+		MessageBuffer& message() noexcept
 		{
 			return owner().getSetterMessage();
 		}
