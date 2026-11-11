@@ -44,7 +44,7 @@ namespace fbcpp
 	namespace impl
 	{
 		template <typename T, std::size_t Alignment>
-		struct AlignedAllocator final
+		struct AlignedAllocator
 		{
 			using value_type = T;
 
